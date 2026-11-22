@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol.customaliases;
 
 import com.nef.notenoughfakepixel.utils.Utils;
@@ -152,6 +155,5 @@ public class AddAliasGui extends GuiScreen {
     public void onGuiClosed() {
         Keyboard.enableRepeatEvents(false);
     }
-
 
 }

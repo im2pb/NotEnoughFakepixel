@@ -1,22 +1,17 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.events.handlers;
 
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
-
-import java.util.Collections;
 
 @RegisterEvents
 public class ConnectionEvents {
 
     @SubscribeEvent
-    public void onCLientConnect(FMLNetworkEvent.ClientConnectedToServerEvent event) {
-        RepoHandler.refreshAsync(Collections.singleton("REPO"));
+    public void onClientConnect(FMLNetworkEvent.ClientConnectedToServerEvent event) {
+        RepoHandler.refreshAllAsync();
     }
-
-    @SubscribeEvent
-    public void onClientDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
-        // Optional
-    }
-
 }

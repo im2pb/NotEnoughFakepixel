@@ -1,9 +1,12 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.config.features;
 
 import com.google.gson.annotations.Expose;
-import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorBoolean;
-import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorDropdown;
-import io.github.notenoughupdates.moulconfig.annotations.ConfigOption;
+import com.nef.notenoughfakepixel.config.gui.core.config.annotations.ConfigEditorBoolean;
+import com.nef.notenoughfakepixel.config.gui.core.config.annotations.ConfigEditorDropdown;
+import com.nef.notenoughfakepixel.config.gui.core.config.annotations.ConfigOption;
 
 public class Experimentation {
 
@@ -36,19 +39,6 @@ public class Experimentation {
     @ConfigOption(name = "Prevent Missclicks", desc = "Prevent missclicks during experiments.")
     @ConfigEditorBoolean
     public boolean experimentationPreventMissclicks = true;
-
-    @Expose
-    @ConfigOption(
-            name = "Ultrasequencer Upcoming",
-            desc = "Set the colour of the glass pane shown behind the element in the ultrasequencer which is coming after \"next\""
-    )
-    @ConfigEditorDropdown(
-            values = {
-                    "None", "White", "Orange", "Light Purple", "Light Blue", "Yellow", "Light Green", "Pink",
-                    "Gray", "Light Gray", "Cyan", "Dark Purple", "Dark Blue", "Brown", "Dark Green", "Red", "Black"
-            }
-    )
-    public int seqUpcoming = 5;
 
     @Expose
     @ConfigOption(

@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.config.features;
 
 import com.google.gson.annotations.Expose;
-import io.github.notenoughupdates.moulconfig.annotations.*;
+import com.nef.notenoughfakepixel.config.gui.core.config.annotations.*;
 
 public class Debug {
 
@@ -11,65 +14,60 @@ public class Debug {
     public boolean debug = false;
 
     @Expose
-    @ConfigOption(name = "Sound Debug", desc = "Show Sounds debug.")
-    @ConfigEditorBoolean
-    public boolean showSounds = false;
-
-    @Expose
     @ConfigOption(name = "Force Pojav", desc = "Force Pojav detection in the mod.")
     @ConfigEditorBoolean
     public boolean forcePojav = false;
 
     @Expose
-    @ConfigOption(name = "Enable out of fakepixel", desc = "Enables mod out of fakepixel server.")
-    @ConfigEditorBoolean
-    public boolean enableOutOfFakepixel = false;
+    @ConfigOption(name = "Loggers", desc = "Logs some stored variables.")
+    @ConfigEditorAccordion(id = 0)
+    public boolean loggersAccordion = false;
 
     @Expose
-    @ConfigOption(name = "Copy NBT", desc = "Allows copying mouse item NBT into clipboard \u00a7c[R CTRL]\u00a77.")
+    @ConfigOption(name = "Log location", desc = "Log current location.")
+    @ConfigEditorButton(buttonText = "Log", runnableId = "logLocation")
+    @ConfigAccordionId(id = 0)
+    public String logLocationButton = "";
+
+    @Expose
+    @ConfigOption(name = "Log SKYBLOCK", desc = "Log if player is in Skyblock gamemode.")
+    @ConfigEditorButton(buttonText = "Log", runnableId = "logIsInSkyblock")
+    @ConfigAccordionId(id = 0)
+    public String logIsInSkyblock = "";
+
+    @Expose
+    @ConfigOption(name = "Log Scoreboard", desc = "Log current scoreboard data.")
+    @ConfigEditorButton(buttonText = "Log", runnableId = "logScoreboard")
+    @ConfigAccordionId(id = 0)
+    public String logScoreboardButton = "";
+
+    @Expose
+    @ConfigOption(name = "Copy API data", desc = "Copy API data to clipboard.")
+    @ConfigEditorButton(runnableId = "showAPI", buttonText = "Copy")
+    @ConfigAccordionId(id = 0)
+    public String showAPIButton = "";
+
+    @Expose
+    @ConfigOption(name = "Show held item SBID", desc = "Shows Skyblock ID of the item held.")
+    @ConfigEditorButton(runnableId = "showSBID", buttonText = "Show")
+    @ConfigAccordionId(id = 0)
+    public String showSBIDButton = "";
+
+    @Expose
+    @ConfigOption(name = "Trigger all timers", desc = "trigger all timers event.")
+    @ConfigEditorButton(runnableId = "triggerTimers", buttonText = "Show")
+    @ConfigAccordionId(id = 0)
+    public String triggerTimers = "";
+
+    @Expose
+    @ConfigOption(name = "Log Skyblock Data", desc = "Logs NEF saved skyblock data.")
+    @ConfigEditorButton(runnableId = "logSbData", buttonText = "Show")
+    @ConfigAccordionId(id = 0)
+    public String logSkyblockData = "";
+
+    @Expose
+    @ConfigOption(name = "Copy Item NBT", desc = "Press Right Ctrl over an item while debug mode is on to copy its NBT.")
     @ConfigEditorBoolean
     public boolean debugCopyNbt = false;
-
-    @Expose
-    @Category(name = "Loggers", desc = "Logs some stored variables.")
-    public Loggers loggers = new Loggers();
-
-    public static class Loggers {
-
-            @Expose
-            @ConfigOption(name = "Log location", desc = "Log current location.")
-            @ConfigEditorButton(buttonText = "Log", runnableId = 12)
-            public String logLocationButton = "";
-
-            @Expose
-            @ConfigOption(name = "Log SKYBLOCK", desc = "Log if player is in Skyblock gamemode.")
-            @ConfigEditorButton(buttonText = "Log", runnableId = 13)
-            public String logIsInSkyblock = "";
-
-            @Expose
-            @ConfigOption(name = "Log Scoreboard", desc = "Log current scoreboard data.")
-            @ConfigEditorButton(buttonText = "Log", runnableId = 14)
-            public String logScoreboardButton = "";
-
-            @Expose
-            @ConfigOption(name = "Copy API data", desc = "Copy API data to clipboard.")
-            @ConfigEditorButton(runnableId = 15, buttonText = "Copy")
-            public String showAPIButton = "";
-
-            @Expose
-            @ConfigOption(name = "Show held item SBID", desc = "Shows Skyblock ID of the item held.")
-            @ConfigEditorButton(runnableId = 16, buttonText = "Show")
-            public String showSBIDButton = "";
-
-            @Expose
-            @ConfigOption(name = "Trigger all timers", desc = "trigger all timers event.")
-            @ConfigEditorButton(runnableId = 17, buttonText = "Show")
-            public String triggerTimers = "";
-
-            @Expose
-            @ConfigOption(name = "Log Skyblock Data", desc = "Logs NEF saved skyblock data.")
-            @ConfigEditorButton(runnableId = 18, buttonText = "Show")
-            public String logSkyblockData = "";
-    }
 
 }

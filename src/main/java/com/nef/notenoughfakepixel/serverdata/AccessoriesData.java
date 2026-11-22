@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.serverdata;
 
 import com.nef.notenoughfakepixel.events.handlers.RepoHandler;

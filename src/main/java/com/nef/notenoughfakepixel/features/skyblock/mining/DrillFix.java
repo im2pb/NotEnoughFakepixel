@@ -1,9 +1,14 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.mining;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.events.PacketReadEvent;
+import com.nef.notenoughfakepixel.features.skyblock.mining.service.DrillPacketCorrectionPolicy;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
+import com.nef.notenoughfakepixel.utils.ItemUtils;
 import com.nef.notenoughfakepixel.variables.Location;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -12,49 +17,100 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.S2FPacketSetSlot;
 import net.minecraft.network.play.server.S30PacketWindowItems;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 @RegisterEvents
 public class DrillFix {
 
-    /// Method ported from DSM
-    /// thanks to Danker for making it public in
-    /// https://github.com/bowser0000/SkyblockMod/blob/2b3568c76269dc6ae5053ea6aeee6944f9b79de6/src/main/java/me/Danker/features/DrillFix.java
+    private final Minecraft mc = Minecraft.getMinecraft();
+    /** One coherent snapshot shared with Netty's packet-read thread. */
+    private volatile DrillPacketContext packetContext = DrillPacketContext.EMPTY;
 
+    @SubscribeEvent
+    public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+
+        packetContext = DrillPacketContext.EMPTY;
+
+        EntityPlayer player = mc.thePlayer;
+        if (!Config.feature.mining.miningDrillFix || player == null ||
+                !SkyblockData.getCurrentGamemode().isSkyblock()) return;
+
+        Location location = SkyblockData.getCurrentLocation();
+        if (location != Location.DWARVEN && location != Location.CRYSTAL_HOLLOWS) return;
+
+        int selectedSlot = player.inventory.currentItem;
+        if (selectedSlot < 0 || selectedSlot >= 9) return;
+
+        ItemStack heldItem = player.getHeldItem();
+        if (heldItem == null || !DrillPacketCorrectionPolicy.isDrillInternalName(ItemUtils.getInternalName(heldItem))) {
+            return;
+        }
+
+        // PacketReadEvent is posted by Netty. Never read mutable player inventory state from that thread.
+        packetContext = new DrillPacketContext(
+                mc.gameSettings.keyBindAttack.isKeyDown(),
+                selectedSlot,
+                heldItem.copy()
+        );
+    }
 
     @SubscribeEvent
     public void onPacketRead(PacketReadEvent event) {
-        if (!Config.feature.mining.miningDrillFix) return;
-        if (!SkyblockData.getCurrentGamemode().isSkyblock()) return;
-        if (!SkyblockData.getCurrentLocation().equals(Location.DWARVEN) && !SkyblockData.getCurrentLocation().equals(Location.CRYSTAL_HOLLOWS)) return;
-
-        Minecraft mc = Minecraft.getMinecraft();
-        EntityPlayer player = mc.thePlayer;
-        boolean isDown = mc.gameSettings.keyBindAttack.isKeyDown();
-
-        if (player == null || player.inventory == null) return;
+        DrillPacketContext context = packetContext;
+        if (context == DrillPacketContext.EMPTY || !context.attackHeld ||
+                context.heldDrillSnapshot == null || context.selectedHotbarSlot < 0) return;
 
         if (event.packet instanceof S2FPacketSetSlot) {
             S2FPacketSetSlot packet = (S2FPacketSetSlot) event.packet;
-            int windowId = packet.func_149175_c();
-            int slot = packet.func_149173_d();
-            ItemStack item = packet.func_149174_e();
+            ItemStack packetItem = packet.func_149174_e();
+            boolean suppress = DrillPacketCorrectionPolicy.shouldSuppressSingleSlotUpdate(
+                    true,
+                    context.attackHeld,
+                    true,
+                    context.selectedHotbarSlot,
+                    packet.func_149175_c(),
+                    packet.func_149173_d(),
+                    packetItem != null && packetItem.getItem() == Items.prismarine_shard
+            );
+            if (suppress) event.setCanceled(true);
+            return;
+        }
 
-            if (item != null && windowId == 0 && slot - 36 == player.inventory.currentItem && item.getItem().equals(Items.prismarine_shard) && isDown) {
-                event.setCanceled(true);
-            }
-        } else if (event.packet instanceof S30PacketWindowItems) {
+        if (event.packet instanceof S30PacketWindowItems) {
             S30PacketWindowItems packet = (S30PacketWindowItems) event.packet;
             ItemStack[] items = packet.getItemStacks();
-
-            if (items.length == 45) {
-                int slot = player.inventory.currentItem + 36;
-                ItemStack item = items[slot];
-
-                if (item != null && item.getItem().equals(Items.prismarine_shard) && isDown) {
-                    items[slot] = player.inventory.getCurrentItem();
-                    event.packet = packet;
-                }
+            int slot = context.selectedHotbarSlot + 36;
+            boolean repair = items != null && slot >= 0 && slot < items.length
+                    && DrillPacketCorrectionPolicy.shouldRepairWindowItemsUpdate(
+                    true,
+                    context.attackHeld,
+                    true,
+                    context.selectedHotbarSlot,
+                    items.length,
+                    items[slot] != null && items[slot].getItem() == Items.prismarine_shard
+            );
+            if (repair) {
+                // Preserve all other server inventory updates and restore only the selected drill slot.
+                // Use a fresh copy so packet processing cannot mutate our cross-thread snapshot.
+                items[slot] = context.heldDrillSnapshot.copy();
             }
         }
     }
+
+    private static final class DrillPacketContext {
+        private static final DrillPacketContext EMPTY = new DrillPacketContext(false, -1, null);
+
+        private final boolean attackHeld;
+        private final int selectedHotbarSlot;
+        /** Never exposed or mutated after construction; copied again before insertion into a packet. */
+        private final ItemStack heldDrillSnapshot;
+
+        private DrillPacketContext(boolean attackHeld, int selectedHotbarSlot, ItemStack heldDrillSnapshot) {
+            this.attackHeld = attackHeld;
+            this.selectedHotbarSlot = selectedHotbarSlot;
+            this.heldDrillSnapshot = heldDrillSnapshot;
+        }
+    }
+
 }

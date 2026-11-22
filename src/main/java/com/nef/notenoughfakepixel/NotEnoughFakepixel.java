@@ -1,17 +1,20 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel;
 
 import com.nef.notenoughfakepixel.alerts.Alerts;
 import com.nef.notenoughfakepixel.commands.RenameCommand;
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.ModEventRegistrar;
+import com.nef.notenoughfakepixel.core.feature.FeatureBootstrap;
+import com.nef.notenoughfakepixel.envcheck.registers.ModEventRegistrar;
 import com.nef.notenoughfakepixel.events.handlers.RepoHandler;
-import com.nef.notenoughfakepixel.features.PetTracker;
 import com.nef.notenoughfakepixel.features.cosmetics.CosmeticsManager;
 import com.nef.notenoughfakepixel.features.cosmetics.impl.Bandana;
 import com.nef.notenoughfakepixel.features.cosmetics.loader.OBJLoader;
 import com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows.treasure.TreasureTriangulator;
 import com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows.waypoints.CrystalWaypoints;
-import com.nef.notenoughfakepixel.features.skyblock.overlays.inventory.equipment.EquipmentOverlay;
+import com.nef.notenoughfakepixel.features.skyblock.inventory.equipment.EquipmentOverlay;
 import com.nef.notenoughfakepixel.features.skyblock.qol.customaliases.CustomAliases;
 import com.nef.notenoughfakepixel.features.skyblock.slotlocking.SlotLocking;
 import com.nef.notenoughfakepixel.nefrepo.NefRepo;
@@ -27,17 +30,13 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.io.File;
 
-@Mod(modid = "notenoughfakepixel", useMetadata = true)
+@Mod(modid = "notenoughfakepixel", version = "1.2.6", useMetadata = true, clientSideOnly = true)
 public class NotEnoughFakepixel {
 
     public static NotEnoughFakepixel instance;
 
-    public static final File nefFolder = new File(Minecraft.getMinecraft().mcDataDir, "NotEnoughFakepixel");
-
     @Getter
     private final Utils utils = new Utils();
-    public static File storageDirectory = new File("config/Notenoughfakepixel/storage");
-
     @Getter
     private OBJLoader objLoader;
 
@@ -51,32 +50,25 @@ public class NotEnoughFakepixel {
         MinecraftForge.EVENT_BUS.register(this);
         objLoader = new OBJLoader();
 
-        //registerCosmetics();
-        //CapeManager.loadCapesFromGitHub();
-
         createDirectoryIfNotExists(Config.configDirectory);
 
+        SlotLocking.getInstance().loadConfig(new File(Config.configDirectory, "slotlocking.json"));
         Config.init();
         Runtime.getRuntime().addShutdownHook(new Thread(Config::saveConfig));
 
         EquipmentOverlay.loadData();
 
         Alerts.load();
+        RenameCommand.load();
 
-        ModEventRegistrar.registerModEvents();
+        // FeatureBootstrap owns event-listener lifecycles across all feature domains.
+        FeatureBootstrap.initialize();
         ModEventRegistrar.registerKeybinds();
         ModEventRegistrar.registerCommands();
 
-        // Load this after register for instance
-        SlotLocking.getInstance().loadConfig(new File(Config.configDirectory, "slotlocking.json"));
-
-        RenameCommand.load();
-
-        // REPO
         NefRepo.init();
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdownHook, "Shutdown Hook"));
 
-        // Ch waypoints
         CrystalWaypoints.getInstance().load();
     }
 
@@ -87,16 +79,15 @@ public class NotEnoughFakepixel {
     }
 
     private void shutdownHook() {
-        // Shutdown tasks
+
+        FeatureBootstrap.shutdown();
         RepoHandler.shutdown();
         TreasureTriangulator.getInstance().shutdown();
 
-        // Save configs
         try {
             CrystalWaypoints.getInstance().saveIfDirty();
-            SlotLocking.getInstance().saveConfig();
             CustomAliases.save();
-            RenameCommand.save();
+            SlotLocking.getInstance().saveConfig();
         } catch (Throwable t) {
             t.printStackTrace();
         }
@@ -131,6 +122,5 @@ public class NotEnoughFakepixel {
         }
 
     }
-
 
 }

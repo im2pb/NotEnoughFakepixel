@@ -1,8 +1,11 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.config.features;
 
 import com.google.gson.annotations.Expose;
-import com.nef.notenoughfakepixel.config.position.Position;
-import io.github.notenoughupdates.moulconfig.annotations.*;
+import com.nef.notenoughfakepixel.config.gui.core.config.Position;
+import com.nef.notenoughfakepixel.config.gui.core.config.annotations.*;
 
 public class ChocolateFactory {
 
@@ -38,11 +41,10 @@ public class ChocolateFactory {
 
     @Expose
     @ConfigOption(name = "Position", desc = "Position of the Egg Timer.")
-    @ConfigEditorButton(runnableId = 10, buttonText = "Edit")
+    @ConfigEditorButton(runnableId = "editEggTimerPos", buttonText = "Edit")
     public String editEggTimerPos = "";
 
     @Expose
     public Position eggTimerPos = new Position(0, 0, true, true);
 
 }
-

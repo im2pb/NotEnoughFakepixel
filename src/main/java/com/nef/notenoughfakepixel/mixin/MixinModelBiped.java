@@ -1,4 +1,7 @@
 /*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
+/*
  * Skytils - Hypixel Skyblock Quality of Life Mod
  * Copyright (C) 2020-2024 Skytils
  *

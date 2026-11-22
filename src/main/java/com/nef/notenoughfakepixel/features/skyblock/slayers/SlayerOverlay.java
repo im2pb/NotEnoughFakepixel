@@ -1,10 +1,13 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.slayers;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.config.gui.core.config.Position;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.features.skyblock.overlays.Overlay;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
-import com.nef.notenoughfakepixel.utils.Logger;
 import com.nef.notenoughfakepixel.variables.Location;
 import com.nef.notenoughfakepixel.variables.Slayer;
 import net.minecraft.client.Minecraft;
@@ -12,153 +15,123 @@ import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/** Slayer progress HUD; state is ephemeral and never persisted to the server or player data. */
 @RegisterEvents
 public class SlayerOverlay extends Overlay {
+    private long currentQuestStartMs;
 
     @Override
     public boolean shouldShow() {
-        if (!SkyblockData.isSkyblock()) return false;
-        if (!SkyblockData.isSlayerActive()) return false;
-        if (!isValidLocation()) return false;
-        if (!Config.feature.slayer.slayerOverlaySettings.slayerOverlay) return false;
-        if (Config.feature.slayer.slayerOverlaySettings.slayerOverlayHideOnTab && Minecraft.getMinecraft().gameSettings.keyBindPlayerList.isKeyDown()) return false;
-        if (Config.feature.slayer.slayerOverlaySettings.slayerOverlayHideOnChat && Minecraft.getMinecraft().currentScreen instanceof GuiChat) return false;
-        return true;
-    }
-
-    private boolean isValidLocation() {
-        return SkyblockData.getCurrentLocation() != Location.PRIVATE_ISLAND;
+        if (!Config.feature.slayer.slayerOverlay || !SkyblockData.getCurrentGamemode().isSkyblock()) return false;
+        if (!SkyblockData.isSlayerActive() || SkyblockData.getCurrentSlayer() == Slayer.NONE) return false;
+        if (SkyblockData.getCurrentLocation() == Location.PRIVATE_ISLAND) return false;
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (Config.feature.slayer.slayerOverlayHideOnTab && minecraft.gameSettings.keyBindPlayerList.isKeyDown()) return false;
+        return !Config.feature.slayer.slayerOverlayHideOnChat || !(minecraft.currentScreen instanceof GuiChat);
     }
 
     @SubscribeEvent
     public void onRender(RenderGameOverlayEvent.Post event) {
-        if (event.type != RenderGameOverlayEvent.ElementType.ALL) return;
-        if (!shouldShow()) return;
-        if (getLines().isEmpty()) return;
-
-        float scale = Config.feature.slayer.slayerOverlaySettings.slayerOverlayScale;
-        float width = getWidth(scale, getLines());
-        float height = getHeight(scale, getLines());
-
-        float x = Config.feature.slayer.slayerOverlaySettings.slayerOverlayPos.getAbsX(new ScaledResolution(Minecraft.getMinecraft()), (int) width) - width/2;
-        float y = Config.feature.slayer.slayerOverlaySettings.slayerOverlayPos.getAbsY(new ScaledResolution(Minecraft.getMinecraft()), (int) height ) - height/2;
-        draw(
-                x,
-                y,
-                Config.feature.slayer.slayerOverlaySettings.slayerOverlayScale,
-                Config.feature.slayer.slayerOverlaySettings.slayerOverlayBackgroundColor
-        );
+        if (event.type != RenderGameOverlayEvent.ElementType.ALL || !shouldShow()) return;
+        List<String> lines = getLines();
+        if (lines.isEmpty()) return;
+        float scale = Config.feature.slayer.slayerOverlayScale;
+        ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
+        int width = (int) (getWidth(scale, lines) * scale);
+        int height = (int) (getHeight(scale, lines) * scale);
+        Position position = Config.feature.slayer.slayerOverlayPos;
+        float x = position.getAbsX(sr, width);
+        float y = position.getAbsY(sr, height);
+        draw(x, y, scale, Config.feature.slayer.slayerOverlayBackgroundColor, lines);
     }
 
     @Override
     public List<String> getLines() {
+        Slayer slayer = SkyblockData.getCurrentSlayer();
+        if (slayer == Slayer.NONE) return Collections.emptyList();
         List<String> lines = new ArrayList<>();
-        Slayer currentSlayer = SkyblockData.getCurrentSlayer();
-        int itemCount = 0;
-        if (currentSlayer != Slayer.NONE) {
-            lines.add("\u00a74" + currentSlayer.getName() + "\u00a7r Slayer");
+        lines.add("§4" + slayer.getName() + " §7Slayer");
+        int level = SkyblockData.getSlayerLevel();
+        if (level > 0) lines.add("§7Level: " + (level >= 9 ? "§aMAX" : "§c" + level));
+        int xp = SkyblockData.getSlayerXp();
+        int next = SkyblockData.getSlayerNextLevelXp();
+        if (next > 0) lines.add("§7XP: §c" + format(xp) + " §7/ §a" + format(next));
+        float meter = SkyblockData.getSlayerRngesusMeter();
+        if (meter > 0.0f) lines.add("§dRNGesus Meter§7: §d" + String.format(java.util.Locale.ROOT, "%.1f", meter) + "%");
+        int bosses = SkyblockData.getSlayerSessionBosses();
+        if (bosses > 0) lines.add("§7Bosses This Session: §e" + bosses);
+        long seconds = SkyblockData.getSlayerSessionSeconds();
+        if (seconds > 0 && bosses > 0) {
+            long average = seconds / bosses;
+            lines.add("§7Average Kill: §e" + (average / 60) + "m " + (average % 60) + "s");
         }
-        if (SkyblockData.getSlayerLevel() > 0) {
-            if (SkyblockData.getSlayerLevel() == 9) {
-                lines.add("\u00a77Level: \u00a7aMAX");
-            } else {
-                lines.add("\u00a77Level: \u00a74" + SkyblockData.getSlayerLevel());
-            }
-
-            itemCount++;
-        }
-        if (SkyblockData.getSlayerXp() > 0 && SkyblockData.getXpToNextLevel() > 0) {
-            lines.add("\u00a77XP: \u00a7c" + SkyblockData.getSlayerXp() + " \u00a77/\u00a7a " + SkyblockData.getNextLevelXp());
-            itemCount++;
-        }
-        if (SkyblockData.getRNGesusMeter() > 0) {
-            lines.add("\u00a7dRNGesus Meter\u00a77:\u00a7d " + SkyblockData.getRNGesusMeter() + "%");
-            itemCount++;
-        }
-        if (SkyblockData.getSessionBosses() > 0) {
-            lines.add("\u00a77Bosses This Session: \u00a7e" + SkyblockData.getSessionBosses());
-            itemCount++;
-        }
-        if (SkyblockData.getTotalSeconds() > 0 && SkyblockData.getSessionBosses() > 0) {
-            double averageTime = SkyblockData.getTotalSeconds() / SkyblockData.getSessionBosses();
-            int minutes = (int) averageTime / 60;
-            int seconds = (int) averageTime % 60;
-            lines.add("\u00a77Average Kill time: \u00a7e" + minutes + "m " + seconds + "s");
-            itemCount++;
-        }
-
-        if (itemCount < 1) {
-            return Collections.emptyList();
-        }
-
-
-        return lines;
+        return lines.size() <= 1 ? Collections.<String>emptyList() : lines;
     }
 
-    @Override
-    public float getWidth(float scale, List<String> lines) {
-        return Math.max(getLongestLine(lines) * 5, MINIMUM_WIDTH) * scale;
-    }
+    @Override public float getWidth(float scale, List<String> lines) { return Math.max(getLongestLine(lines) * 6 + 8, MINIMUM_WIDTH); }
+    @Override public float getHeight(float scale, List<String> lines) { return Math.max(LINE_HEIGHT, lines.size() * LINE_HEIGHT + 4); }
 
-    @Override
-    public float getHeight(float scale, List<String> lines) {
-        return lines.size() * LINE_HEIGHT;
-    }
-
-    // Detecting slayer messages to update XP
     @SubscribeEvent
     public void onChatReceived(ClientChatReceivedEvent event) {
-        if (!shouldShow()) return;
+        if (event == null || event.message == null || !shouldShow()) return;
         String message = event.message.getUnformattedText();
+        if (message.contains("SLAYER QUEST STARTED!") || message.contains("Slay the boss!")
+                || (message.contains("» Slay ") && message.contains("XP worth of "))) {
+            currentQuestStartMs = System.currentTimeMillis();
+            if (message.contains("SLAYER QUEST STARTED!") || message.contains("» Slay ")) event.setCanceled(true);
+        }
         if (message.contains("SLAYER QUEST COMPLETE!")) {
-            SkyblockData.setSessionBosses(SkyblockData.getSessionBosses() + 1);
-        }
-
-        if (message.contains("SLAYER QUEST STARTED!") || (message.contains("» Slay ") && message.contains("XP worth of "))) {
-            event.setCanceled(true);
-        }
-
-        if (message.contains("RNGesus Meter:")) {
-            SkyblockData.setRNGesusMeter(Float.parseFloat(event.message.getUnformattedText().split(":")[1].trim().replace("%", "")));
-            event.setCanceled(true);
-        }
-
-        if (message.contains("Slayer LVL")) {
-            Slayer currentSlayer = SkyblockData.getCurrentSlayer();
-            if (currentSlayer != Slayer.NONE) {
-                try {
-
-                    int slayerLevel = Integer.parseInt(message.split("Slayer LVL")[1].split("-")[0].trim());
-                    SkyblockData.setSlayerLevel(slayerLevel);
-
-                    if (slayerLevel == 9) {
-                        SkyblockData.setSlayerXp(0);
-                        SkyblockData.setNextLevelXp(0);
-                        SkyblockData.setXpToNextLevel(0);
-                    } else {
-                        String nextXpPart = message.split("Next LVL in")[1].trim().split(" ")[0].replace(",", "");
-                        int nextLevelXp = Integer.parseInt(nextXpPart);
-
-                        SkyblockData.setXpToNextLevel(nextLevelXp);
-                        int totalXpForCurrentLevel = currentSlayer.getAccumulatedXp(slayerLevel, nextLevelXp);
-
-                        SkyblockData.setSlayerXp(totalXpForCurrentLevel);
-                        SkyblockData.setNextLevelXp(currentSlayer.getNextLevelXp(slayerLevel));
-                    }
-
-                    event.setCanceled(true);
-
-                } catch (NumberFormatException e) {
-                    Logger.log("[SlayerOverlay] Failed to parse slayer level or XP from message: " + message);
-                }
+            SkyblockData.setSlayerSessionBosses(SkyblockData.getSlayerSessionBosses() + 1);
+            if (currentQuestStartMs > 0L) {
+                long seconds = Math.max(0L, (System.currentTimeMillis() - currentQuestStartMs) / 1000L);
+                SkyblockData.setSlayerSessionSeconds(SkyblockData.getSlayerSessionSeconds() + seconds);
+                currentQuestStartMs = 0L;
             }
         }
-
+        if (message.contains("RNGesus Meter:")) {
+            try {
+                String raw = message.substring(message.indexOf(':') + 1).trim().replace("%", "");
+                SkyblockData.setSlayerRngesusMeter(Float.parseFloat(raw));
+                event.setCanceled(true);
+            } catch (RuntimeException ignored) { }
+        }
+        if (message.contains("Slayer LVL") && SkyblockData.getCurrentSlayer() != Slayer.NONE) {
+            try {
+                int level = Integer.parseInt(message.split("Slayer LVL")[1].split("-")[0].trim());
+                SkyblockData.setSlayerLevel(level);
+                if (level >= 9) {
+                    SkyblockData.setSlayerXp(0);
+                    SkyblockData.setSlayerNextLevelXp(0);
+                    SkyblockData.setSlayerXpToNextLevel(0);
+                } else {
+                    String remaining = message.split("Next LVL in")[1].trim().split(" ")[0].replace(",", "");
+                    int xpToNext = Integer.parseInt(remaining);
+                    Slayer current = SkyblockData.getCurrentSlayer();
+                    SkyblockData.setSlayerXpToNextLevel(xpToNext);
+                    SkyblockData.setSlayerNextLevelXp(current.getNextLevelXp(level));
+                    SkyblockData.setSlayerXp(current.getAccumulatedXp(level, xpToNext));
+                }
+                event.setCanceled(true);
+            } catch (RuntimeException ignored) { /* Ignore format changes; retain the last valid state. */ }
+        }
     }
+
+    @SubscribeEvent
+    public void onWorldUnload(WorldEvent.Unload event) {
+        currentQuestStartMs = 0L;
+        SkyblockData.setSlayerLevel(0);
+        SkyblockData.setSlayerXp(0);
+        SkyblockData.setSlayerNextLevelXp(0);
+        SkyblockData.setSlayerXpToNextLevel(0);
+        SkyblockData.setSlayerRngesusMeter(0.0f);
+    }
+
+    private String format(int value) { return String.format(java.util.Locale.ROOT, "%,d", Math.max(0, value)); }
 }

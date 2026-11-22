@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.chocolate;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.features.skyblock.overlays.Timer;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.variables.Resources;
@@ -16,7 +19,7 @@ public class ChocolateEggTimer extends Timer {
 
     @Override
     public boolean shouldShow() {
-        return SkyblockData.isSkyblock() && Config.feature.chocolateFactory.chocolateEggTimer && SkyblockData.getSeason().equals(SkyblockData.Season.SPRING);
+        return Config.feature.chocolateFactory.chocolateEggTimer && SkyblockData.getSeason().equals(SkyblockData.Season.SPRING);
     }
 
     @Override

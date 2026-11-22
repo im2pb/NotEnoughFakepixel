@@ -1,699 +1,320 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.diana;
 
-import com.nef.notenoughfakepixel.Configuration;
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.features.skyblock.diana.burrows.ParticleProcessor;
+import com.nef.notenoughfakepixel.features.skyblock.diana.core.DianaRuntimeContext;
+import com.nef.notenoughfakepixel.features.skyblock.diana.inquisitor.alert.MinosInquisitorAlertController;
+import com.nef.notenoughfakepixel.features.skyblock.diana.inquisitor.detection.InquisitorLocationRegistry;
+import com.nef.notenoughfakepixel.features.skyblock.diana.inquisitor.detection.InquisitorOutlineTracker;
+import com.nef.notenoughfakepixel.features.skyblock.diana.inquisitor.render.InquisitorOutlineRenderer;
+import com.nef.notenoughfakepixel.features.skyblock.diana.mobs.gaia.GaiaConstruct;
+import com.nef.notenoughfakepixel.features.skyblock.diana.mobs.gaia.GaiaTracker;
+import com.nef.notenoughfakepixel.features.skyblock.diana.mobs.DianaMobTrackingService;
+import com.nef.notenoughfakepixel.features.skyblock.diana.mobs.siamese.SiameseTracker;
+import com.nef.notenoughfakepixel.features.skyblock.diana.render.BurrowWaypointRenderer;
+import com.nef.notenoughfakepixel.serverdata.SkyblockData;
+import com.nef.notenoughfakepixel.utils.InventoryUtils;
+import com.nef.notenoughfakepixel.utils.Waypoint;
 import com.nef.notenoughfakepixel.events.PacketReadEvent;
 import com.nef.notenoughfakepixel.events.RenderEntityModelEvent;
-import com.nef.notenoughfakepixel.serverdata.SkyblockData;
-import com.nef.notenoughfakepixel.utils.*;
-import com.nef.notenoughfakepixel.variables.MobDisplayTypes;
-import com.nef.notenoughfakepixel.variables.Mayor;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.item.EntityArmorStand;
-import net.minecraft.entity.monster.EntityGolem;
-import net.minecraft.entity.passive.EntityOcelot;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S29PacketSoundEffect;
 import net.minecraft.network.play.server.S2APacketParticles;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.Vec3;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
-import java.awt.*;
-import java.time.Instant;
-import java.util.*;
-import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@RegisterEvents
-public class Diana {
-    ParticleProcessor processor = new ParticleProcessor();
-    private final Queue<GaiaConstruct> listGaiaAlive = new ConcurrentLinkedQueue<>();
-    private final ConcurrentHashMap<UUID, GaiaConstruct> gaiaById = new ConcurrentHashMap<>();
-    private final Queue<SiameseLynx> listSiameseAlive = new ConcurrentLinkedQueue<>();
+/**
+ * Diana's Forge event adapter. Feature behavior lives in focused domain services;
+ * this class only routes lifecycle and event callbacks to their owners.
+ */
+public final class Diana {
+    private final DianaRuntimeContext runtimeContext;
+    private final ParticleProcessor processor = new ParticleProcessor();
+
+    private final GaiaTracker gaiaTracker = new GaiaTracker();
+    private final SiameseTracker siameseTracker = new SiameseTracker();
+    private final DianaMobTrackingService mobTrackingService = new DianaMobTrackingService(gaiaTracker, siameseTracker);
+    private final BurrowWaypointRenderer waypointRenderer = new BurrowWaypointRenderer(processor);
+
+    private final InquisitorLocationRegistry inquisitorLocations = new InquisitorLocationRegistry();
+    private final InquisitorOutlineTracker inquisitorOutlineTracker = new InquisitorOutlineTracker();
+    private final MinosInquisitorAlertController inquisitorAlertController;
+    private final InquisitorOutlineRenderer inquisitorOutlineRenderer;
+
     private final Pattern cooldownPattern =
             Pattern.compile("§r§cThis ability is on cooldown for \\d+ more second(?:s)?\\.§r");
-    private final Pattern minosInquisitorPartyChat = Pattern.compile("§9Party §8> (?:§[0-9a-f])*\\[?(?:(?:§[0-9a-f])?[A-Z](?:§[0-9a-f])?\\+*(?:§[0-9a-f])?)*\\]?(?:§[0-9a-f])*.*?: Minos Inquisitor found at .*,? ?x:(-?\\d+), y:(-?\\d+), z:(-?\\d+) in HUB-(1[0-9]|[1-9])");
-    private final String inquisitorSound = "mob.enderdragon.growl";
-    Instant lastCaptureTime = Instant.now();
-    private final Map<String, int[]> locations = new HashMap<>();
+    private int mobTrackingTickCounter;
+    /** Client-thread location snapshot consumed by Netty packet callbacks. */
+    private volatile boolean inHubCached;
+    private boolean wasInHub;
+    private boolean wasBurrowDetectionEnabled;
 
-    private final ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(1);
+    public Diana(DianaRuntimeContext runtimeContext) {
+        if (runtimeContext == null) throw new IllegalArgumentException("Diana runtime context cannot be null");
+        this.runtimeContext = runtimeContext;
+        this.inquisitorAlertController = new MinosInquisitorAlertController(
+                inquisitorLocations, runtimeContext.getScheduler(), inquisitorOutlineTracker);
+        this.inquisitorOutlineRenderer = new InquisitorOutlineRenderer(inquisitorOutlineTracker);
+    }
 
     @SubscribeEvent
     public void onParticlePacketReceive(PacketReadEvent event) {
-        if (!SkyblockData.isMayor(Mayor.DIANA)) return;
-        if (!Config.feature.diana.burrowSettings.dianaShowWaypointsBurrows) return; // Check if the feature is enabled
-        if (!SkyblockData.getCurrentLocation().isHub()) return; // Check if the player is in a hub
-        //if (InventoryUtils.getSlot("Ancestral Spade") == -1) return;
+        if (event == null || event.packet == null) return;
+        // PacketReadEvent is invoked on Netty. Do not read the mutable SkyblockData state here.
+        if (!inHubCached) return;
+        if (!(event.packet instanceof S2APacketParticles)) return;
 
-        Packet packet = event.packet;
-        if (packet instanceof S2APacketParticles) {
-            S2APacketParticles particles = (S2APacketParticles) packet;
-            // magicCrit enchantmenttable footstep -> empty (blue)
-            // crit enchantmenttable -> mob (white)
-            // dripLava enchantmenttable -> treasure (brown)
-            if (particles.getParticleType().getParticleName().equals("crit") ||
-                    particles.getParticleType().getParticleName().equals("magicCrit") ||
-                    particles.getParticleType().getParticleName().equals("dripLava") ||
-                    particles.getParticleType().getParticleName().equals("enchantmenttable") ||
-                    particles.getParticleType().getParticleName().equals("footstep")) {
+        S2APacketParticles particles = (S2APacketParticles) event.packet;
+        if (particles.getParticleType() == null) return;
+        String particleName = particles.getParticleType().getParticleName();
 
-                processor.addParticle(particles);
+        if ("crit".equals(particleName) || "magicCrit".equals(particleName)
+                || "dripLava".equals(particleName) || "enchantmenttable".equals(particleName)) {
+            if (Config.feature.diana.dianaShowWaypointsBurrows) processor.addParticle(particles);
+        } else if ("angryVillager".equals(particleName) && Config.feature.diana.dianaSiamese) {
+            final int[] particleCoords = {
+                    (int) particles.getXCoordinate(),
+                    (int) particles.getYCoordinate(),
+                    (int) particles.getZCoordinate()
+            };
+            runtimeContext.getScheduler().executeOnClientThread(() -> siameseTracker.markClosestHittable(particleCoords));
+        }
+    }
 
-            } else if (particles.getParticleType().getParticleName().equals("angryVillager")) {
-                // Siamese Lynx feature
-                Entity closestSiamese = getClosestSiamese(new int[]{(int) particles.getXCoordinate(), (int) particles.getYCoordinate(), (int) particles.getZCoordinate()});
-                if (closestSiamese != null) {
-                    for (SiameseLynx siamese : listSiameseAlive) {
-                        if (siamese.getEntity1() != null && siamese.getEntity1().getUniqueID() == closestSiamese.getUniqueID()) {
-                            siamese.setHittable(closestSiamese);
-                            //System.out.println("Ocelot 1 hittable");
-                            break;
-                        } else if (siamese.getEntity2() != null && siamese.getEntity2().getUniqueID() == closestSiamese.getUniqueID()) {
-                            siamese.setHittable(closestSiamese);
-                            //System.out.println("Ocelot 2 hittable");
-                            break;
-                        }
-                        siamese.setHittable(closestSiamese);
-                    }
-                }
+    @SubscribeEvent
+    public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+
+        Minecraft mc = Minecraft.getMinecraft();
+        boolean inHub = SkyblockData.getCurrentLocation().isHub();
+        inHubCached = inHub;
+        boolean inquisitorTrackingEnabled = Config.feature.diana.dianaMinosInquisitorAlert
+                || Config.feature.diana.dianaMinosInquisitorOutline;
+        // Discover targets on the client tick, not as a side effect of a mob render callback.
+        inquisitorOutlineTracker.scanIfDue(mc, inHub && inquisitorTrackingEnabled);
+        if (inquisitorOutlineTracker.consumeObservedTrackedDeath()) {
+            inquisitorAlertController.onInquisitorDeath(processor);
+        }
+
+        if (!inHub) {
+            if (wasInHub || wasBurrowDetectionEnabled) {
+                processor.clearParticles();
+                mobTrackingService.clear();
             }
+            wasInHub = false;
+            wasBurrowDetectionEnabled = false;
+            mobTrackingTickCounter = 0;
+            return;
+        }
+        wasInHub = true;
 
+        if (Config.feature.diana.dianaShowWaypointsBurrows) {
+            wasBurrowDetectionEnabled = true;
+            processor.processParticles();
+        } else if (wasBurrowDetectionEnabled) {
+            processor.clearParticles();
+            wasBurrowDetectionEnabled = false;
+        }
+
+        // Mob discovery only needs a periodic scan. Rendering is handled separately from cached targets.
+        if (++mobTrackingTickCounter >= 4) {
+            mobTrackingTickCounter = 0;
+            if (mc != null && mc.theWorld != null && mc.thePlayer != null) {
+                mobTrackingService.update(mc.theWorld, mc.thePlayer, processor,
+                        Config.feature.diana.dianaGaiaConstruct, Config.feature.diana.dianaSiamese);
+            }
         }
     }
 
     @SubscribeEvent
     public void onRenderLast(RenderWorldLastEvent event) {
-        if (!SkyblockData.isMayor(Mayor.DIANA)) return;
         if (!SkyblockData.getCurrentLocation().isHub()) return;
-        if (Config.feature.diana.burrowSettings.dianaShowWaypointsBurrows) drawWaypoints(event.partialTicks);
-        if (Config.feature.diana.burrowSettings.dianaShowTracersWaypoints) drawTracers(event.partialTicks);
-        if (Config.feature.diana.burrowSettings.dianaShowLabelsWaypoints) drawLabels(event.partialTicks);
-        if (Config.feature.diana.mobSettings.dianaGaiaConstruct || Config.feature.diana.mobSettings.dianaSiamese) {
-            dianaMobCheck(); // Check entities on world, add to lists if not tracked
-            dianaMobRemover(); // Remove mobs from lists if out of render distance
-            dianaMobRender(event.partialTicks); // Check for mobs in entities and draw a hitbox
+
+        waypointRenderer.render(event.partialTicks);
+        if (Config.feature.diana.dianaGaiaConstruct || Config.feature.diana.dianaSiamese) {
+            mobTrackingService.render(event.partialTicks,
+                    Config.feature.diana.dianaGaiaConstruct, Config.feature.diana.dianaSiamese);
         }
     }
-
 
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {
-        if (!SkyblockData.isMayor(Mayor.DIANA)) return;
-        if (!SkyblockData.getCurrentLocation().isHub()) return; // Check if the player is in a hub
+        if (!SkyblockData.getCurrentLocation().isHub()) return;
         if (!Config.feature.diana.dianaMinosInquisitorAlert) return;
-        initializeLocations();
+        inquisitorAlertController.initializeLocations();
     }
-
-    private final Set<EntityLivingBase> isInq = new HashSet<>();
-    private volatile long lastOutlineScanNs = 0L;
 
     @SubscribeEvent
     public void onRenderLiving(RenderLivingEvent.Pre<EntityLivingBase> event) {
-        if (!SkyblockData.isMayor(Mayor.DIANA)) return;
-        final Minecraft mc = Minecraft.getMinecraft();
+        Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.theWorld == null || mc.thePlayer == null) return;
         if (!SkyblockData.getCurrentLocation().isHub()) return;
-        if (!Config.feature.diana.dianaMinosInquisitorAlert && !Config.feature.diana.dianaMinosInquisitorOutline) return;
+        boolean inquisitorTrackingEnabled = Config.feature.diana.dianaMinosInquisitorAlert
+                || Config.feature.diana.dianaMinosInquisitorOutline;
+        if (!inquisitorTrackingEnabled) return;
 
         try {
-            // === Detección por nombre seguro (sin NBT) ===
-            final String entityName = getSafeEntityName(event.entity);
-            if (Config.feature.diana.dianaMinosInquisitorAlert && containsInquisitor(entityName)) {
-
-                final Instant now = Instant.now();
-                if (lastCaptureTime == null || now.isAfter(lastCaptureTime.plusSeconds(63))) {
-                    // Evita subtítulo nulo
-                    mc.ingameGUI.displayTitle("Inquisitor Detected!", "", 10, 40, 20);
-
-                    final int ex = event.entity.getPosition().getX();
-                    final int ey = event.entity.getPosition().getY() - 2; // tu ajuste
-                    final int ez = event.entity.getPosition().getZ();
-
-                    final String loc = findNearestLocation(ex, ey, ez);
-                    final String hub = String.valueOf(ScoreboardUtils.getHubNumber());
-
-                    final String msgBase = "Minos Inquisitor found";
-                    final String where = (loc != null && !loc.isEmpty())
-                            ? (" at " + loc + ", x:" + ex + ", y:" + ey + ", z:" + ez)
-                            : (" at x:" + ex + ", y:" + ey + ", z:" + ez);
-
-                    mc.thePlayer.sendChatMessage("/pc " + msgBase + where + " in HUB-" + hub);
-                    lastCaptureTime = now;
-                }
+            // Keep the Beta 42 render-driven discovery path as a fallback to the client-tick scan.
+            // scanIfDue is throttled, so this does not rescan the world for every rendered entity.
+            inquisitorOutlineTracker.scanIfDue(mc, true);
+            if (Config.feature.diana.dianaMinosInquisitorAlert) {
+                inquisitorAlertController.onEntityRendered(event.entity, processor);
             }
-
-            // === Outline (optimización mínima si no puedes mover a tick) ===
-            if (Config.feature.diana.dianaMinosInquisitorOutline) {
-                if (Configuration.isPojav()) return;
-                // Limita frecuencia: solo cada 5 renders (~cada 0.25s a 20 tps)
-                if ((System.nanoTime() - lastOutlineScanNs) < 250_000_000L) return;
-                lastOutlineScanNs = System.nanoTime();
-
-                // No limpies caché completo en cada frame; solo descarta referencias muertas
-                pruneInqCache();
-
-                final WorldClient world = mc.theWorld;
-                if (world == null) return;
-
-                for (Entity e : world.loadedEntityList) {
-                    if (e instanceof EntityArmorStand) {
-                        final EntityArmorStand as = (EntityArmorStand) e;
-                        final String asName = getSafeEntityName(as);
-                        if (containsInquisitor(asName)) {
-                            final EntityLivingBase inq = findAssociatedMob(as);
-                            if (inq != null) isInq.add(inq);
-                        }
-                    }
-                }
-            }
-        } catch (Throwable t) {
-            t.printStackTrace();
+        } catch (Throwable error) {
+            error.printStackTrace();
         }
     }
 
-    private boolean containsInquisitor(String s) {
-        if (s == null) return false;
-        final String x = s.toLowerCase(java.util.Locale.ROOT);
-        return x.contains("minos inquisitor");
-    }
+    @SubscribeEvent
+    public void onInquisitorLivingDeath(LivingDeathEvent event) {
+        if (event == null || event.entity == null) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.theWorld == null || event.entity.worldObj != mc.theWorld) return;
+        if (!SkyblockData.getCurrentLocation().isHub()) return;
+        if (!(event.entity instanceof EntityLivingBase)) return;
 
-    private String getSafeEntityName(Entity entity) {
-        try {
-            if (entity == null) return "";
-            if (entity.hasCustomName()) {
-                final String cn = entity.getCustomNameTag();
-                if (cn != null && !cn.isEmpty()) {
-                    return net.minecraft.util.EnumChatFormatting.getTextWithoutFormattingCodes(cn);
-                }
-            }
-            final String n = entity.getName();
-            return n == null ? "" : net.minecraft.util.EnumChatFormatting.getTextWithoutFormattingCodes(n);
-        } catch (Throwable ignored) {
-            return "";
-        }
-    }
+        EntityLivingBase dyingEntity = (EntityLivingBase) event.entity;
+        if (!inquisitorOutlineTracker.isInquisitorEntity(dyingEntity)) return;
 
-    private void pruneInqCache() {
-        if (isInq == null) return;
-        isInq.removeIf(e -> e == null || e.isDead || e.worldObj == null);
-    }
-
-    public void clearCache() {
-        isInq.clear();
-    }
-
-    private EntityLivingBase findAssociatedMob(EntityArmorStand armorStand) {
-        return armorStand.worldObj.getEntitiesWithinAABB(EntityLivingBase.class,
-                        armorStand.getEntityBoundingBox().expand(1.5, 3.0, 1.5),
-                        e -> e != null &&
-                                !(e instanceof EntityArmorStand) &&
-                                e != Minecraft.getMinecraft().thePlayer
-                ).stream()
-                .findFirst()
-                .orElse(null);
+        inquisitorOutlineTracker.forget(dyingEntity);
+        inquisitorAlertController.onInquisitorDeath(processor);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onRenderEntityModel(RenderEntityModelEvent event) {
-        if (!SkyblockData.isMayor(Mayor.DIANA)) return;
-        if (Minecraft.getMinecraft().thePlayer == null) return;
-        if (Minecraft.getMinecraft().theWorld == null) return;
-
-        final EntityLivingBase entity = event.getEntity();
-        if (!isInq.contains(entity)) return;
-        if (entity.isInvisible()) return;
-
-        Color color = new Color(
-                ColorUtils.getColor(Config.feature.dungeons.mobs.dungeonsStarredBoxColor).getRGB()
-        );
-
-        if (Configuration.isPojav()) {
-            EntityHighlightUtils.renderEntityOutline(event, color);
-        } else {
-            OutlineUtils.outlineEntity(event, 5.0f, color, true);
+        inquisitorOutlineRenderer.onRenderEntityModel(event);
+        if (inquisitorOutlineTracker.consumeObservedTrackedDeath()) {
+            inquisitorAlertController.onInquisitorDeath(processor);
         }
     }
 
+    /** Retained public accessor for integrations that inspect current Inquisitor outline targets. */
     public Set<EntityLivingBase> getCurrentEntities() {
-        return isInq;
+        return inquisitorOutlineTracker.getTrackedEntities();
     }
 
-    private String findNearestLocation(int playerX, int playerY, int playerZ) {
-        String nearestLocation = null;
-        double minDistance = Double.MAX_VALUE;
-
-        for (Map.Entry<String, int[]> entry : locations.entrySet()) {
-            int[] coords = entry.getValue();
-            double distance = Math.sqrt(Math.pow(playerX - coords[0], 2) + Math.pow(playerY - coords[1], 2) + Math.pow(playerZ - coords[2], 2));
-
-            if (distance < minDistance) {
-                minDistance = distance;
-                nearestLocation = entry.getKey();
-            }
-        }
-
-        return nearestLocation;
+    /** Clears only the current Inquisitor outline cache. */
+    public void clearCache() {
+        inquisitorOutlineTracker.clear();
     }
 
-    private void initializeLocations() {
-        locations.put("Farm", new int[]{60, 72, -173});
-        locations.put("Above Coal mine", new int[]{-40, 85, -196});
-        locations.put("Farm", new int[]{81, 72, -140});
-        locations.put("2pb NPC", new int[]{83, 72, -102});
-        locations.put("Colosseum left side", new int[]{101, 72, -73});
-        locations.put("Wizard tower", new int[]{53, 72, 66});
-        locations.put("Spider den portal", new int[]{-120, 76, -177});
-        locations.put("Crypt entrance", new int[]{-173, 74, -92});
-        locations.put("Dante statue in the graveyard", new int[]{-98, 72, -135});
-        locations.put("Graveyard entrance", new int[]{-120, 71, -77});
-        locations.put("Lumber jack npc", new int[]{-114, 74, -32});
-        locations.put("Park portal", new int[]{-192, 74, -23});
-        locations.put("Castle / ruins", new int[]{-209, 91, 70});
-        locations.put("Museum", new int[]{-108, 68, 102});
-        locations.put("High level", new int[]{-6, 71, 164});
-        locations.put("Dark auction hut", new int[]{84, 74, 176});
-        locations.put("Fairy lake in wilderness", new int[]{110, 66, 114});
-        locations.put("Colosseum", new int[]{143, 76, -17});
-    }
-
-    private void drawWaypoints(float partialTicks) {
-        List<Waypoint> safeResults = new ArrayList<>(processor.getWaypoints());
-        if (safeResults.isEmpty()) return;
-
-        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-        if (player == null) return;
-
-        int[] playerPos = new int[]{
-                (int) Math.floor(player.posX),
-                (int) Math.floor(player.posY),
-                (int) Math.floor(player.posZ)
-        };
-
-        for (Waypoint result : safeResults) {
-            if (result.isHidden()) continue;
-
-            Color newColor = burrowColor(result.getType());
-
-            BlockPos posAbsolute = new BlockPos(result.getCoordinates()[0], result.getCoordinates()[1] - 1, result.getCoordinates()[2]);
-
-            int[] waypointPos = result.getCoordinates();
-            boolean isClose = Math.abs(playerPos[0] - waypointPos[0]) <= 5 && Math.abs(playerPos[2] - waypointPos[2]) <= 5;
-
-            RenderUtils.highlightBlock(posAbsolute, newColor, true, partialTicks);
-            if (!isClose) {
-                RenderUtils.renderBeaconBeam(posAbsolute, newColor.getRGB(), 1.0f, partialTicks);
-            }
-            GlStateManager.enableTexture2D();
-        }
-    }
-
-    private Color burrowColor(String type) {
-        Color burrowColor = new Color(255, 255, 255, 100); // Default white color with alpha
-        switch (type) {
-            case "EMPTY":
-                burrowColor = ColorUtils.getColor(Config.feature.diana.burrowSettings.dianaEmptyBurrowColor);
-                break;
-            case "MOB":
-                burrowColor = ColorUtils.getColor(Config.feature.diana.burrowSettings.dianaMobBurrowColor);
-                break;
-            case "TREASURE":
-                burrowColor = ColorUtils.getColor(Config.feature.diana.burrowSettings.dianaTreasureBurrowColor);
-                break;
-            case "MINOS":
-                burrowColor = new Color(243, 225, 107);
-                break;
-        }
-        burrowColor = new Color(burrowColor.getRed(), burrowColor.getGreen(), burrowColor.getBlue(), 100);
-        return burrowColor;
-    }
-
-    private void drawTracers(float partialTicks) {
-        List<Waypoint> safeResults = processor.getWaypoints();
-        if (safeResults.isEmpty()) return;
-
-        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-        if (player == null) return;
-
-        for (Waypoint result : safeResults) {
-            if (result.isHidden()) continue;
-
-            Color newColor = burrowColor(result.getType());
-            newColor = new Color(newColor.getRed(), newColor.getGreen(), newColor.getBlue(), 255);
-
-            RenderUtils.draw3DLine(
-                    new Vec3(result.getCoordinates()[0] + 0.5, result.getCoordinates()[1], result.getCoordinates()[2] + 0.5),
-                    player.getPositionEyes(partialTicks),
-                    newColor,
-                    4,
-                    true,
-                    partialTicks
-            );
-        }
-    }
-
-    private void drawLabels(float partialTicks) {
-        List<Waypoint> safeResults = processor.getWaypoints();
-        if (safeResults.isEmpty()) return;
-
-        for (Waypoint result : safeResults) {
-            if (result.isHidden()) continue;
-
-            String displayName;
-            switch (result.getType()) {
-                case "MINOS":
-                    displayName = "Inquisitor";
-                    break;
-                case "EMPTY":
-                    displayName = "EMPTY";
-                    break;
-                case "MOB":
-                    displayName = "MOB";
-                    break;
-                case "TREASURE":
-                    displayName = "TREASURE";
-                    break;
-                default:
-                    displayName = result.getType();
-            }
-            BlockPos pos = new BlockPos(result.getCoordinates()[0], result.getCoordinates()[1] + 1, result.getCoordinates()[2]);
-            RenderUtils.renderWaypointText(displayName, pos, partialTicks);
-        }
-    }
-
-    private void dianaMobRender(float partialTicks) {
-        Minecraft mc = Minecraft.getMinecraft();
-        if (mc == null || mc.theWorld == null || mc.thePlayer == null) return;
-        WorldClient world = mc.theWorld;
-        for (Entity entity : new ArrayList<>(world.loadedEntityList)) {
-            if (entity == null) return;
-            if (entity.getName() == null) return;
-            if (entity instanceof EntityGolem) {
-                GaiaConstruct gaia = gaiaById.get(entity.getUniqueID());
-                if (gaia != null) {
-                    Entity gaiaEntity = gaia.getEntity();
-                    if (gaia.canBeHit()) {
-                        RenderUtils.renderEntityHitbox(gaiaEntity, partialTicks,
-                                new Color(ColorUtils.getColor(Config.feature.diana.mobSettings.dianaGaiaHittableColor).getRed(),
-                                        ColorUtils.getColor(Config.feature.diana.mobSettings.dianaGaiaHittableColor).getGreen(),
-                                        ColorUtils.getColor(Config.feature.diana.mobSettings.dianaGaiaHittableColor).getBlue(), 150),
-                                MobDisplayTypes.GAIA);
-                    } else {
-                        RenderUtils.renderEntityHitbox(gaiaEntity, partialTicks,
-                                new Color(ColorUtils.getColor(Config.feature.diana.mobSettings.dianaGaiaUnhittableColor).getRed(),
-                                        ColorUtils.getColor(Config.feature.diana.mobSettings.dianaGaiaUnhittableColor).getGreen(),
-                                        ColorUtils.getColor(Config.feature.diana.mobSettings.dianaGaiaUnhittableColor).getBlue(), 150),
-                                MobDisplayTypes.GAIA);
-                    }
-                }
-            } else if (entity instanceof EntityOcelot) {
-                for (SiameseLynx siamese : listSiameseAlive) {
-                    if (siamese.getHittable() == null) continue;
-                    RenderUtils.renderEntityHitbox(
-                            siamese.getHittable(),
-                            partialTicks,
-                            new Color(ColorUtils.getColor(Config.feature.diana.mobSettings.dianaSiameseHittableColor).getRed(), ColorUtils.getColor(Config.feature.diana.mobSettings.dianaSiameseHittableColor).getGreen(), ColorUtils.getColor(Config.feature.diana.mobSettings.dianaSiameseHittableColor).getBlue(), 150),
-                            MobDisplayTypes.SIAMESE
-                    );
-                }
-
-            }
-        }
-    }
-
-    private void dianaMobCheck() {
-        // Iterate world entities
-        WorldClient world = Minecraft.getMinecraft().theWorld;
-
-        new ArrayList<>(world.loadedEntityList).forEach(entity -> {
-            if (entity == null) return;
-            if (entity.getName() == null) return;
-            if (entity instanceof EntityGolem) {
-                // Iterate gaia list
-                java.util.UUID id = entity.getUniqueID();
-                gaiaById.computeIfAbsent(id, k -> new GaiaConstruct(entity));
-                //System.out.println("Gaia added, "+listGaiaAlive.size());
-            } else if (entity instanceof EntityArmorStand) {
-                if (!(entity.getDisplayName().getUnformattedText().contains("Bagheera") || entity.getDisplayName().getUnformattedText().contains("Azrael")))
-                    return;
-                for (SiameseLynx siamese : listSiameseAlive) {
-                    if (siamese.getEntity1() == null) return;
-                    // If already added, don't add again
-                    if (siamese.getEntity1().getUniqueID() == entity.getUniqueID()) return;
-                    if (siamese.getEntity2() == null) {
-                        siamese.setEntity2(entity);
-                        //System.out.println("Ocelot2 added, "+listSiameseAlive.size());
-                    }
-                    if (siamese.getEntity2().getUniqueID() == entity.getUniqueID()) return;
-                }
-                // If this point reached, no occurrences, so new siamese added
-                listSiameseAlive.add(new SiameseLynx(entity));
-                //System.out.println("Siamese added, "+listSiameseAlive.size());
-            }
-        });
-    }
-
-    private void dianaMobRemover() {
-        Minecraft mc = Minecraft.getMinecraft();
-        if (mc.thePlayer == null) return;
-
-        final int[] playerCoords = {
-                (int) mc.thePlayer.posX,
-                (int) mc.thePlayer.posY,
-                (int) mc.thePlayer.posZ
-        };
-        final int distanceRenderHitbox = 64;
-
-        // Remove far Gaias in one atomic pass
-        listGaiaAlive.removeIf(gaia -> {
-            Entity e = gaia.getEntity();
-            if (e == null) return true;
-            int[] c = { e.getPosition().getX(), e.getPosition().getY(), e.getPosition().getZ() };
-            return !processor.areCoordinatesClose(playerCoords, c, distanceRenderHitbox);
-        });
-
-        // Tidy Siamese in one pass, no mid-iteration list removals
-        listSiameseAlive.removeIf(s -> {
-            boolean allGone = true;
-            if (s.getEntity1() != null) {
-                int[] c1 = { s.getEntity1().getPosition().getX(), s.getEntity1().getPosition().getY(), s.getEntity1().getPosition().getZ() };
-                if (!processor.areCoordinatesClose(playerCoords, c1, distanceRenderHitbox)) s.setEntity1(null);
-                allGone &= (s.getEntity1() == null);
-            }
-            if (s.getEntity2() != null) {
-                int[] c2 = { s.getEntity2().getPosition().getX(), s.getEntity2().getPosition().getY(), s.getEntity2().getPosition().getZ() };
-                if (!processor.areCoordinatesClose(playerCoords, c2, distanceRenderHitbox)) s.setEntity2(null);
-                allGone &= (s.getEntity2() == null);
-            }
-            return allGone;
-        });
-    }
-
-    /*@SubscribeEvent
-    public void onLivingHurt(LivingHurtEvent event) {
-        System.out.println("\n\n"+event.entity.getName()+ " hurt");
-        if (event.entity instanceof EntityGolem) { // check if golem has been hurt
-            System.out.println("Golem hurt");
-            for (GaiaConstruct gaia : listGaiaAlive) {
-                if (gaia.getEntity() == event.entity) gaia.addHit();
-            }
-        }
-    }*/
     @SubscribeEvent
     public void onSoundPacketReceive(PacketReadEvent event) {
-        if (!SkyblockData.isMayor(Mayor.DIANA)) return;
-        if (!SkyblockData.getCurrentLocation().isHub()) return; // Check if the player is in a hub
+        // This callback is on Netty; use the location snapshot published by onClientTick.
+        if (event == null || event.packet == null || !inHubCached) return;
         Packet packet = event.packet;
-        if (packet instanceof S29PacketSoundEffect) {
-            S29PacketSoundEffect soundEffect = (S29PacketSoundEffect) packet;
-            int[] coordsSound = new int[]{(int) Math.floor(soundEffect.getX()), (int) Math.floor(soundEffect.getY()), (int) Math.floor(soundEffect.getZ())};
-            String soundName = soundEffect.getSoundName();
-            //System.out.println(soundName);
-            switch (soundName) {
-                // Remove explosion sound feature
-                case "random.explode":
-                    if (!Config.feature.diana.dianaDisableDianaExplosionSounds) return;
-                    if (Math.floor(soundEffect.getPitch() * 1000) / 1000 == 1.190) {
-                        if (event.isCancelable()) event.setCanceled(true);
-                    }
-                    break;
-                // Remove waypoint at pling sound
-                case "note.pling":
-                    //System.out.println(soundName + ", " + soundEffect.getVolume() + ", " + soundEffect.getPitch());
-                    if (Config.feature.diana.burrowSettings.dianaShowWaypointsBurrows) {
-                        deleteClosestWaypoint(coordsSound[0], coordsSound[1], coordsSound[2]);
-                    }
+        if (!(packet instanceof S29PacketSoundEffect)) return;
 
-                    break;
-                // Gaia track hits feature
-                case "mob.zombie.metal":
-                case "mob.irongolem.death":
-                case "mob.irongolem.hit":
-                    if (!Config.feature.diana.mobSettings.dianaGaiaConstruct) return; // Check if the feature is enabled
-                    // Gaia track hits feature
-                    GaiaConstruct closestGaia = getClosestGaia(coordsSound);
+        S29PacketSoundEffect soundEffect = (S29PacketSoundEffect) packet;
+        final int[] coordsSound = {
+                (int) Math.floor(soundEffect.getX()),
+                (int) Math.floor(soundEffect.getY()),
+                (int) Math.floor(soundEffect.getZ())
+        };
+        final String soundName = soundEffect.getSoundName();
+
+        switch (soundName) {
+            case "random.explode":
+                if (!Config.feature.diana.dianaDisableDianaExplosionSounds) return;
+                if (Math.floor(soundEffect.getPitch() * 1000) / 1000 == 1.190) {
+                    if (event.isCancelable()) event.setCanceled(true);
+                }
+                break;
+            case "note.pling":
+                if (Config.feature.diana.dianaShowWaypointsBurrows) {
+                    runtimeContext.getScheduler().executeOnClientThread(() ->
+                            deleteClosestWaypoint(coordsSound[0], coordsSound[1], coordsSound[2]));
+                }
+                break;
+            case "mob.zombie.metal":
+            case "mob.irongolem.death":
+            case "mob.irongolem.hit":
+                if (!Config.feature.diana.dianaGaiaConstruct) return;
+                runtimeContext.getScheduler().executeOnClientThread(() -> {
+                    GaiaConstruct closestGaia = gaiaTracker.getClosest(coordsSound);
                     if (closestGaia == null) return;
-                    if (soundName.equals("mob.zombie.metal")) {
-                        //System.out.println("GAIA HIT " + closestGaia.getHits() + "/" + closestGaia.getHitsNeeded()[closestGaia.getState()]);
+                    if ("mob.zombie.metal".equals(soundName)) {
                         closestGaia.addHit();
-                    } else if (soundName.equals("mob.irongolem.hit")) {
-                        //System.out.println("GAIA HURT"+closestGaia.getHits()+"/"+closestGaia.getHitsNeeded()[closestGaia.getState()]);
-                        //System.out.println("Hit tooks: "+closestGaia.getHits());
+                    } else if ("mob.irongolem.hit".equals(soundName)) {
                         closestGaia.hurtAction();
                     } else {
-                        scheduler.schedule(new Runnable() {
-                            public void run() {
-                                listGaiaAlive.remove(closestGaia);
-                                //System.out.println("Gaia removed, " + listGaiaAlive.size());
-                            }
-                        }, 1, TimeUnit.SECONDS);
+                        runtimeContext.getScheduler().scheduleOnClientThread(
+                                () -> gaiaTracker.remove(closestGaia), 1, TimeUnit.SECONDS);
                     }
-                    break;
-                case "note.harp":
-                    /*if (Configuration.disableDianaHarpSounds) {
-                        if (event.isCancelable()) event.setCanceled(true);
-                    }*/
-                    break;
-            }
+                });
+                break;
+            default:
+                break;
         }
     }
-
-    private GaiaConstruct getClosestGaia(int[] coords) {
-        GaiaConstruct returnedGaia = null;
-        float distance = Float.MAX_VALUE;
-        for (GaiaConstruct gaia : listGaiaAlive) {
-            int[] coordsGaia = new int[]{gaia.getEntity().getPosition().getX(), gaia.getEntity().getPosition().getY(), gaia.getEntity().getPosition().getZ()};
-            if (ParticleProcessor.getDistance(coords, coordsGaia) < distance) {
-                distance = ParticleProcessor.getDistance(coords, coordsGaia);
-                returnedGaia = gaia;
-            }
-        }
-        return returnedGaia;
-    }
-
-    private Entity getClosestSiamese(int[] coords) {
-        Entity returnedSiamese = null;
-        float distance = Float.MAX_VALUE;
-        for (SiameseLynx siamese : listSiameseAlive) {
-            if (siamese.getEntity1() != null) {
-                int[] coordsSiamese1 = new int[]{siamese.getEntity1().getPosition().getX(), siamese.getEntity1().getPosition().getY(), siamese.getEntity1().getPosition().getZ()};
-                if (ParticleProcessor.getDistance(coords, coordsSiamese1) < distance) {
-                    distance = ParticleProcessor.getDistance(coords, coordsSiamese1);
-                    returnedSiamese = siamese.getEntity1();
-                }
-            }
-            if (siamese.getEntity2() != null) {
-                int[] coordsSiamese2 = new int[]{siamese.getEntity2().getPosition().getX(), siamese.getEntity2().getPosition().getY(), siamese.getEntity2().getPosition().getZ()};
-                if (ParticleProcessor.getDistance(coords, coordsSiamese2) < distance) {
-                    distance = ParticleProcessor.getDistance(coords, coordsSiamese2);
-                    returnedSiamese = siamese.getEntity2();
-                }
-            }
-
-        }
-        return returnedSiamese;
-    }
-
 
     private void deleteClosestWaypoint(int x, int y, int z) {
         int[] coords = {x, y, z};
-        Waypoint res = processor.getClosestWaypoint(coords);
-
-        if (res != null && processor.areCoordinatesClose(res.getCoordinates(), coords, 3)) {
-            res.setHidden(true);
-            scheduler.schedule(() -> processor.deleteWaypoint(res), 30, TimeUnit.SECONDS);
+        Waypoint result = processor.getClosestWaypointExcludingType(coords, "MINOS");
+        if (result != null && processor.areCoordinatesClose(result.getCoordinates(), coords, 3)) {
+            result.setHidden(true);
+            runtimeContext.getScheduler().scheduleOnClientThread(() -> processor.deleteWaypoint(result), 30, TimeUnit.SECONDS);
         }
     }
 
     @SubscribeEvent
     public void onChatRecieve(ClientChatReceivedEvent event) {
-        if (!SkyblockData.isMayor(Mayor.DIANA)) return;
-        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-        if (player == null) return;
+        if (Minecraft.getMinecraft().thePlayer == null) return;
         if (!SkyblockData.getCurrentLocation().isHub()) return;
-        if (ChatUtils.middleBar.matcher(event.message.getFormattedText()).matches()) return;
-        //System.out.println(event.message.getFormattedText());
-        if (Config.feature.diana.dianaCancelCooldownSpadeMessage && InventoryUtils.getSlot("Ancestral Spade") == InventoryUtils.getCurrentSlot()) {
+        if (com.nef.notenoughfakepixel.utils.ChatUtils.middleBar.matcher(event.message.getFormattedText()).matches()) return;
+
+        if (Config.feature.diana.dianaCancelCooldownSpadeMessage
+                && InventoryUtils.getSlot("Ancestral Spade") == InventoryUtils.getCurrentSlot()) {
             cancelMessage(true, event, cooldownPattern, true);
         }
         if (Config.feature.diana.dianaMinosInquisitorAlert) {
-            Matcher matcher = minosInquisitorPartyChat.matcher(event.message.getFormattedText());
-            if (matcher.find()) {
-                // extract from message
-                int x = Integer.parseInt(matcher.group(1));
-                int y = Integer.parseInt(matcher.group(2));
-                int z = Integer.parseInt(matcher.group(3));
-                int hubNumber = Integer.parseInt(matcher.group(4)); // hub number
-
-                int[] coords = new int[]{Minecraft.getMinecraft().thePlayer.getPosition().getX(),
-                        Minecraft.getMinecraft().thePlayer.getPosition().getY(),
-                        Minecraft.getMinecraft().thePlayer.getPosition().getZ()};
-                SoundUtils.playSound(coords, inquisitorSound, 3.0f, 0.8f);
-
-                if (ScoreboardUtils.getHubNumber() == hubNumber) {
-                    Waypoint wp = new Waypoint("MINOS", new int[]{x, y, z});
-                    processor.deleteWaypoint(processor.getClosestWaypoint(new int[]{x, y, z}));
-                    processor.addWaypoint(wp);
-                    scheduler.schedule(new Runnable() {
-                        public void run() {
-                            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "30 seconds for despawn!"));
-                        }
-                    }, 30, TimeUnit.SECONDS);
-                    scheduler.schedule(new Runnable() {
-                        public void run() {
-                            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "10 seconds for despawn!"));
-                        }
-                    }, 50, TimeUnit.SECONDS);
-                    scheduler.schedule(new Runnable() {
-                        public void run() {
-                            processor.deleteWaypoint(wp);
-                        }
-                    }, 60, TimeUnit.SECONDS);
-                }
-
-            } else {
-                //System.out.println("No match found.");
-            }
+            inquisitorAlertController.onPartyChat(event, processor);
         }
-
-
     }
 
-    private void cancelMessage(boolean option, ClientChatReceivedEvent e, Pattern pattern, boolean formatted) {
+    private void cancelMessage(boolean option, ClientChatReceivedEvent event, Pattern pattern, boolean formatted) {
         if (!option) return;
-        String message = e.message.getUnformattedText();
-        if (formatted) message = e.message.getFormattedText();
-        if (pattern.matcher(message).find() || pattern.matcher(message).matches()) {
-            e.setCanceled(true);
-        }
+        String message = event.message.getUnformattedText();
+        if (formatted) message = event.message.getFormattedText();
+        if (pattern.matcher(message).find() || pattern.matcher(message).matches()) event.setCanceled(true);
     }
 
-    @SubscribeEvent()
+    @SubscribeEvent
     public void onWorldUnload(WorldEvent.Unload event) {
-        if (Config.feature.diana.burrowSettings.dianaShowWaypointsBurrows) processor.clearWaypoints();
-        if (Config.feature.diana.mobSettings.dianaGaiaConstruct) listGaiaAlive.clear();
-        if (Config.feature.diana.mobSettings.dianaSiamese) listSiameseAlive.clear();
-        scheduler.getQueue().clear();
+        resetTransientState();
     }
 
+    /** Clears all world-scoped Diana state. Safe to call during module shutdown as well. */
+    public void onModuleShutdown() {
+        resetTransientState();
+    }
+
+    private void resetTransientState() {
+        processor.clearWaypoints();
+        processor.clearParticles();
+        gaiaTracker.clear();
+        siameseTracker.clear();
+        inquisitorOutlineTracker.clear();
+        inquisitorAlertController.reset();
+        runtimeContext.getScheduler().clearPendingTasks();
+        mobTrackingTickCounter = 0;
+        wasInHub = false;
+        inHubCached = false;
+        wasBurrowDetectionEnabled = false;
+    }
 }

@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.dungeons.terminals;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.features.skyblock.dungeons.DungeonManager;
 import com.nef.notenoughfakepixel.utils.ColorUtils;
 import com.nef.notenoughfakepixel.utils.RenderUtils;
@@ -70,7 +73,7 @@ public class MazeSolver {
                 .getUnformattedText()
                 .trim();
 
-        if (Config.feature.dungeons.terminals.dungeonsCustomGuiMaze && displayName.contains("Complete the maze!")) {
+        if (Config.feature.dungeons.dungeonsCustomGuiMaze && displayName.contains("Complete the maze!")) {
             targetSlots.clear();
             alternativeSlots.clear();
             slotPositions.clear();
@@ -94,7 +97,7 @@ public class MazeSolver {
                 .getUnformattedText()
                 .trim();
 
-        if (Config.feature.dungeons.terminals.dungeonsCustomGuiMaze && displayName.contains("Complete the maze!")) {
+        if (Config.feature.dungeons.dungeonsCustomGuiMaze && displayName.contains("Complete the maze!")) {
             event.setCanceled(true);
         }
     }
@@ -137,7 +140,7 @@ public class MazeSolver {
 
     @SubscribeEvent(priority = EventPriority.LOW)
     public void onDrawScreenPost(GuiScreenEvent.DrawScreenEvent.Post event) {
-        if (!Config.feature.dungeons.terminals.dungeonsTerminalMazeSolver) return;
+        if (!Config.feature.dungeons.dungeonsTerminalMazeSolver) return;
         if (!DungeonManager.checkEssentialsF7()) return;
         if (!(event.gui instanceof GuiChest)) return;
 
@@ -151,7 +154,7 @@ public class MazeSolver {
 
         updateSlots(containerChest);
 
-        if (Config.feature.dungeons.terminals.dungeonsCustomGuiMaze) {
+        if (Config.feature.dungeons.dungeonsCustomGuiMaze) {
             renderCustomGui(containerChest);
         } else {
             renderVanillaOverlay(containerChest);
@@ -178,7 +181,7 @@ public class MazeSolver {
     private void renderCustomGui(ContainerChest container) {
         ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
         GlStateManager.pushMatrix();
-        float scale = Config.feature.dungeons.terminals.dungeonsTerminalsScale;
+        float scale = Config.feature.dungeons.dungeonsTerminalsScale;
 
         int guiWidth = (int) (COLUMNS * SLOT_SIZE * scale);
         int guiHeight = (int) (ROWS * SLOT_SIZE * scale);
@@ -215,14 +218,14 @@ public class MazeSolver {
             int x = (slot.slotNumber % COLUMNS) * SLOT_SIZE;
             int y = (slot.slotNumber / COLUMNS) * SLOT_SIZE;
             Gui.drawRect(x, y, x + SLOT_SIZE, y + SLOT_SIZE,
-                    ColorUtils.getColor(Config.feature.dungeons.terminals.dungeonsCorrectColor).getRGB());
+                    ColorUtils.getColor(Config.feature.dungeons.dungeonsCorrectColor).getRGB());
         });
 
         alternativeSlots.forEach(slot -> {
             int x = (slot.slotNumber % COLUMNS) * SLOT_SIZE;
             int y = (slot.slotNumber / COLUMNS) * SLOT_SIZE;
             Gui.drawRect(x, y, x + SLOT_SIZE, y + SLOT_SIZE,
-                    ColorUtils.getColor(Config.feature.dungeons.terminals.dungeonsAlternativeColor).getRGB());
+                    ColorUtils.getColor(Config.feature.dungeons.dungeonsAlternativeColor).getRGB());
         });
 
         GlStateManager.popMatrix();
@@ -250,14 +253,14 @@ public class MazeSolver {
                         container.inventorySlots.size(),
                         slot.xDisplayPosition,
                         slot.yDisplayPosition,
-                        ColorUtils.getColor(Config.feature.dungeons.terminals.dungeonsCorrectColor).getRGB()
+                        ColorUtils.getColor(Config.feature.dungeons.dungeonsCorrectColor).getRGB()
                 );
             } else if (alternativeSlots.contains(slot)) {
                 RenderUtils.drawOnSlot(
                         container.inventorySlots.size(),
                         slot.xDisplayPosition,
                         slot.yDisplayPosition,
-                        ColorUtils.getColor(Config.feature.dungeons.terminals.dungeonsAlternativeColor).getRGB()
+                        ColorUtils.getColor(Config.feature.dungeons.dungeonsAlternativeColor).getRGB()
                 );
             }
         }
@@ -265,7 +268,7 @@ public class MazeSolver {
 
     @SubscribeEvent
     public void onMouseClick(GuiScreenEvent.MouseInputEvent.Pre event) {
-        if (!Config.feature.dungeons.terminals.dungeonsTerminalMazeSolver) return;
+        if (!Config.feature.dungeons.dungeonsTerminalMazeSolver) return;
         if (!DungeonManager.checkEssentialsF7()) return;
 
         int button = Mouse.getEventButton();
@@ -279,7 +282,7 @@ public class MazeSolver {
         String title = container.getLowerChestInventory().getDisplayName().getUnformattedText();
         if (!title.contains("Complete the maze!")) return;
 
-        if (Config.feature.dungeons.terminals.dungeonsCustomGuiMaze) {
+        if (Config.feature.dungeons.dungeonsCustomGuiMaze) {
             handleCustomGuiClick(container, event);
         } else {
             handleVanillaGuiClick(container);
@@ -289,7 +292,7 @@ public class MazeSolver {
     private void handleCustomGuiClick(ContainerChest container, GuiScreenEvent.MouseInputEvent.Pre event) {
         Minecraft mc = Minecraft.getMinecraft();
         ScaledResolution sr = new ScaledResolution(mc);
-        float scale = Config.feature.dungeons.terminals.dungeonsTerminalsScale;
+        float scale = Config.feature.dungeons.dungeonsTerminalsScale;
 
         int mouseX = (Mouse.getEventX() * sr.getScaledWidth()) / mc.displayWidth;
         int mouseY = sr.getScaledHeight() - (Mouse.getEventY() * sr.getScaledHeight()) / mc.displayHeight - 1;
@@ -318,7 +321,6 @@ public class MazeSolver {
         }
     }
 
-
     private void handleVanillaGuiClick(ContainerChest container) {
         Minecraft mc = Minecraft.getMinecraft();
         GuiChest guiChest = (GuiChest) mc.currentScreen;
@@ -337,7 +339,6 @@ public class MazeSolver {
             updateSlots(container);
         }
     }
-
 
     private int calculateClickedSlot(int mouseX, int mouseY, int guiLeft, int guiTop, float scale) {
         float relX = (mouseX - guiLeft) / scale;

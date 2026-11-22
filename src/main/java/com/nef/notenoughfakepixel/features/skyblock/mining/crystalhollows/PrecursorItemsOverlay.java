@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.features.skyblock.overlays.Overlay;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.InventoryUtils;
@@ -14,6 +17,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @RegisterEvents
@@ -25,6 +29,7 @@ public class PrecursorItemsOverlay extends Overlay {
     private static boolean hasRobotron = false;
     private static boolean hasElectron = false;
     private static boolean hasFTX = false;
+    private static List<String> cachedLines = buildLines();
 
     @Override
     public boolean shouldShow() {
@@ -33,21 +38,23 @@ public class PrecursorItemsOverlay extends Overlay {
         if (Minecraft.getMinecraft().gameSettings.showDebugInfo) return false;
         if (Minecraft.getMinecraft().gameSettings.keyBindPlayerList.isKeyDown()) return false;
         if (Config.feature.mining.miningOverlayHideOnChat && mc.currentScreen instanceof GuiChat) return false;
-        return Config.feature.mining.crystalHollows.crystalShowAutomaton;
+        return Config.feature.mining.crystalShowAutomaton;
     }
 
     @Override
     public List<String> getLines() {
-        List<String> lines = new ArrayList<>();
+        return cachedLines;
+    }
 
+    private static List<String> buildLines() {
+        List<String> lines = new ArrayList<>(6);
         lines.add("\u00a79Synthetic Heart \u00a77- \u00a7" + (hasSynthetic? "a✔":"c✖"));
         lines.add("\u00a7bSuperlite Motor \u00a77- \u00a7" + (hasSuperlite? "a✔":"c✖"));
         lines.add("\u00a7eRobotron Reflector \u00a77- \u00a7" + (hasRobotron? "a✔":"c✖"));
         lines.add("\u00a7aElectron Transmitter \u00a77- \u00a7" + (hasElectron? "a✔":"c✖"));
         lines.add("\u00a7cFTX 3070 \u00a77- \u00a7" + (hasFTX? "a✔":"c✖"));
         lines.add("\u00a7dControl Switch \u00a77- \u00a7" + (hasSwitch? "a✔":"c✖"));
-
-        return lines;
+        return Collections.unmodifiableList(lines);
     }
 
     @Override
@@ -57,7 +64,7 @@ public class PrecursorItemsOverlay extends Overlay {
 
     @Override
     public float getHeight(float scale, List<String> lines) {
-        return LINE_HEIGHT * getLines().size();
+        return LINE_HEIGHT * lines.size();
     }
 
     @SubscribeEvent
@@ -66,16 +73,18 @@ public class PrecursorItemsOverlay extends Overlay {
         if (!shouldShow()) return;
 
         ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
-        int width = (int) getWidth(Config.feature.mining.automatonOverlaySettings.automatonOverlayScale, getLines());
-        int height = (int) getHeight(Config.feature.mining.automatonOverlaySettings.automatonOverlayScale, getLines());
-        int x = Config.feature.mining.automatonOverlaySettings.automatonOverlayPos.getAbsX(sr, width);
-        int y = Config.feature.mining.automatonOverlaySettings.automatonOverlayPos.getAbsY(sr, height);
+        List<String> lines = getLines();
+        int width = (int) getWidth(Config.feature.mining.automatonOverlayScale, lines);
+        int height = (int) getHeight(Config.feature.mining.automatonOverlayScale, lines);
+        int x = Config.feature.mining.automatonOverlayPos.getAbsX(sr, width);
+        int y = Config.feature.mining.automatonOverlayPos.getAbsY(sr, height);
 
         draw(
                 x - ((float) width /2),
                 y - ((float) height /2),
-                Config.feature.mining.automatonOverlaySettings.automatonOverlayScale,
-                Config.feature.mining.miningOverlaySettings.miningOverlayBackgroundColor
+                Config.feature.mining.automatonOverlayScale,
+                Config.feature.mining.miningOverlayBackgroundColor,
+                lines
         );
     }
 
@@ -91,8 +100,8 @@ public class PrecursorItemsOverlay extends Overlay {
             hasFTX = InventoryUtils.searchForItemInInventory("FTX_3070");
             hasRobotron = InventoryUtils.searchForItemInInventory("ROBOTRON_REFLECTOR");
             hasSuperlite = InventoryUtils.searchForItemInInventory("SUPERLITE_MOTOR");
+            cachedLines = buildLines();
             tickCounter = 0;
         }
     }
 }
-

@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.accessories;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.AccessoriesData;
 import com.nef.notenoughfakepixel.utils.ItemUtils;
 import com.nef.notenoughfakepixel.utils.Logger;
@@ -35,11 +38,9 @@ public class MissingAccessories {
 
     private static int ticks = 0;
 
-    // Panel scrolling
     private int accScroll = 0, accMaxScroll = 0;
     private int accPanelX, accPanelY, accPanelW, accPanelH;
 
-    // Field cache, reflections
     private static final Field F_GUI_LEFT = ReflectionHelper.findField(GuiContainer.class,
             "field_147003_i", "guiLeft");
     private static final Field F_GUI_TOP  = ReflectionHelper.findField(GuiContainer.class,
@@ -139,7 +140,6 @@ public class MissingAccessories {
         return v < lo ? lo : (v > hi ? hi : v);
     }
 
-    // Also scroll with arrow keys
     @SubscribeEvent
     public void onKeyDown(GuiScreenEvent.KeyboardInputEvent.Pre e) {
         if (!(e.gui instanceof GuiChest)) return;
@@ -186,25 +186,21 @@ public class MissingAccessories {
             int headerH = fr.FONT_HEIGHT + 6;
             int lineH   = fr.FONT_HEIGHT + 2;
 
-            // --- Decide a fixed visible height so scrolling is useful
             int visibleListH = Math.min(180, ySize - headerH - 6);
             int panelH = headerH + Math.max(0, visibleListH) + 6;
 
-            // Save panel rect for scissor & scrollbar
             accPanelX = panelX; accPanelY = panelY; accPanelW = panelW; accPanelH = panelH;
 
             GlStateManager.disableLighting();
             GlStateManager.disableDepth();
             GlStateManager.translate(0, 0, -200);
 
-            // Background + border
             Gui.drawRect(panelX, panelY, panelX + panelW, panelY + panelH, 0xB0000000);
             Gui.drawRect(panelX, panelY, panelX + panelW, panelY + 1, 0x40FFFFFF);
             Gui.drawRect(panelX, panelY + panelH - 1, panelX + panelW, panelY + panelH, 0x40000000);
             Gui.drawRect(panelX, panelY, panelX + 1, panelY + panelH, 0x40000000);
             Gui.drawRect(panelX + panelW - 1, panelY, panelX + panelW, panelY + panelH, 0x40000000);
 
-            // Title + underline
             fr.drawStringWithShadow("§7Missing Accessories", panelX + 6, panelY + 4, 0xFFFFFF);
             Gui.drawRect(panelX + 6, panelY + headerH - 2, panelX + panelW - 6, panelY + headerH - 1, 0x40FFFFFF);
 
@@ -222,7 +218,6 @@ public class MissingAccessories {
                 return;
             }
 
-            // ---- SCROLLABLE LIST ----
             java.util.List<java.util.Map.Entry<String, Rarity>> entries =
                     new java.util.ArrayList<>(accessories.entrySet());
             entries.sort((a, b) -> {

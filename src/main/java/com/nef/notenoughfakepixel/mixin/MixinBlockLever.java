@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.mixin;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
@@ -22,17 +25,17 @@ public abstract class MixinBlockLever {
             EnumFacing facing = state.getValue(BlockLever.FACING).getFacing();
 
             if (facing == EnumFacing.DOWN) {
-                lever.setBlockBounds(0.0F, 0.5F, 0.0F, 1.0F, 1.0F, 1.0F); // Lever on bottom face
+                lever.setBlockBounds(0.0F, 0.5F, 0.0F, 1.0F, 1.0F, 1.0F); 
             } else if (facing == EnumFacing.UP) {
-                lever.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 0.5F, 1.0F); // Lever on top face
+                lever.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 0.5F, 1.0F); 
             } else if (facing == EnumFacing.NORTH) {
-                lever.setBlockBounds(0.0F, 0.0F, 0.5F, 1.0F, 1.0F, 1.0F); // Lever on north face
+                lever.setBlockBounds(0.0F, 0.0F, 0.5F, 1.0F, 1.0F, 1.0F); 
             } else if (facing == EnumFacing.SOUTH) {
-                lever.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 0.5F); // Lever on south face
+                lever.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 0.5F); 
             } else if (facing == EnumFacing.WEST) {
-                lever.setBlockBounds(0.5F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F); // Lever on west face
+                lever.setBlockBounds(0.5F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F); 
             } else if (facing == EnumFacing.EAST) {
-                lever.setBlockBounds(0.0F, 0.0F, 0.0F, 0.5F, 1.0F, 1.0F); // Lever on east face
+                lever.setBlockBounds(0.0F, 0.0F, 0.0F, 0.5F, 1.0F, 1.0F); 
             }
             ci.cancel();
         }

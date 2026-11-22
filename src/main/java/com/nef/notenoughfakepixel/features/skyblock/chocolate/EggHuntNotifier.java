@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.chocolate;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.events.ChatNotifier;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.ListUtils;
@@ -10,6 +13,11 @@ import java.util.List;
 
 @RegisterEvents
 public class EggHuntNotifier extends ChatNotifier {
+
+    @Override
+    public boolean isListenerActive() {
+        return SkyblockData.getSeason() == SkyblockData.Season.SPRING;
+    }
 
     @Override
     public boolean shouldNotify() {

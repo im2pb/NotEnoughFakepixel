@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.slayers;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.events.NefPacketBlockChange;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.*;
@@ -31,7 +34,10 @@ public class VoidgloomSeraph {
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.side == net.minecraftforge.fml.relauncher.Side.CLIENT && !SkyblockData.isSlayerActive()){
+        if (event.phase != TickEvent.Phase.END) return;
+        
+        if (event.side == net.minecraftforge.fml.relauncher.Side.CLIENT && !SkyblockData.isSlayerActive()
+                && !waypoints.isEmpty()) {
             clearWaypointsSafe();
         }
     }
@@ -39,7 +45,7 @@ public class VoidgloomSeraph {
     @SubscribeEvent
     public void onRenderLast(RenderWorldLastEvent event) {
         if (checkEssentials()
-                || !Config.feature.slayer.beaconSettings.slayerShowBeaconPath
+                || !Config.feature.slayer.slayerShowBeaconPath
                 || !SkyblockData.getCurrentSlayer().equals(Slayer.VOIDGLOOM)) {
             return;
         }
@@ -52,11 +58,11 @@ public class VoidgloomSeraph {
         for (Map.Entry<Waypoint, Long> entry : waypoints.entrySet()) {
             BlockPos waypoint = entry.getKey().getBlockPos();
 
-            if (Config.feature.slayer.beaconSettings.showTracerToBeacon) {
+            if (Config.feature.slayer.showTracerToBeacon) {
                 RenderUtils.draw3DLine(
                         new Vec3(waypoint.getX() + .5, waypoint.getY() + .5, waypoint.getZ() + .5),
                         mc.thePlayer.getPositionEyes(event.partialTicks),
-                        ColorUtils.getColor(Config.feature.slayer.beaconSettings.slayerBeaconColor),
+                        ColorUtils.getColor(Config.feature.slayer.slayerBeaconColor),
                         8,
                         true,
                         event.partialTicks
@@ -65,7 +71,7 @@ public class VoidgloomSeraph {
 
             RenderUtils.renderBeaconBeam(
                     waypoint,
-                    ColorUtils.getColor(Config.feature.slayer.beaconSettings.slayerBeaconColor).getRGB(),
+                    ColorUtils.getColor(Config.feature.slayer.slayerBeaconColor).getRGB(),
                     1.0f,
                     event.partialTicks
             );
@@ -74,7 +80,7 @@ public class VoidgloomSeraph {
     }
 
     private static void notifyPlayer() {
-        if (Config.feature.slayer.beaconSettings.notifyBeaconInScreen
+        if (Config.feature.slayer.notifyBeaconInScreen
                 && mc.thePlayer != null
                 && mc.theWorld != null
                 && mc.ingameGUI != null
@@ -121,11 +127,10 @@ public class VoidgloomSeraph {
     }
 
     public static void processBlockChange(NefPacketBlockChange packetIn) {
-        if (!Config.feature.slayer.beaconSettings.slayerShowBeaconPath) return;
+        if (!Config.feature.slayer.slayerShowBeaconPath) return;
         Block block = packetIn.getBlock();
         BlockPos position = packetIn.getPacket().getBlockPosition();
 
-        // Check if the block is a beacon and add a waypoint
         if (block instanceof BlockBeacon && block.getLocalizedName().contains("Beacon") && SkyblockData.isBossActive()) {
             EntityPlayerSP player = mc.thePlayer;
             if (player == null || player.getPosition() == null) return;
@@ -136,7 +141,7 @@ public class VoidgloomSeraph {
             notifyPlayer();
             addWaypointSafe(new Waypoint("BEACON", new int[]{position.getX(), position.getY(), position.getZ()}));
         } else if (block instanceof BlockAir) {
-            // If the block is air, it means the beacon was removed
+            
             removeWaypointSafe(position);
         }
     }
@@ -154,7 +159,7 @@ public class VoidgloomSeraph {
 
     @SubscribeEvent
     public void onChat(ClientChatReceivedEvent event) {
-        if (Config.feature.slayer.beaconSettings.slayerShowBeaconPath && SkyblockData.getCurrentGamemode().isSkyblock() && SkyblockData.getCurrentLocation().isEnd()) {
+        if (Config.feature.slayer.slayerShowBeaconPath && SkyblockData.getCurrentGamemode().isSkyblock() && SkyblockData.getCurrentLocation().isEnd()) {
             String message = StringUtils.stripControlCodes(event.message.getUnformattedText());
             if (message.contains("SLAYER QUEST COMPLETE!") || message.contains("SLAYER QUEST FAILED!")) {
                 SkyblockData.setSlayerActive(false);

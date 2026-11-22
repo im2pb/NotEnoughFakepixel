@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.utils;
 
 import com.nef.notenoughfakepixel.events.RenderEntityModelEvent;
@@ -47,7 +50,6 @@ public final class EntityHighlightUtils {
                 event.getHeadPitch(),
                 event.getScaleFactor());
 
-        // Restore state
         GlStateManager.depthMask(true);
         GlStateManager.enableDepth();
         GlStateManager.enableTexture2D();

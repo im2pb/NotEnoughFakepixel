@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.variables;
 
 public class Constants {
@@ -5,18 +8,6 @@ public class Constants {
     public static final String PREFIX_INFO = "\u00a7f[\u00a79NEF\u00a7f] \u00a7a";
     public static final String PREFIX = "\u00a7f[\u00a79NEF DEBUG\u00a7f] \u00a7a";
     public static final String ERROR_PREFIX = "\u00a7f[\u00a7cNEF\u00a7f] \u00a7c";
-
-    public static final String[] RARITIES = {
-            "COMMON",
-            "UNCOMMON",
-            "RARE",
-            "EPIC",
-            "LEGENDARY",
-            "MYTHIC",
-            "DIVINE",
-            "SPECIAL",
-            "VERY SPECIAL"
-    };
 
     public static final String[] EVENT_PACKAGES = {
             "dungeons",
@@ -67,7 +58,7 @@ public class Constants {
             "Sven Packmaster",
             "Tarantula Broodfather",
             "Voidgloom Seraph",
-            // removed blaze boss from the list since the BlazeAttunements displays an outline depending on the current attunement
+            
     };
 
 }

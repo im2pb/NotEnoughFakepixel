@@ -1,9 +1,11 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.utils;
 
 import com.nef.notenoughfakepixel.variables.Rarity;
 import com.nef.notenoughfakepixel.variables.Skins;
 import com.nef.notenoughfakepixel.variables.StackingEnchant;
-import lombok.Data;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -35,8 +37,8 @@ public class ItemUtils {
         return list;
     }
 
-    public static String getInternalName(ItemStack item) {
-        if (item == null) return "";
+    public static String getInternalName(@Nullable ItemStack item) {
+        if (item == null || item.stackSize <= 0) return "";
         if (!item.hasTagCompound()) return "";
         if (!item.getTagCompound().hasKey("ExtraAttributes")) return "";
 
@@ -44,26 +46,6 @@ public class ItemUtils {
         if (!extraAttributes.hasKey("id")) return "";
 
         return extraAttributes.getString("id");
-    }
-
-    public static String getItemUUID(ItemStack item) {
-        if (item == null) return "";
-        if (!item.hasTagCompound()) return "";
-        if (!item.getTagCompound().hasKey("ExtraAttributes")) return "";
-
-        NBTTagCompound extraAttributes = item.getTagCompound().getCompoundTag("ExtraAttributes");
-        if (!extraAttributes.hasKey("uuid")) return "";
-
-        return extraAttributes.getString("uuid");
-    }
-
-    public static void renameItem(ItemStack item, String newName) {
-        if (item == null) return;
-        NBTTagCompound tag = getOrCreateTag(item);
-        NBTTagCompound displayTag = tag.getCompoundTag("display");
-        displayTag.setString("Name", newName);
-        tag.setTag("display", displayTag);
-        item.setTagCompound(tag);
     }
 
     public static @NotNull NBTTagCompound getExtraAttributes(ItemStack itemStack) {
@@ -77,6 +59,22 @@ public class ItemUtils {
         NBTTagCompound extraAttributes = getExtraAttributes(item);
         if (!extraAttributes.hasKey(tag)) return -1;
         return extraAttributes.getInteger(tag);
+    }
+
+    public static String getExtraAttributesStringTag(ItemStack item, String tag) {
+        NBTTagCompound extraAttributes = getExtraAttributes(item);
+        if (!extraAttributes.hasKey(tag)) return "";
+        return extraAttributes.getString(tag);
+    }
+
+    public static List<ItemStack> getAllCustomSkulls(Map<String, String> skullIcons) {
+        List<ItemStack> skulls = new ArrayList<>();
+        for (Map.Entry<String, String> entry : skullIcons.entrySet()) {
+            String name = entry.getKey();
+            String value = entry.getValue().replace("skull:", "").trim();
+            skulls.add(createSkullWithTexture(name, value));
+        }
+        return skulls;
     }
 
     public static String getSkullTexture(ItemStack itemStack) {
@@ -99,14 +97,13 @@ public class ItemUtils {
     }
 
     public static ItemStack createSkullWithTexture(String name, String textureHash) {
-        ItemStack skull = new ItemStack(Items.skull, 1, 3); // 3 = player head
+        ItemStack skull = new ItemStack(Items.skull, 1, 3); 
 
         NBTTagCompound skullTag = new NBTTagCompound();
         NBTTagCompound skullOwner = new NBTTagCompound();
 
         skullOwner.setString("Id", UUID.randomUUID().toString());
 
-        // Create texture compound
         NBTTagCompound textures = new NBTTagCompound();
         NBTTagList texturesList = new NBTTagList();
         NBTTagCompound valueTag = new NBTTagCompound();
@@ -198,6 +195,22 @@ public class ItemUtils {
                 .orElse(null);
     }
 
+    public static boolean hasSkinValue(String value, ItemStack item) {
+        if (item == null) return false;
+        if (!item.hasTagCompound()) return false;
+        if (!item.getTagCompound().hasKey("SkullOwner")) return false;
+        NBTTagCompound skullOwner = item.getTagCompound().getCompoundTag("SkullOwner");
+        if (!skullOwner.hasKey("Properties")) return false;
+        NBTTagCompound properties = skullOwner.getCompoundTag("Properties");
+        if (!properties.hasKey("textures")) return false;
+        NBTTagList textures = properties.getTagList("textures", 10);
+        for (int i = 0; i < textures.tagCount(); i++) {
+            NBTTagCompound texture = textures.getCompoundTagAt(i);
+            if (texture.hasKey("Value") && texture.getString("Value").equals(value)) return true;
+        }
+        return false;
+    }
+
     public static boolean hasSkinValue(Skins skin, ItemStack item) {
         if (item == null) return false;
         if (!item.hasTagCompound()) return false;
@@ -229,130 +242,93 @@ public class ItemUtils {
     public static boolean isMenuItem(ItemStack item) {
         return item.getDisplayName().trim().isEmpty() && Item.getItemFromBlock(Blocks.stained_glass_pane) == item.getItem() && item.getItemDamage() == 15;
     }
-
-    @Data public static class AdminStatus {
-        boolean isAdmin;
-        String reason;
-        String detail;
-
-        public AdminStatus(String reason, String detail) {
-            this.reason = reason;
-            this.detail = detail;
-            this.isAdmin = true;
-        }
-
-        public AdminStatus() {
-            this.isAdmin = false;
-            this.reason = "";
-            this.detail = "";
-        }
+    public static String getItemUUID(ItemStack item) {
+        if (item == null || !item.hasTagCompound()) return "";
+        NBTTagCompound attributes = item.getTagCompound().getCompoundTag("ExtraAttributes");
+        return attributes.hasKey("uuid") ? attributes.getString("uuid") : "";
     }
 
+    public static final class AdminStatus {
+        private final boolean admin;
+        private final String reason;
+        private final String detail;
+        public AdminStatus() { this(false, "", ""); }
+        public AdminStatus(String reason, String detail) { this(true, reason, detail); }
+        private AdminStatus(boolean admin, String reason, String detail) {
+            this.admin = admin; this.reason = reason == null ? "" : reason; this.detail = detail == null ? "" : detail;
+        }
+        public boolean isAdmin() { return admin; }
+        public String getReason() { return reason; }
+        public String getDetail() { return detail; }
+    }
+
+    /** Conservative client-side heuristic for visibly flagging unusual item metadata. */
     public static AdminStatus isAdminItem(ItemStack item) {
         if (item == null) return new AdminStatus();
-        // Checking if custom item / custom pet
-        if (getInternalName(item).trim().equals("CUSTOM_ITEM")) return new AdminStatus("Custom Item", "");
-        if (getInternalName(item).trim().contains("PET_CUSTOM")) return new AdminStatus("Custom Pet", "");
-
-        if (!item.hasTagCompound()) return new AdminStatus();
-        if (!item.getTagCompound().hasKey("ExtraAttributes")) return new AdminStatus();
-        NBTTagCompound extraAttributes = item.getTagCompound().getCompoundTag("ExtraAttributes");
-
-        // Checking origin
-        if (extraAttributes.hasKey("origin")) {
-            if (extraAttributes.getString("origin").contains("ALL_ITEMS_GUI_ACTOR")) return new AdminStatus("", "");
-            if (extraAttributes.getString("origin").contains("random")) return new AdminStatus("Gambled item", "");
+        String internalName = getInternalName(item);
+        if ("CUSTOM_ITEM".equals(internalName)) return new AdminStatus("Custom Item", "");
+        if (internalName.contains("PET_CUSTOM")) return new AdminStatus("Custom Pet", "");
+        if (!item.hasTagCompound() || !item.getTagCompound().hasKey("ExtraAttributes")) return new AdminStatus();
+        NBTTagCompound attributes = item.getTagCompound().getCompoundTag("ExtraAttributes");
+        if (attributes.hasKey("origin")) {
+            String origin = attributes.getString("origin");
+            if (origin.contains("ALL_ITEMS_GUI_ACTOR")) return new AdminStatus("", "");
+            if (origin.toLowerCase(java.util.Locale.ROOT).contains("random")) return new AdminStatus("Gambled item", "");
         }
-
-        // Checking candy count
-        if (extraAttributes.hasKey("candy")) {
-            if (extraAttributes.getInteger("candy") < 0) return new AdminStatus("Candies", "");
-            if (extraAttributes.getInteger("candy") > 10) return new AdminStatus("Candies", "");
+        if (attributes.hasKey("candy")) {
+            int candy = attributes.getInteger("candy");
+            if (candy < 0 || candy > 10) return new AdminStatus("Candies", "");
         }
-
-        // Checking abnormal stats
-        if (extraAttributes.hasKey("stars")) {
-           if (extraAttributes.getInteger("stars") > 5) return new AdminStatus("Stars", "");
-           if (extraAttributes.getInteger("stars") < 0) return new AdminStatus("Stars", "");
+        if (attributes.hasKey("stars")) {
+            int stars = attributes.getInteger("stars");
+            if (stars < 0 || stars > 5) return new AdminStatus("Stars", "");
         }
-
-        if (extraAttributes.hasKey("master_stars")) {
-            if (extraAttributes.getInteger("master_stars") > 5) return new AdminStatus("Master Stars", "");
-            if (extraAttributes.getInteger("master_stars") < 0) return new AdminStatus("Master Stars", "");;
+        if (attributes.hasKey("master_stars")) {
+            int stars = attributes.getInteger("master_stars");
+            if (stars < 0 || stars > 5) return new AdminStatus("Master Stars", "");
         }
-
-        // Checking abnormal bids
-        if (extraAttributes.hasKey("bid")) {
-            if (extraAttributes.getInteger("bid") > 10) return new AdminStatus("Edited tags", "");
-            if (extraAttributes.getInteger("bid") < 0) return new AdminStatus("Edited tags", "");;
+        if (attributes.hasKey("bid")) {
+            int bid = attributes.getInteger("bid");
+            if (bid < 0 || bid > 10) return new AdminStatus("Edited tags", "");
         }
-
-        // Checking abnormal dates
-        if (extraAttributes.hasKey("timestamp")) {
-            long timestamp = extraAttributes.getLong("timestamp");
-            if (timestamp < 1640995200L) return new AdminStatus("Invalid date", "");;
-        }
-
-        // Checking invalid level enchantments
-        if (extraAttributes.hasKey("enchantments")) {
-            NBTTagCompound enchantments = extraAttributes.getCompoundTag("enchantments");
+        if (attributes.hasKey("timestamp") && attributes.getLong("timestamp") < 1640995200L) return new AdminStatus("Invalid date", "");
+        if (attributes.hasKey("enchantments")) {
+            NBTTagCompound enchantments = attributes.getCompoundTag("enchantments");
             for (String key : enchantments.getKeySet()) {
                 int level = enchantments.getInteger(key);
-                if (level < 0 || level > 10) {
-                    return new AdminStatus(StringUtils.capitalizeName(key), String.format("%d", level));
-                }
+                if (level < 0 || level > 10) return new AdminStatus(StringUtils.capitalizeName(key), String.valueOf(level));
             }
         }
-
-        // Checking abnormal xp amount
-        if (extraAttributes.hasKey("exp")) {
-            double xp = extraAttributes.getDouble("exp");
-            if (xp > 1.5E9) return new AdminStatus("Leveled up", "");;
-        }
-
+        if (attributes.hasKey("exp") && attributes.getDouble("exp") > 1.5E9) return new AdminStatus("Leveled up", "");
         return new AdminStatus();
     }
 
     public static String getAdminName(ItemStack item) {
-        if (!item.hasTagCompound()) return "";
-        if (!item.getTagCompound().hasKey("ExtraAttributes")) return "";
-        NBTTagCompound extraAttributes = item.getTagCompound().getCompoundTag("ExtraAttributes");
-
-        if (extraAttributes.hasKey("origin")) {
-            if (extraAttributes.getString("origin").contains("ALL_ITEMS_GUI_ACTOR")) {
-                return extraAttributes.getString("origin").replace("ALL_ITEMS_GUI_ACTOR_", "");
-            }
+        if (item == null || !item.hasTagCompound() || !item.getTagCompound().hasKey("ExtraAttributes")) return "";
+        NBTTagCompound attributes = item.getTagCompound().getCompoundTag("ExtraAttributes");
+        if (attributes.hasKey("origin")) {
+            String origin = attributes.getString("origin");
+            if (origin.contains("ALL_ITEMS_GUI_ACTOR")) return origin.replace("ALL_ITEMS_GUI_ACTOR_", "");
         }
-
         return "";
     }
 
     public static boolean hasStackingCounter(ItemStack item) {
-        if (item == null) return false;
-        if (!item.hasTagCompound()) return false;
-        if (!item.getTagCompound().hasKey("ExtraAttributes")) return false;
-        NBTTagCompound extraAttributes = item.getTagCompound().getCompoundTag("ExtraAttributes");
-        return extraAttributes.hasKey("stacking_enchant_counter");
+        return item != null && item.hasTagCompound()
+                && item.getTagCompound().hasKey("ExtraAttributes")
+                && item.getTagCompound().getCompoundTag("ExtraAttributes").hasKey("stacking_enchant_counter");
     }
 
     public static int getStackingCounter(ItemStack item) {
-        NBTTagCompound extraAttributes = getExtraAttributes(item);
-        return extraAttributes.getInteger("stacking_enchant_counter");
+        if (!hasStackingCounter(item)) return 0;
+        return item.getTagCompound().getCompoundTag("ExtraAttributes").getInteger("stacking_enchant_counter");
     }
 
     public static StackingEnchant getStackingEnchant(ItemStack item) {
-        List<String> loreLines = getLoreLines(item);
-        for (String line : loreLines) {
-            if (line.trim().contains("Cultivating")) {
-                return StackingEnchant.CULTIVATING;
-            } else if (line.trim().contains("Compact")) {
-                return StackingEnchant.COMPACT;
-            } else if (line.trim().contains("Expertise")) {
-                return StackingEnchant.EXPERTISE;
-            } else if (line.trim().contains("Champion")) {
-                return StackingEnchant.CHAMPION;
-            } else if (line.trim().contains("Toxophilite")) {
-                return StackingEnchant.TOXOPHILITE;
+        for (String line : getLoreLines(item)) {
+            String clean = line == null ? "" : net.minecraft.util.StringUtils.stripControlCodes(line).trim();
+            for (StackingEnchant enchant : StackingEnchant.values()) {
+                if (enchant != StackingEnchant.NONE && clean.toLowerCase(java.util.Locale.ROOT).contains(enchant.getDisplayName().toLowerCase(java.util.Locale.ROOT))) return enchant;
             }
         }
         return StackingEnchant.NONE;

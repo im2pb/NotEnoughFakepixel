@@ -1,7 +1,12 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.config.gui.commands;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterCommand;
+import com.nef.notenoughfakepixel.config.gui.config.ConfigEditor;
+import com.nef.notenoughfakepixel.config.gui.core.GuiScreenElementWrapper;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterCommand;
 import com.nef.notenoughfakepixel.utils.ListUtils;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -30,12 +35,8 @@ public class NefCommand extends SimpleCommand {
     @Override
     public void execute(ICommandSender sender, String[] args) throws CommandException {
         if (args.length == 0) {
-            Config.screenToOpen = Config.createMoulConfigScreen(null);
-            return;
+            Config.screenToOpen = new GuiScreenElementWrapper(new ConfigEditor(Config.feature));
         }
-
-        String category = StringUtils.join(args, " ");
-        Config.screenToOpen = Config.createMoulConfigScreen(category);
+        Config.screenToOpen = new GuiScreenElementWrapper(new ConfigEditor(Config.feature, StringUtils.join(args, " ")));
     }
 }
-

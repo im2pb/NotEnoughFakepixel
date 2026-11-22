@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
@@ -84,7 +87,7 @@ public class ItemBackgroundRarity {
         float r = ((rgb >> 16) & 0xFF) / 255f;
         float g = ((rgb >> 8) & 0xFF) / 255f;
         float b = (rgb & 0xFF) / 255f;
-        float a = Math.max(0f, Math.min(1f, Config.feature.qol.visualTweaks.qolItemRarityOpacity));
+        float a = Math.max(0f, Math.min(1f, Config.feature.qol.qolItemRarityOpacity));
         GlStateManager.color(r, g, b, a);
     }
 
@@ -118,15 +121,13 @@ public class ItemBackgroundRarity {
         if (display == null) return null;
 
         String name = getDisplayName(item);
-        NBTTagList lore = display.getTagList("Lore", 8); // NBT type String
+        NBTTagList lore = display.getTagList("Lore", 8); 
 
-        // Check for pet items
         Matcher petMatcher = PET_PATTERN.matcher(name);
         if (petMatcher.find()) {
             return ItemRarity.byBaseColor(petMatcher.group("color"));
         }
 
-        // Check regular item lore
         for (int i = 0; i < lore.tagCount(); i++) {
             String line = lore.getStringTagAt(i);
             Matcher rarityMatcher = RARITY_PATTERN.matcher(line);

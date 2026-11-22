@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.mixin;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
@@ -16,7 +19,7 @@ public abstract class MixinBlockStainedGlassPane extends BlockPane {
     }
 
     public void setBlockBoundsBasedOnState(IBlockAccess worldIn, BlockPos pos) {
-        if (Config.feature.mining.crystalHollows.crystalFullBlockPane) {
+        if (Config.feature.mining.crystalFullBlockPane) {
             this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
         } else {
             super.setBlockBoundsBasedOnState(worldIn, pos);
@@ -24,4 +27,3 @@ public abstract class MixinBlockStainedGlassPane extends BlockPane {
     }
 
 }
-

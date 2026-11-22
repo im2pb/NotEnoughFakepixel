@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.dungeons.terminals;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
@@ -34,7 +37,7 @@ public class TerminalSimulator extends GuiScreen {
     private static final int BUTTON_SPACING = 10;
     private static final int PADDING = 5;
     private static final int TITLE_HEIGHT = 10;
-    private final float scale = Config.feature.dungeons.terminals.dungeonsTerminalsScale;
+    private final float scale = Config.feature.dungeons.dungeonsTerminalsScale;
     private int guiLeft, guiTop, guiWidth, guiHeight;
     private boolean initialRenderDone = false;
     private int puzzleRows;
@@ -141,7 +144,7 @@ public class TerminalSimulator extends GuiScreen {
             int y = yOffset + row * SLOT_SIZE;
             Gui.drawRect(x, y, x + SLOT_SIZE, y + SLOT_SIZE, 0xFF555555);
             if (highlightSlots.contains(i) && !clickedSlots.contains(i)) {
-                int color = ColorUtils.getColor(Config.feature.dungeons.terminals.dungeonsCorrectColor).getRGB();
+                int color = ColorUtils.getColor(Config.feature.dungeons.dungeonsCorrectColor).getRGB();
                 Gui.drawRect(x + 1, y + 1, x + SLOT_SIZE - 1, y + SLOT_SIZE - 1, color);
             }
         }
@@ -165,11 +168,11 @@ public class TerminalSimulator extends GuiScreen {
                 int y = yOffset + row * SLOT_SIZE;
                 int color;
                 if (i == currentClickIndex) {
-                    color = ColorUtils.getColor(Config.feature.dungeons.terminals.dungeonsCorrectColor).getRGB();
+                    color = ColorUtils.getColor(Config.feature.dungeons.dungeonsCorrectColor).getRGB();
                 } else if (i == currentClickIndex + 1) {
-                    color = ColorUtils.getColor(Config.feature.dungeons.terminals.dungeonsAlternativeColor).getRGB();
+                    color = ColorUtils.getColor(Config.feature.dungeons.dungeonsAlternativeColor).getRGB();
                 } else if (i == currentClickIndex + 2) {
-                    Color baseColor = ColorUtils.getColor(Config.feature.dungeons.terminals.dungeonsAlternativeColor);
+                    Color baseColor = ColorUtils.getColor(Config.feature.dungeons.dungeonsAlternativeColor);
                     color = new Color(baseColor.getRed(), baseColor.getGreen(), baseColor.getBlue(), 150).getRGB();
                 } else {
                     color = 0xFF888888;

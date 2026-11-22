@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.mixin;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
@@ -22,17 +25,17 @@ public abstract class MixinBlockButton {
             EnumFacing facing = state.getValue(BlockButton.FACING);
 
             if (facing == EnumFacing.DOWN) {
-                button.setBlockBounds(0.0F, 0.75F, 0.0F, 1.0F, 1.0F, 1.0F); // Button on bottom face
+                button.setBlockBounds(0.0F, 0.75F, 0.0F, 1.0F, 1.0F, 1.0F); 
             } else if (facing == EnumFacing.UP) {
-                button.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 0.25F, 1.0F); // Button on top face
+                button.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 0.25F, 1.0F); 
             } else if (facing == EnumFacing.NORTH) {
-                button.setBlockBounds(0.0F, 0.0F, 0.75F, 1.0F, 1.0F, 1.0F); // Button on north face
+                button.setBlockBounds(0.0F, 0.0F, 0.75F, 1.0F, 1.0F, 1.0F); 
             } else if (facing == EnumFacing.SOUTH) {
-                button.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 0.25F); // Button on south face
+                button.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 0.25F); 
             } else if (facing == EnumFacing.WEST) {
-                button.setBlockBounds(0.75F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F); // Button on west face
+                button.setBlockBounds(0.75F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F); 
             } else if (facing == EnumFacing.EAST) {
-                button.setBlockBounds(0.0F, 0.0F, 0.0F, 0.25F, 1.0F, 1.0F); // Button on east face
+                button.setBlockBounds(0.0F, 0.0F, 0.0F, 0.25F, 1.0F, 1.0F); 
             }
             ci.cancel();
         }

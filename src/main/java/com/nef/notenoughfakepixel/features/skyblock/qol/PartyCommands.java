@@ -1,6 +1,9 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol;
 
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.events.PacketReadEvent;
 import com.nef.notenoughfakepixel.utils.RandomUtils;
 import net.minecraft.client.Minecraft;
@@ -31,10 +34,14 @@ public class PartyCommands {
 
     private final Minecraft mc = Minecraft.getMinecraft();
     private final Random random = RandomUtils.getInstance();
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread thread = new Thread(r, "NEF-PartyCommands");
+        thread.setDaemon(true);
+        return thread;
+    });
 
     private long prevTime = 0L;
-    public double averageTps = 20.0;
+    public volatile double averageTps = 20.0;
 
     @SubscribeEvent
     public void onPacket(PacketReadEvent event) {
@@ -73,11 +80,11 @@ public class PartyCommands {
 
         if (response != null && mc.thePlayer != null) {
             final String finalResponse = response;
-            scheduler.schedule(() -> {
+            scheduler.schedule(() -> mc.addScheduledTask(() -> {
                 if (mc.thePlayer != null) {
                     mc.thePlayer.sendChatMessage("/pc " + finalResponse);
                 }
-            }, 1500, TimeUnit.MILLISECONDS);
+            }), 1500, TimeUnit.MILLISECONDS);
         }
     }
 }

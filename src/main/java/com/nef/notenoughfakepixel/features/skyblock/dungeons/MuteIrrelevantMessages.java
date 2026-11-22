@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.dungeons;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -11,9 +14,8 @@ public class MuteIrrelevantMessages {
     @SubscribeEvent
     public void onChat(ClientChatReceivedEvent event) {
         if (!SkyblockData.getCurrentLocation().isDungeon()) return;
-        if (!Config.feature.dungeons.general.dungeonsMuteIrrelevantMessages) return;
+        if (!Config.feature.dungeons.dungeonsMuteIrrelevantMessages) return;
         if (event.message.getUnformattedText().contains("[BOSS]") || event.message.getUnformattedText().contains("[CROWD]"))
             event.setCanceled(true);
     }
 }
-

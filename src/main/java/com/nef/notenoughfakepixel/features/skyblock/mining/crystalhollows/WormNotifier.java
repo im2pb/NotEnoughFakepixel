@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.events.ChatNotifier;
 import net.minecraft.util.EnumChatFormatting;
 
@@ -9,8 +12,13 @@ import net.minecraft.util.EnumChatFormatting;
 public class WormNotifier extends ChatNotifier {
 
     @Override
+    public boolean isListenerActive() {
+        return shouldNotify() || Config.feature.mining.wormTimerCooldown;
+    }
+
+    @Override
     public boolean shouldNotify() {
-        return Config.feature.mining.crystalHollows.crystalWormNotifier;
+        return Config.feature.mining.crystalWormNotifier;
     }
 
     @Override
@@ -33,4 +41,3 @@ public class WormNotifier extends ChatNotifier {
         WormSpawnTimer.setGoalEpochMs(System.currentTimeMillis() + 30000);
     }
 }
-

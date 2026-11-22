@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.mining;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.ColorUtils;
 import com.nef.notenoughfakepixel.utils.RenderUtils;
@@ -23,11 +26,9 @@ public class PuzzlerSolver {
 
     private static BlockPos overlayLoc = null;
 
-    // Thanks to @Moulberry for the original code
-
     @SubscribeEvent
     public void onChatReceived(ClientChatReceivedEvent event) {
-        if (!Config.feature.mining.dwarvenMines.miningPuzzlerSolver) {
+        if (!Config.feature.mining.miningPuzzlerSolver) {
             overlayLoc = null;
             return;
         }
@@ -41,13 +42,13 @@ public class PuzzlerSolver {
             for (int i = 0; i < clean.length(); i++) {
                 char c = clean.charAt(i);
 
-                if (c == '\u25C0') { //Left
+                if (c == '\u25C0') { 
                     pos = pos.add(1, 0, 0);
-                } else if (c == '\u25B2') { //Up
+                } else if (c == '\u25B2') { 
                     pos = pos.add(0, 0, 1);
-                } else if (c == '\u25BC') { //Down
+                } else if (c == '\u25BC') { 
                     pos = pos.add(0, 0, -1);
-                } else if (c == '\u25B6') { //Right
+                } else if (c == '\u25B6') { 
                     pos = pos.add(-1, 0, 0);
                 } else {
                     return;
@@ -60,21 +61,27 @@ public class PuzzlerSolver {
 
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {
+        if (event.world == null || !event.world.isRemote) return;
         overlayLoc = null;
     }
 
     @SubscribeEvent()
     public void onWorldUnload(WorldEvent.Unload event) {
+        if (event.world == null || !event.world.isRemote) return;
         overlayLoc = null;
     }
 
-
     @SubscribeEvent
     public void renderWorldLast(RenderWorldLastEvent event) {
+        if (!Config.feature.mining.miningPuzzlerSolver) {
+            overlayLoc = null;
+            return;
+        }
         if (SkyblockData.getCurrentLocation() != Location.DWARVEN) return;
         if (overlayLoc == null) return;
 
         Entity viewer = Minecraft.getMinecraft().getRenderViewEntity();
+        if (viewer == null) return;
         double viewerX = viewer.lastTickPosX + (viewer.posX - viewer.lastTickPosX) * event.partialTicks;
         double viewerY = viewer.lastTickPosY + (viewer.posY - viewer.lastTickPosY) * event.partialTicks;
         double viewerZ = viewer.lastTickPosZ + (viewer.posZ - viewer.lastTickPosZ) * event.partialTicks;
@@ -95,4 +102,3 @@ public class PuzzlerSolver {
     }
 
 }
-

@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.utils;
 
 import lombok.Data;
@@ -7,9 +10,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * This class is made because of Java 8 compatibility issues with the Map.of() method.
- */
 public class MapUtils {
 
     @SafeVarargs
@@ -29,7 +29,6 @@ public class MapUtils {
                 .orElse(null);
     }
 
-    // Helper class to store key-value pairs
     @Data
     public static class Pair<K, V> {
         final K key;

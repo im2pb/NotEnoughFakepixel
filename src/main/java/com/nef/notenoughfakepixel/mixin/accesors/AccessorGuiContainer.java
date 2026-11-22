@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.mixin.accesors;
 
 import net.minecraft.client.gui.inventory.GuiContainer;

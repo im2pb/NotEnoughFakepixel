@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.config.features;
 
 import com.google.gson.annotations.Expose;
-import io.github.notenoughupdates.moulconfig.annotations.*;
+import com.nef.notenoughfakepixel.config.gui.core.config.annotations.*;
 import org.lwjgl.input.Keyboard;
 
 public class SlotLocking {
@@ -11,7 +14,7 @@ public class SlotLocking {
             name = "\u00A7cWarning",
             desc = "Make sure you have SBA's and NEU's locked slots off before you turn NEF's on"
     )
-    @ConfigEditorBoolean
+    @ConfigEditorText()
     public boolean slotLockWarning = false;
 
     @Expose
@@ -46,14 +49,6 @@ public class SlotLocking {
     )
     @ConfigEditorKeybind(defaultKey = Keyboard.KEY_L)
     public int slotLockKey = Keyboard.KEY_L;
-
-    @Expose
-    @ConfigOption(
-            name = "Lock Slots in Trade",
-            desc = "Prevents trading locked items in the custom trade windows"
-    )
-    @ConfigEditorBoolean
-    public boolean lockSlotsInTrade = true;
 
     @Expose
     @ConfigOption(
@@ -102,9 +97,8 @@ public class SlotLocking {
             desc = "Resets Slot Locking"
     )
     @ConfigEditorButton(
-            runnableId = 5,
+            runnableId = "slotReset",
             buttonText = "Reset"
     )
     public float resetSlotLocking = 39;
 }
-

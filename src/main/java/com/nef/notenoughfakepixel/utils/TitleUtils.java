@@ -1,6 +1,9 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.utils;
 
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
@@ -22,15 +25,15 @@ public class TitleUtils {
     }
 
     public static void showTitle(String text, Color color) {
-        showTitleInternal(text, color, 1000); // default duration of 1000ms
+        showTitleInternal(text, color, 1000); 
     }
 
     public static void showTitle(String text) {
-        showTitleInternal(text, null, 1000); // default duration & preserve formatting
+        showTitleInternal(text, null, 1000); 
     }
 
     public static void showTitle(String text, int durationMillis) {
-        showTitleInternal(text, null, durationMillis); // preserve formatting & custom duration
+        showTitleInternal(text, null, durationMillis); 
     }
 
     private static void showTitleInternal(String text, Color color, int durationMillis) {

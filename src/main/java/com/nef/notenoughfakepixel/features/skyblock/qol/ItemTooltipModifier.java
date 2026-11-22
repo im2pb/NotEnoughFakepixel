@@ -1,107 +1,73 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol;
 
 import com.nef.notenoughfakepixel.commands.RenameCommand;
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.ItemUtils;
-import com.nef.notenoughfakepixel.utils.StringUtils;
-import com.nef.notenoughfakepixel.variables.Constants;
+import com.nef.notenoughfakepixel.utils.RomanNumeralParser;
 import com.nef.notenoughfakepixel.variables.StackingEnchant;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-
-/**
- * Handles modifications to item tooltips, specifically for adding custom
- * status tags like the "Admin Item" warning.
- * <p>
- * This class listens to Forge tooltip events to inject information
- * at specific positions within the tooltip list, ensuring custom tags appear
- * above technical information (like NBT or registry names) but below the item description.
- */
 @RegisterEvents
 public class ItemTooltipModifier {
 
-    /**
-     * Injects custom metadata tags into the item tooltip.
-     * <p>
-     * The method calculates an insertion index to place the tag appropriately:
-     * <ul>
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void onItemTooltipFirst(ItemTooltipEvent event) {
+        ItemStack item = event.itemStack;
+        List<String> tooltip = event.toolTip;
+        if (tooltip == null || item == null || !SkyblockData.getCurrentGamemode().isSkyblock()) return;
+        if (!ItemUtils.isSkyblockItem(item)) return;
 
-     * @param e The ItemTooltipEvent provided by the event bus.
-     */
-    @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void onItemTooltipFirst(ItemTooltipEvent e) {
-        ItemStack hoveredItem = e.itemStack;
-        int insertAt = e.toolTip.size();
+        // Restore client-only custom names by UUID; the override is never written to ExtraAttributes.
+        String uuid = ItemUtils.getItemUUID(item);
+        Map<String, String> renamed = RenameCommand.renamedItems;
+        if (uuid != null && !uuid.isEmpty() && renamed.containsKey(uuid) && !tooltip.isEmpty()) {
+            // The ItemTooltipEvent is post-generation: update the title line rather than mutate a live stack.
+            tooltip.set(0, renamed.get(uuid));
+        }
 
-        // If not in Skyblock or not a Skyblock item, do nothing
-        if (!SkyblockData.isSkyblock()) return;
-        if (!ItemUtils.isSkyblockItem(hoveredItem)) return;
-
-        // Calculating the correct insertion point
-        for (String line : e.toolTip) {
-            List<String> rarities = Arrays.asList(Constants.RARITIES);
-            for (String rarity : rarities) {
-                if (line.contains(rarity)) {
-                    insertAt = e.toolTip.indexOf(line);
-                    break;
+        int insertAt = Math.max(1, tooltip.size() - 1);
+        if (Config.feature.qol.qolShowAdminTag) {
+            ItemUtils.AdminStatus status = ItemUtils.isAdminItem(item);
+            if (status.isAdmin()) {
+                String line = "§c§l⚠ ADMIN ITEM ⚠";
+                String adminName = ItemUtils.getAdminName(item);
+                if (!adminName.isEmpty()) line += " §7(§c" + adminName + "§7)";
+                if (!status.getReason().isEmpty()) {
+                    String detail = status.getDetail().isEmpty() ? "" : " " + status.getDetail();
+                    line += " §8- (" + status.getReason() + detail + ")";
                 }
+                tooltip.add(Math.min(insertAt, tooltip.size()), line);
+                insertAt++;
             }
         }
 
-
-        // Admin Item Tag
-        if (Config.feature.qol.itemTooltipSettings.qolShowAdminTag && !SkyblockData.isSandbox()) {
-            ItemUtils.AdminStatus adminStatus = ItemUtils.isAdminItem(hoveredItem);
-            if (adminStatus.isAdmin()) {
-                String adminName = ItemUtils.getAdminName(hoveredItem);
-                String insertText = "§c§l⚠ ADMIN ITEM ⚠";
-                if (!adminName.isEmpty()) {
-                    insertText += " §7(§c" + adminName + "§7)";
-                }
-                if (!adminStatus.getReason().isEmpty()) {
-                    String detail = adminStatus.getDetail().isEmpty() ? "" : " " + adminStatus.getDetail();
-                    insertText += " §8- (" + adminStatus.getReason() + detail + ")";
-                }
-
-                e.toolTip.add(insertAt, insertText);
+        if (Config.feature.qol.qolShowStackingCounter && ItemUtils.hasStackingCounter(item)) {
+            StackingEnchant enchant = ItemUtils.getStackingEnchant(item);
+            if (enchant != StackingEnchant.NONE) {
+                int counter = ItemUtils.getStackingCounter(item);
+                Integer next = enchant.getNextLevel(counter);
+                String line = "§6§l" + enchant.getDisplayName() + ": §e" + String.format(java.util.Locale.ROOT, "%,d", counter);
+                line += next == null ? " §7(MAX LEVEL)" : " §7(Next Level at §a" + String.format(java.util.Locale.ROOT, "%,d", next) + "§7)";
+                tooltip.add(Math.min(insertAt, tooltip.size()), line);
             }
         }
 
-        // Farming tools Counter
-        if (Config.feature.qol.itemTooltipSettings.qolShowStackingCounter) {
-            if (ItemUtils.hasStackingCounter(hoveredItem)) {
-                int counter = ItemUtils.getStackingCounter(hoveredItem);
-                String counterFormatted = String.format("%,d", counter);
-
-                StackingEnchant type = ItemUtils.getStackingEnchant(hoveredItem);
-                if (type == StackingEnchant.NONE) return;
-
-                Integer nextLevelAt = StackingEnchant.getNextLevel(counter, type);
-
-                if (nextLevelAt != null) {
-                    String nextLevelFormatted = String.format("%,d", nextLevelAt);
-                    e.toolTip.add(insertAt, "§6§l" + StringUtils.capitalizeName(type.name().toLowerCase()) + ": §e" + counterFormatted + " §7(Next Level at §a" + nextLevelFormatted + "§7)");
-                } else {
-                    e.toolTip.add(insertAt, "§6§l" + StringUtils.capitalizeName(type.name().toLowerCase()) + ": §e" + counterFormatted + " §7(MAX LEVEL)");
-                }
+        if (Config.feature.romanNumerals.tooltips) {
+            for (int i = 0; i < tooltip.size(); i++) {
+                String line = tooltip.get(i);
+                if (line != null) tooltip.set(i, RomanNumeralParser.replaceInString(line));
             }
-        }
-
-        // Checking if item UUID is renamed already
-        Map<String, String> renamedItems = RenameCommand.renamedItems;
-        String itemUUID = ItemUtils.getItemUUID(hoveredItem);
-        if (renamedItems.containsKey(itemUUID)) {
-            ItemUtils.renameItem(hoveredItem, renamedItems.get(itemUUID));
         }
     }
-
 }

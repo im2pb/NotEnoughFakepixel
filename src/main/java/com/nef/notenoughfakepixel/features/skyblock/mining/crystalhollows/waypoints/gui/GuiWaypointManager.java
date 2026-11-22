@@ -1,5 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows.waypoints.gui;
-
 
 import com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows.waypoints.ChWaypoint;
 import com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows.waypoints.CrystalWaypoints;
@@ -139,11 +141,10 @@ public class GuiWaypointManager extends GuiScreen implements RowActions {
         private static final int CB_SIZE = 12;
         private static final int CB_GAP_TEXT = 6;
 
-        // Buttons style
         private static final int BTN_H = 14;
-        private static final int BTN_PAD_X = 4; // Button padding in X
-        private static final int BTN_GAP = 4; // Gap between buttons
-        private static final int RIGHT_MARGIN = 8; // Margin right of last button
+        private static final int BTN_PAD_X = 4; 
+        private static final int BTN_GAP = 4; 
+        private static final int RIGHT_MARGIN = 8; 
 
         private static final String LBL_DELETE = "Delete";
         private static final String LBL_SHARE  = "Share";
@@ -167,12 +168,10 @@ public class GuiWaypointManager extends GuiScreen implements RowActions {
             this.W_EDIT   = fr.getStringWidth(LBL_EDIT)   + BTN_PAD_X * 2;
         }
 
-
         @Override protected int getSize() { return data.size(); }
         @Override protected void drawBackground() {}
         @Override protected boolean isSelected(int index) { return false; }
 
-        // Debouncing prevention for clicks
         private long lastClickMs = 0L;
         private int lastClickIndex = -1;
 
@@ -225,7 +224,6 @@ public class GuiWaypointManager extends GuiScreen implements RowActions {
             final int listLeft  = this.left;
             final int listRight = this.right;
 
-            // 1) Buttons (right)
             int xRight = listRight - RIGHT_MARGIN;
 
             BtnRect del = makeBtnRect(xRight - W_DELETE, y + ((slotHeight - BTN_H) / 2), W_DELETE, BTN_H); xRight -= (W_DELETE + BTN_GAP);
@@ -236,7 +234,6 @@ public class GuiWaypointManager extends GuiScreen implements RowActions {
             drawButton(shr,  LBL_SHARE,  mouseX, mouseY, fr);
             drawButton(del,  LBL_DELETE, mouseX, mouseY, fr);
 
-            // 2) Checkbox (left)
             BtnRect cb = rectCheckboxForIndex(idx);
             boolean hoverCb = cb.contains(mouseX, mouseY);
 
@@ -250,7 +247,6 @@ public class GuiWaypointManager extends GuiScreen implements RowActions {
                 fr.drawString(tick, cb.x + (CB_SIZE - tw) / 2, cb.y + 1, 0xFF0B5);
             }
 
-            // 3) Left Text: name + coords
             final int nameX = listLeft + LEFT_MARGIN + CB_SIZE + CB_GAP_TEXT;
             final int textRightLimit = Math.min(edt.x - 8, listRight - RIGHT_MARGIN);
 
@@ -277,7 +273,6 @@ public class GuiWaypointManager extends GuiScreen implements RowActions {
             return this.right - 6;
         }
 
-        //* This function is taken from Vanilla's GuiSlot and modified to use a custom background
         @Override protected void overlayBackground(int startY, int endY, int startAlpha, int endAlpha) {
             Tessellator tessellator = Tessellator.getInstance();
             WorldRenderer worldrenderer = tessellator.getWorldRenderer();
@@ -303,7 +298,6 @@ public class GuiWaypointManager extends GuiScreen implements RowActions {
             drawRect(this.left, this.top, this.right, this.bottom, 0x55000000);
         }
 
-        // ---------- Button Helpers ----------
         private static final class BtnRect {
             final int x, y, w, h;
             BtnRect(int x, int y, int w, int h) { this.x = x; this.y = y; this.w = w; this.h = h; }
@@ -336,10 +330,10 @@ public class GuiWaypointManager extends GuiScreen implements RowActions {
 
             int tl = hover ? 0x55FFFFFF : 0x33333333;
             int br = hover ? 0x33000000 : 0x55000000;
-            Gui.drawRect(r.x,             r.y,             r.x + r.w,     r.y + 1,     tl); // top
-            Gui.drawRect(r.x,             r.y + r.h - 1,   r.x + r.w,     r.y + r.h,   br); // bottom
-            Gui.drawRect(r.x,             r.y,             r.x + 1,       r.y + r.h,   tl); // left
-            Gui.drawRect(r.x + r.w - 1,   r.y,             r.x + r.w,     r.y + r.h,   br); // right
+            Gui.drawRect(r.x,             r.y,             r.x + r.w,     r.y + 1,     tl); 
+            Gui.drawRect(r.x,             r.y + r.h - 1,   r.x + r.w,     r.y + r.h,   br); 
+            Gui.drawRect(r.x,             r.y,             r.x + 1,       r.y + r.h,   tl); 
+            Gui.drawRect(r.x + r.w - 1,   r.y,             r.x + r.w,     r.y + r.h,   br); 
 
             int tx = r.x + (r.w - fr.getStringWidth(label)) / 2;
             int ty = r.y + (r.h - 8) / 2;

@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.fishing;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
@@ -15,8 +18,7 @@ public class GreatCatchNotifier {
 
     @SubscribeEvent
     public void onChat(@NotNull ClientChatReceivedEvent e) {
-        if (!Config.feature.fishing.notifications.legendaryCreatures) return;
-        if (e.type != 1) return;
+        if (!Config.feature.fishing.fishingLegendaryCreatures) return;
 
         String message = e.message.getUnformattedText();
         String title = null;

@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.slayers;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.ScoreboardUtils;
 import net.minecraft.util.ChatComponentText;
@@ -21,7 +24,10 @@ public class SlayerTimer {
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
-        if (Config.feature.slayer.bossSettings.slayerBossTimer && SkyblockData.getCurrentGamemode().isSkyblock()) {
+        if (event.phase != TickEvent.Phase.END) return;
+
+        if (isBossActive || !SkyblockData.isSlayerActive()) return;
+        if (Config.feature.slayer.slayerBossTimer && SkyblockData.getCurrentGamemode().isSkyblock()) {
             if (event.side == net.minecraftforge.fml.relauncher.Side.CLIENT) {
                 List<String> sidebarLines = ScoreboardUtils.getScoreboardLines();
 
@@ -40,7 +46,7 @@ public class SlayerTimer {
 
     @SubscribeEvent
     public void onChat(ClientChatReceivedEvent event) {
-        if (Config.feature.slayer.bossSettings.slayerBossTimer && SkyblockData.getCurrentGamemode().isSkyblock()) {
+        if (Config.feature.slayer.slayerBossTimer && SkyblockData.getCurrentGamemode().isSkyblock()) {
             String message = StringUtils.stripControlCodes(event.message.getUnformattedText());
 
             if (message.contains("SLAYER QUEST COMPLETE!")) {
@@ -49,7 +55,6 @@ public class SlayerTimer {
                     long duration = endTime - startTime;
 
                     double seconds = duration / 1000.0;
-                    SkyblockData.setTotalSeconds(SkyblockData.getTotalSeconds() + seconds);
 
                     String chatMessage = String.format("[NEF] Boss took %.3f seconds!", seconds);
                     ChatComponentText formattedMessage = new ChatComponentText(chatMessage);

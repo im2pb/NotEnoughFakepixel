@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.dungeons;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.ChatUtils;
 import com.nef.notenoughfakepixel.utils.ItemUtils;
@@ -38,7 +41,7 @@ public class SalvageItemsSaver {
     @SubscribeEvent
     public void onGuiRender(GuiScreenEvent.BackgroundDrawnEvent event) {
         if (SkyblockData.getCurrentLocation() != Location.DUNGEON_HUB) return;
-        if (!Config.feature.dungeons.general.dungeonsSalvageItemsPrevention) return;
+        if (!Config.feature.dungeons.dungeonsSalvageItemsPrevention) return;
         if (event.gui instanceof GuiChest) {
             GuiChest chest = (GuiChest) event.gui;
             Container container = chest.inventorySlots;
@@ -58,10 +61,10 @@ public class SalvageItemsSaver {
     @SubscribeEvent
     public void onMouseClick(GuiScreenEvent.MouseInputEvent.Pre event) {
         if (SkyblockData.getCurrentLocation() != Location.DUNGEON_HUB) return;
-        if (!Config.feature.dungeons.general.dungeonsSalvageItemsPrevention) return;
+        if (!Config.feature.dungeons.dungeonsSalvageItemsPrevention) return;
         if (!Mouse.getEventButtonState()) return;
         if (!(Minecraft.getMinecraft().currentScreen instanceof GuiChest))
-            return; // Check if the current screen is a chest GUI
+            return; 
         GuiChest chestGui = (GuiChest) Minecraft.getMinecraft().currentScreen;
         Container container = chestGui.inventorySlots;
         if (container instanceof ContainerChest) {
@@ -87,4 +90,3 @@ public class SalvageItemsSaver {
         }
     }
 }
-

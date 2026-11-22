@@ -1,8 +1,11 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.crimson;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.config.position.Position;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.config.gui.core.config.Position;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -17,7 +20,7 @@ public class AshfangOverlay {
     private final Position position;
 
     public AshfangOverlay() {
-        this.position = Config.feature.crimson.ashfangSettings.ashfangOverlayPos;
+        this.position = Config.feature.crimson.ashfangOverlayPos;
     }
 
     @SubscribeEvent
@@ -27,30 +30,22 @@ public class AshfangOverlay {
         render();
     }
 
-    /**
-     * Renders the overlay at the configured position
-     */
     public void render() {
         if (!shouldShow()) return;
 
         List<String> lines = new ArrayList<>();
         getLines(lines, false);
 
-        // Get absolute x and y coordinates based on the position
         ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
-        int x = position.getAbsX(sr, 100); // Width assumed as 100
-        int y = position.getAbsY(sr, 20);  // Height assumed as 20
+        int x = position.getAbsX(sr, 100); 
+        int y = position.getAbsY(sr, 20);  
 
-        // Render each line
         for (String line : lines) {
-            Minecraft.getMinecraft().fontRendererObj.drawString(line, x, y, 0xFFFFFF); // White text
+            Minecraft.getMinecraft().fontRendererObj.drawString(line, x, y, 0xFFFFFF); 
             y += 10;
         }
     }
 
-    /**
-     * Renders a dummy version for the position editor preview
-     */
     public void renderDummy() {
         List<String> lines = new ArrayList<>();
         getLines(lines, true);
@@ -66,41 +61,39 @@ public class AshfangOverlay {
         }
     }
 
-    /**
-     * Populates the text lines to display
-     */
     private void getLines(List<String> lines, boolean example) {
-        if (Crimson.checkEssentials()) return; // Skip if essentials check fails
-        if (Config.feature.crimson.ashfangSettings.crimsonAshfangOverlay) {
-            lines.add("\u00a77Ashfang HP: \u00a7r" + formatAshfangHP(AshfangHelper.getAshfangHP()));
-            lines.add("\u00a77Blazing souls: \u00a7r" + AshfangHelper.getBlazingSoulsCounter() + " / " + AshfangHelper.getHitsNeeded());
+        if (example) {
+            lines.add("\u00a77Ashfang HP: \u00a7a50.0M");
+            lines.add("\u00a77Blazing souls: \u00a7r0 / 25");
+            return;
+        }
+        if (Crimson.checkEssentials()) return;
+        if (Config.feature.crimson.crimsonAshfangOverlay) {
+            float hp = AshfangHelper.getAshfangHP();
+            int hitsNeeded = AshfangHelper.getHitsNeeded();
+            String hpText = hp < 0.0f ? "\u00a77N/A" : formatAshfangHP(hp);
+            String hitsText = hitsNeeded < 0 ? "--" : Integer.toString(hitsNeeded);
+            lines.add("\u00a77Ashfang HP: \u00a7r" + hpText);
+            lines.add("\u00a77Blazing souls: \u00a7r" + AshfangHelper.getBlazingSoulsCounter() + " / " + hitsText);
         }
     }
 
-    /**
-     * Determines if the overlay should be shown
-     */
     private boolean shouldShow() {
-        return Config.feature.crimson.ashfangSettings.crimsonAshfangOverlay &&
-                Crimson.checkAshfangArea(new int[]{
-                        Minecraft.getMinecraft().thePlayer.getPosition().getX(),
-                        Minecraft.getMinecraft().thePlayer.getPosition().getY(),
-                        Minecraft.getMinecraft().thePlayer.getPosition().getZ()
-                });
+        Minecraft mc = Minecraft.getMinecraft();
+        if (!Config.feature.crimson.crimsonAshfangOverlay || mc.thePlayer == null || mc.theWorld == null
+                || Crimson.checkEssentials()) return false;
+        return Crimson.checkAshfangArea(
+                net.minecraft.util.MathHelper.floor_double(mc.thePlayer.posX),
+                net.minecraft.util.MathHelper.floor_double(mc.thePlayer.posY),
+                net.minecraft.util.MathHelper.floor_double(mc.thePlayer.posZ));
     }
 
-    /**
-     * Formats Ashfang HP with color based on percentage
-     */
     private static String formatAshfangHP(double hp) {
-        double percentage = hp / 50_000_000; // Assuming max HP is 50M
-        String prefix = percentage > 0.5 ? "§a" : percentage > 0.1 ? "§e" : "§c"; // Green, Yellow, Red
+        double percentage = hp / 50_000_000;
+        String prefix = percentage > 0.5 ? "§a" : percentage > 0.1 ? "§e" : "§c";
         return prefix + coolFormat(hp, 0);
     }
 
-    /**
-     * Formats numbers into a compact form (e.g., 1k, 1M)
-     */
     private static final char[] SUFFIXES = {'k', 'M'};
 
     private static String coolFormat(double n, int iteration) {

@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows.treasure;
 
 import net.minecraft.util.BlockPos;
@@ -31,6 +34,13 @@ public class GradientSolver {
     private final List<double[]> readings   = new ArrayList<>();  // {px, py, pz, d}
     private final List<double[]> candidates = new ArrayList<>();  // {cx, cz}
 
+    // Candidate positions are queried on every render frame, but only change when a
+    // new distance reading is accepted. Cache the immutable BlockPos snapshot to
+    // avoid allocating a list and BlockPos objects at frame rate.
+    private List<BlockPos> candidatePositionCache = Collections.emptyList();
+    private boolean candidatePositionCacheDirty;
+
+    private boolean lastReadingTriggeredTreasureSwitch;
     private int      dualDisagreeCount = 0;
     private int      dualDisagreeIdx   = -1; // -1=none, 0=A losing, 1=B losing
     private double   lastX = Double.NaN, lastZ = Double.NaN;
@@ -39,6 +49,7 @@ public class GradientSolver {
     // ── Public API ────────────────────────────────────────────────────────────
 
     public synchronized boolean addReading(double px, double py, double pz, double d) {
+        lastReadingTriggeredTreasureSwitch = false;
         if (!Double.isNaN(lastX)) {
             double dx = px - lastX, dz = pz - lastZ;
             double moveLenSq = dx * dx + dz * dz;
@@ -57,6 +68,7 @@ public class GradientSolver {
                     dualDisagreeCount = 0;
                     dualDisagreeIdx   = -1;
                     lastSingleCandidate = null;
+                    lastReadingTriggeredTreasureSwitch = true;
                 }
             }
         }
@@ -64,16 +76,34 @@ public class GradientSolver {
         if (readings.size() >= MAX_READINGS) readings.remove(0);
         readings.add(new double[]{px, py, pz, d});
         if (readings.size() >= 2) recompute();
+        candidatePositionCacheDirty = true;
         return true;
     }
 
     public synchronized List<BlockPos> getCandidatePositions() {
-        if (candidates.isEmpty()) return Collections.emptyList();
-        double avgY = avgPlayerY();
-        List<BlockPos> result = new ArrayList<>();
-        for (double[] c : candidates)
-            result.add(new BlockPos((int) Math.floor(c[0]), (int) Math.floor(avgY), (int) Math.floor(c[1])));
-        return result;
+        if (!candidatePositionCacheDirty) return candidatePositionCache;
+        if (candidates.isEmpty()) {
+            candidatePositionCache = Collections.emptyList();
+        } else {
+            double avgY = avgPlayerY();
+            List<BlockPos> result = new ArrayList<>(candidates.size());
+            for (double[] candidate : candidates) {
+                result.add(new BlockPos(
+                        (int) Math.floor(candidate[0]),
+                        (int) Math.floor(avgY),
+                        (int) Math.floor(candidate[1])));
+            }
+            candidatePositionCache = Collections.unmodifiableList(result);
+        }
+        candidatePositionCacheDirty = false;
+        return candidatePositionCache;
+    }
+
+    /** True once after an accepted reading caused the solver to detect a different treasure. */
+    public synchronized boolean consumeTreasureSwitch() {
+        boolean switched = lastReadingTriggeredTreasureSwitch;
+        lastReadingTriggeredTreasureSwitch = false;
+        return switched;
     }
 
     public synchronized int getCandidateCount() { return candidates.size(); }
@@ -82,10 +112,13 @@ public class GradientSolver {
     public synchronized void reset() {
         readings.clear();
         candidates.clear();
+        lastReadingTriggeredTreasureSwitch = false;
         dualDisagreeCount = 0;
         dualDisagreeIdx   = -1;
         lastX = lastZ = Double.NaN;
         lastSingleCandidate = null;
+        candidatePositionCache = Collections.emptyList();
+        candidatePositionCacheDirty = false;
     }
 
     // ── Solver ────────────────────────────────────────────────────────────────

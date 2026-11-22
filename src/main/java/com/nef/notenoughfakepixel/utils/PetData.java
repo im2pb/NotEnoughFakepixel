@@ -1,85 +1,79 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.utils;
 
 import com.nef.notenoughfakepixel.events.handlers.RepoHandler;
 import com.nef.notenoughfakepixel.variables.Rarity;
-import lombok.Data;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class PetData {
+/** Pet catalogue backed by the existing NEF repository cache, with a safe offline fallback. */
+public final class PetData {
+    private static final Map<String, String> FALLBACK;
+    private static final Map<String, Rarity> EMPTY = Collections.emptyMap();
+    private static volatile PetMap cachedSource;
+    private static volatile Map<String, Rarity> cachedPets = EMPTY;
 
-    @Data
-    private static class RepoWrapper {
-        private Map<String, String> pets = Collections.emptyMap();
+    static {
+        Map<String, String> pets = new LinkedHashMap<>();
+        String[] legendary = {
+                "Ammonite", "Armadillo", "Baby Yeti", "Bal", "Bat", "Bee", "Black Cat", "Blaze",
+                "Blue Whale", "Chicken", "Dolphin", "Developer's Pet", "Duck", "Frozen Bubble",
+                "Relic Keeper", "Droplet Wisp", "Elephant", "Ender Dragon", "Enderman", "Endermite",
+                "Flying Fish", "Ghoul", "Giraffe", "Golem", "Golden Dragon", "Griffin", "Guardian",
+                "Horse", "Jerry", "Lion", "Megalodon", "Monkey", "Mooshroom Cow", "Ocelot", "Parrot",
+                "Phoenix", "Pigman", "Rabbit", "Rock", "Sheep", "Silverfish", "Skeleton Horse",
+                "Snowman", "Spider", "Squid", "Tarantula", "Tiger", "Wither Skeleton", "Wolf", "Zombie"
+        };
+        for (String name : legendary) pets.put(name, "LEGENDARY");
+        pets.put("Mithril Golem", "MYTHIC");
+        FALLBACK = Collections.unmodifiableMap(pets);
     }
 
-    private static final RepoWrapper STUB = new RepoWrapper();
-
-    private static final Map<String, String> FALLBACK_PETS = new LinkedHashMap<String, String>() {{
-        put("Ammonite", "LEGENDARY");
-        put("Armadillo", "LEGENDARY");
-        put("Baby Yeti", "LEGENDARY");
-        put("Bal", "LEGENDARY");
-        put("Bat", "LEGENDARY");
-        put("Bee", "LEGENDARY");
-        put("Black Cat", "LEGENDARY");
-        put("Blaze", "LEGENDARY");
-        put("Blue Whale", "LEGENDARY");
-        put("Chicken", "LEGENDARY");
-        put("Dolphin", "LEGENDARY");
-        put("Developer's Pet", "LEGENDARY");
-        put("Duck", "LEGENDARY");
-        put("Frozen Bubble", "LEGENDARY");
-        put("Relic Keeper", "LEGENDARY");
-        put("Droplet Wisp", "LEGENDARY");
-        put("Elephant", "LEGENDARY");
-        put("Ender Dragon", "LEGENDARY");
-        put("Enderman", "LEGENDARY");
-        put("Endermite", "LEGENDARY");
-        put("Flying Fish", "LEGENDARY");
-        put("Ghoul", "LEGENDARY");
-        put("Giraffe", "LEGENDARY");
-        put("Golem", "LEGENDARY");
-        put("Golden Dragon", "LEGENDARY");
-        put("Griffin", "LEGENDARY");
-        put("Guardian", "LEGENDARY");
-        put("Horse", "LEGENDARY");
-        put("Jerry", "LEGENDARY");
-        put("Lion", "LEGENDARY");
-        put("Megalodon", "LEGENDARY");
-        put("Mithril Golem", "MYTHIC");
-        put("Monkey", "LEGENDARY");
-        put("Mooshroom Cow", "LEGENDARY");
-        put("Ocelot", "LEGENDARY");
-        put("Parrot", "LEGENDARY");
-        put("Phoenix", "LEGENDARY");
-        put("Pigman", "LEGENDARY");
-        put("Rabbit", "LEGENDARY");
-        put("Rock", "LEGENDARY");
-        put("Sheep", "LEGENDARY");
-        put("Silverfish", "LEGENDARY");
-        put("Skeleton Horse", "LEGENDARY");
-        put("Snowman", "LEGENDARY");
-        put("Spider", "LEGENDARY");
-        put("Squid", "LEGENDARY");
-        put("Tarantula", "LEGENDARY");
-        put("Tiger", "LEGENDARY");
-        put("Wither Skeleton", "LEGENDARY");
-        put("Wolf", "LEGENDARY");
-        put("Zombie", "LEGENDARY");
-    }};
+    private PetData() { }
 
     public static Map<String, Rarity> getAllPets() {
-        RepoWrapper wrapper = RepoHandler.getData("pets", RepoWrapper.class, STUB);
-        Map<String, String> raw = (wrapper != null) ? wrapper.getPets() : null;
-        if (raw == null || raw.isEmpty()) raw = FALLBACK_PETS;
-
-        Map<String, Rarity> result = new LinkedHashMap<>();
-        for (Map.Entry<String, String> entry : raw.entrySet()) {
-            result.put(entry.getKey(), Rarity.fromString(entry.getValue()));
+        // RepoHandler returns the same parsed object until the remote cache changes.
+        // Cache the converted rarity map too, avoiding allocations on every throttled GUI scan.
+        PetMap source = RepoHandler.getData("pets", PetMap.class, PetMap.EMPTY);
+        Map<String, String> raw = source == null ? null : source.pets;
+        if (raw == null || raw.isEmpty()) return fallbackPets();
+        Map<String, Rarity> snapshot = cachedPets;
+        if (source == cachedSource && !snapshot.isEmpty()) return snapshot;
+        synchronized (PetData.class) {
+            if (source == cachedSource && !cachedPets.isEmpty()) return cachedPets;
+            Map<String, Rarity> result = new LinkedHashMap<>();
+            for (Map.Entry<String, String> entry : raw.entrySet()) {
+                Rarity rarity = Rarity.fromString(entry.getValue());
+                if (rarity != Rarity.NONE) result.put(entry.getKey(), rarity);
+            }
+            cachedSource = source;
+            cachedPets = result.isEmpty() ? fallbackPets() : Collections.unmodifiableMap(result);
+            return cachedPets;
         }
-        return result;
+    }
+
+    private static Map<String, Rarity> fallbackPets() {
+        Map<String, Rarity> snapshot = cachedPets;
+        if (!snapshot.isEmpty() && cachedSource == PetMap.EMPTY) return snapshot;
+        synchronized (PetData.class) {
+            if (cachedSource == PetMap.EMPTY && !cachedPets.isEmpty()) return cachedPets;
+            Map<String, Rarity> result = new LinkedHashMap<>();
+            for (Map.Entry<String, String> entry : FALLBACK.entrySet()) {
+                Rarity rarity = Rarity.fromString(entry.getValue());
+                if (rarity != Rarity.NONE) result.put(entry.getKey(), rarity);
+            }
+            cachedSource = PetMap.EMPTY;
+            cachedPets = Collections.unmodifiableMap(result);
+            return cachedPets;
+        }
+    }
+
+    public static final class PetMap {
+        static final PetMap EMPTY = new PetMap();
+        public Map<String, String> pets = Collections.emptyMap();
     }
 }

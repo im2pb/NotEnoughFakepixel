@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.overlays.storage;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
@@ -21,21 +24,17 @@ import org.lwjgl.input.Mouse;
 
 import java.io.File;
 
-//@RegisterEvents
 public class StorageHandler {
-
-    // LOGIC
 
     public StorageRenderer renderer;
     @SubscribeEvent
     public void onOpen(GuiScreenEvent.BackgroundDrawnEvent e){
-//        if(!Config.feature.overlays.storageOverlay) return;
+
         if(e.gui instanceof GuiContainer){
             GuiContainer gc = (GuiContainer) e.gui;
 
             boolean itemCheck = false, guiCheck = false;
             IInventory inv = gc.inventorySlots.inventorySlots.get(0).inventory;
-            System.out.println("Title: " + inv.getDisplayName().getUnformattedText());
             if(inv.getDisplayName().getUnformattedText().startsWith("Ender Chest")){
                 String page = inv.getDisplayName().getUnformattedText().replace("Ender Chest","").replace("(Page","").replace(")","");
                 int num = Integer.parseInt(page);
@@ -62,16 +61,13 @@ public class StorageHandler {
             if (gc.inventorySlots.getSlot(4).getStack() != null) {
                 if (gc.inventorySlots.getSlot(4).getStack().getDisplayName().contains("Ender")) {
                     itemCheck = true;
-                    System.out.println("Item Check True");
                 }
             }
                     if(inv.getDisplayName().getUnformattedText().equals("Storage")){
                         guiCheck = true;
-                        System.out.println("Gui Check True");
                     }
                    if(itemCheck && guiCheck){
                        this.renderer = new StorageRenderer(gc);
-                       System.out.println("Storage GUI");
                 }
             }
     }
@@ -129,7 +125,6 @@ public class StorageHandler {
         }
     }
 
-    // HELPER METHODS
     public static Minecraft mc = Minecraft.getMinecraft();
     public static int getMouseX() {
         ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
@@ -140,7 +135,6 @@ public class StorageHandler {
         ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
         return sr.getScaledHeight() - Mouse.getY() * sr.getScaledHeight() / Minecraft.getMinecraft().displayHeight - 1;
     }
-
 
     public static ResourceLocation getResource(int size) {
         switch(size){
@@ -157,13 +151,10 @@ public class StorageHandler {
         }
     }
 
-
-    // CONFIG
     public StorageData storageData = new StorageData();
     public void saveConfig(){
         ConfigHandler.saveConfig(storageData,new File(Config.configDirectory,"storage.json"),ConfigHandler.GSON);
     }
-
 
     public void saveCorruptFile(File f){
         File renameFile = new File(f.getPath().replace(".json",".corrupted"));
@@ -198,7 +189,5 @@ public class StorageHandler {
         }
         return null;
     }
-
-
 
 }

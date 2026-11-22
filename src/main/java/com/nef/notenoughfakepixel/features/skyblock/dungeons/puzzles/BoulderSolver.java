@@ -1,8 +1,11 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.dungeons.puzzles;
 
 import com.google.common.collect.Lists;
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.RenderUtils;
 import net.minecraft.block.state.IBlockState;
@@ -36,51 +39,43 @@ public class BoulderSolver {
     private static final Minecraft mc = Minecraft.getMinecraft();
 
     public BoulderSolver() {
-        // Variant 0
+        
         expectedBoulders.add(Lists.newArrayList(BoulderState.EMPTY, BoulderState.FILLED, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY));
         variantSteps.add(Lists.newArrayList(new BoulderPush(2, 4, Direction.RIGHT), new BoulderPush(2, 3, Direction.FORWARD), new BoulderPush(3, 3, Direction.RIGHT), new BoulderPush(4, 3, Direction.RIGHT), new BoulderPush(4, 1, Direction.FORWARD), new BoulderPush(5, 1, Direction.RIGHT)));
 
-        // Variant 1
         expectedBoulders.add(Lists.newArrayList(BoulderState.FILLED, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.FILLED));
         variantSteps.add(Lists.newArrayList(new BoulderPush(3, 4, Direction.FORWARD), new BoulderPush(2, 4, Direction.LEFT), new BoulderPush(3, 3, Direction.RIGHT), new BoulderPush(3, 2, Direction.FORWARD), new BoulderPush(2, 2, Direction.LEFT), new BoulderPush(4, 2, Direction.RIGHT), new BoulderPush(2, 1, Direction.FORWARD), new BoulderPush(4, 1, Direction.FORWARD), new BoulderPush(3, 1, Direction.RIGHT)));
 
-        // Variant 2
         expectedBoulders.add(Lists.newArrayList(BoulderState.FILLED, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.FILLED, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.FILLED));
         variantSteps.add(Lists.newArrayList(new BoulderPush(1, 1, Direction.RIGHT)));
 
-        // Variant 3
         expectedBoulders.add(Lists.newArrayList(BoulderState.FILLED, BoulderState.FILLED, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.FILLED, BoulderState.FILLED));
         variantSteps.add(Lists.newArrayList(new BoulderPush(4, 3, Direction.FORWARD), new BoulderPush(3, 3, Direction.LEFT), new BoulderPush(3, 1, Direction.FORWARD), new BoulderPush(2, 1, Direction.LEFT)));
 
-        // Variant 4
         expectedBoulders.add(Lists.newArrayList(BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.FILLED));
         variantSteps.add(Lists.newArrayList(new BoulderPush(3, 4, Direction.FORWARD), new BoulderPush(3, 3, Direction.FORWARD), new BoulderPush(2, 1, Direction.FORWARD), new BoulderPush(1, 1, Direction.LEFT)));
 
-        // Variant 5
         expectedBoulders.add(Lists.newArrayList(BoulderState.FILLED, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.FILLED, BoulderState.EMPTY, BoulderState.FILLED, BoulderState.EMPTY));
         variantSteps.add(Lists.newArrayList(new BoulderPush(1, 4, Direction.FORWARD), new BoulderPush(1, 1, Direction.RIGHT)));
 
-        // Variant 6
         expectedBoulders.add(Lists.newArrayList(BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.FILLED, BoulderState.FILLED, BoulderState.FILLED, BoulderState.FILLED, BoulderState.FILLED, BoulderState.FILLED, BoulderState.EMPTY, BoulderState.FILLED));
         variantSteps.add(Lists.newArrayList(new BoulderPush(6, 4, Direction.FORWARD), new BoulderPush(6, 3, Direction.FORWARD), new BoulderPush(4, 1, Direction.FORWARD), new BoulderPush(5, 1, Direction.RIGHT)));
 
-        // Variant 7
         expectedBoulders.add(Lists.newArrayList(BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.FILLED));
         variantSteps.add(Lists.newArrayList(new BoulderPush(0, 1, Direction.FORWARD)));
 
-        // New Variant (Variant 8) with only 2 moves
         ArrayList<BoulderState> newVariantInitial = Lists.newArrayList(
-                // row=0 (top, near chest)
+                
                 BoulderState.EMPTY, BoulderState.FILLED, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.FILLED, BoulderState.EMPTY, BoulderState.FILLED,
-                // row=1
+                
                 BoulderState.FILLED, BoulderState.EMPTY, BoulderState.FILLED, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.EMPTY,
-                // row=2
+                
                 BoulderState.FILLED, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.FILLED, BoulderState.EMPTY, BoulderState.FILLED, BoulderState.EMPTY,
-                // row=3
+                
                 BoulderState.FILLED, BoulderState.EMPTY, BoulderState.EMPTY, BoulderState.FILLED, BoulderState.FILLED, BoulderState.FILLED, BoulderState.FILLED,
-                // row=4
+                
                 BoulderState.FILLED, BoulderState.EMPTY, BoulderState.FILLED, BoulderState.EMPTY, BoulderState.FILLED, BoulderState.EMPTY, BoulderState.FILLED,
-                // row=5 (bottom)
+                
                 BoulderState.EMPTY, BoulderState.FILLED, BoulderState.EMPTY, BoulderState.FILLED, BoulderState.EMPTY, BoulderState.FILLED, BoulderState.EMPTY
         );
         expectedBoulders.add(newVariantInitial);
@@ -104,7 +99,7 @@ public class BoulderSolver {
 
     @SubscribeEvent
     public void onRenderWorld(RenderWorldLastEvent event) {
-        if (!Config.feature.dungeons.puzzles.dungeonsBoulderSolver) return;
+        if (!Config.feature.dungeons.dungeonsBoulderSolver) return;
         if (boulderChest == null) return;
         Entity viewer = Minecraft.getMinecraft().getRenderViewEntity();
         double viewerX = viewer.lastTickPosX + (viewer.posX - viewer.lastTickPosX) * event.partialTicks;
@@ -169,11 +164,11 @@ public class BoulderSolver {
     }
 
     public static void update() {
-        if (!Config.feature.dungeons.puzzles.dungeonsBoulderSolver) return;
+        if (!Config.feature.dungeons.dungeonsBoulderSolver) return;
         EntityPlayerSP player = mc.thePlayer;
         World world = mc.theWorld;
         if (SkyblockData.getCurrentLocation().isDungeon() && world != null && player != null) {
-            new Thread(() -> {
+            {
                 int quartzBlocksFound = 0;
                 int barriersFound = 0;
                 BlockPos plusPlusQuartz = null;
@@ -183,7 +178,6 @@ public class BoulderSolver {
                         new BlockPos(player.posX + 25, 68, player.posZ + 25)
                 );
 
-                // Detect boulder room
                 for (BlockPos blockPos : blocks) {
                     if (world.getBlockState(blockPos).getBlock() == Blocks.quartz_block) {
                         quartzBlocksFound++;
@@ -203,7 +197,7 @@ public class BoulderSolver {
 
                 if (quartzBlocksFound == 8 && barriersFound >= 10) {
                     if (boulderChest == null || boulderFacing == null) {
-                        // Detect rotation of room
+                        
                         BlockPos northChest = minusMinusQuartz.add(11, +1, 0);
                         BlockPos eastChest = plusPlusQuartz.add(0, +1, -11);
                         BlockPos southChest = plusPlusQuartz.add(-11, +1, 0);
@@ -227,11 +221,8 @@ public class BoulderSolver {
                             ));
                             return;
                         }
-                        System.out.println("Boulder chest is at " + boulderChest);
-                        System.out.println("Boulder room is facing " + boulderFacing);
                     }
 
-                    // Update grid state
                     EnumFacing downRow = boulderFacing.getOpposite();
                     EnumFacing rightColumn = boulderFacing.rotateY();
                     BlockPos farLeftPos = boulderChest.offset(downRow, 5).offset(rightColumn.getOpposite(), 9);
@@ -243,7 +234,6 @@ public class BoulderSolver {
                         }
                     }
 
-                    // Detect variant
                     if (roomVariant == -1) {
                         roomVariant = -2;
                         for (int i = 0; i < expectedBoulders.size(); i++) {
@@ -273,7 +263,7 @@ public class BoulderSolver {
                         }
                     }
                 }
-            }).start();
+            }
         }
     }
 

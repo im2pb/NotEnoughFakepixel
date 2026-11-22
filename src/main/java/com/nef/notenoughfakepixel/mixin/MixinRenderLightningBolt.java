@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.mixin;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
@@ -11,9 +14,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinRenderLightningBolt {
     @Inject(method = "doRender(Lnet/minecraft/entity/effect/EntityLightningBolt;DDDFF)V", at = @At("HEAD"), cancellable = true)
     private void cancelLightningBolt(CallbackInfo ci) {
-        if (Config.feature.qol.soundTweaks.qolDisableThunderlordBolt) {
+        if (Config.feature.qol.qolDisableThunderlordBolt) {
             ci.cancel();
         }
     }
 }
-

@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.crimson;
 
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
@@ -14,11 +17,13 @@ public class Crimson {
     }
 
     public static boolean checkAshfangArea(int[] coords) {
-        for (int i = 0; i < coords.length; i++) {
-            if (coords[i] < ashfangArea[0][i] || coords[i] > ashfangArea[1][i]) {
-                return false;
-            }
-        }
-        return true;
+        return coords != null && coords.length >= 3
+                && checkAshfangArea(coords[0], coords[1], coords[2]);
+    }
+
+    public static boolean checkAshfangArea(int x, int y, int z) {
+        return x >= ashfangArea[0][0] && x <= ashfangArea[1][0]
+                && y >= ashfangArea[0][1] && y <= ashfangArea[1][1]
+                && z >= ashfangArea[0][2] && z <= ashfangArea[1][2];
     }
 }

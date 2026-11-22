@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.dungeons.terminals;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.features.skyblock.dungeons.DungeonManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -17,7 +20,7 @@ public class HideTooltips {
 
     @SubscribeEvent(priority = EventPriority.LOW)
     public void onTooltipLow(ItemTooltipEvent event) {
-        if (!Config.feature.dungeons.terminals.dungeonsHideTooltips) return;
+        if (!Config.feature.dungeons.dungeonsHideTooltips) return;
         if (!DungeonManager.checkEssentialsF7()) return;
         if (event.toolTip == null) return;
 
@@ -38,4 +41,3 @@ public class HideTooltips {
         }
     }
 }
-

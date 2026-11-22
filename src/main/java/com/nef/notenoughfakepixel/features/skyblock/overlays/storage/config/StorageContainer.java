@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.overlays.storage.config;
 
 import com.nef.notenoughfakepixel.features.skyblock.overlays.storage.StorageHandler;
@@ -60,9 +63,6 @@ public class StorageContainer {
         int height = (int) getYStatic(80 + (44 * this.size));
 
         Color ce = Color.CYAN;
-//        = ColorUtils.getColor(
-//                this.type.equals("echest") ? Config.feature.overlays.enderTint : Config.feature.overlays.bagTint
-//        );
 
         GlStateManager.disableLighting();
 
@@ -155,5 +155,3 @@ public class StorageContainer {
         wasMouseDown = mouseDown;
     }
 }
-
-

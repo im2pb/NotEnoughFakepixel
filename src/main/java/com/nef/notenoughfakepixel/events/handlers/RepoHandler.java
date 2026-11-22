@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.events.handlers;
 
 import com.google.gson.Gson;
@@ -19,14 +22,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class RepoHandler {
 
-    // ==== Configuration ====
-
     private static final long TTL_MS = TimeUnit.DAYS.toMillis(1);
     private static final int CONNECTION_TIMEOUT = 5000;
     private static final int READ_TIMEOUT = 5000;
-    private static final String USER_AGENT   = "NEF/1.0 (Minecraft 1.8.9)";
+    private static final String USER_AGENT   = "NotEnoughFakepixel/1.2.6 (Minecraft 1.8.9)";
 
-    // Mini-pool for IO
     private static final ExecutorService IO_POOL = new ThreadPoolExecutor(
             1, 2, 30, TimeUnit.SECONDS,
             new LinkedBlockingQueue<Runnable>(64),
@@ -35,21 +35,13 @@ public class RepoHandler {
                 t.setDaemon(true);
                 return t;
             },
-            new ThreadPoolExecutor.DiscardOldestPolicy()
+            new ThreadPoolExecutor.AbortPolicy()
     );
-
-    private static final ScheduledExecutorService EXEC =
-            Executors.newSingleThreadScheduledExecutor(r -> {
-                Thread t = new Thread(r, "RepoHandler-IO");
-                t.setDaemon(true);
-                return t;
-            });
 
     private RepoHandler() {}
 
     private static final Gson gson = ConfigHandler.GSON;
 
-    // State per source (if we want to add more sources in the future)
     private static final class SourceState {
         final String url;
         final long ttlMs;
@@ -66,7 +58,6 @@ public class RepoHandler {
         }
     }
 
-    // Cached JSON
     private static final ConcurrentMap<String, SourceState> SOURCES = new ConcurrentHashMap<>();
 
     public static void registerSource(String key, String url, long ttlMs) {
@@ -79,21 +70,24 @@ public class RepoHandler {
         });
     }
 
-    // Loading on mod init
     public static void warmupAllAsync() {
         for (Map.Entry<String, SourceState> e : SOURCES.entrySet()) {
             loadIfStaleAsync(e.getKey(), false);
         }
     }
 
-    // Loading on server connect
     public static void refreshAsync(Set<String> keys) {
         for (String k : keys) loadIfStaleAsync(k, true);
     }
 
-    // Loading on GUI (if needed)
+    public static void refreshAllAsync() {
+        for (String key : SOURCES.keySet()) {
+            loadIfStaleAsync(key, true);
+        }
+    }
+
     public static void ensureLoadedAsync(String key) {
-        loadIfStaleAsync(key, true);
+        loadIfStaleAsync(key, false);
     }
 
     public static boolean isLoaded(String key) {
@@ -116,12 +110,10 @@ public class RepoHandler {
         }
     }
 
-    // Shutdown pool on mod unload
     public static void shutdown() {
         IO_POOL.shutdownNow();
     }
 
-    // Core loading
     private static void loadIfStaleAsync(String key, boolean forceIfExpired) {
         final SourceState s = SOURCES.get(key);
         if (s == null) return;
@@ -132,49 +124,65 @@ public class RepoHandler {
         if (!forceIfExpired && !expired && s.json.get() != null) return;
         if (!s.loading.compareAndSet(false, true)) return;
 
-        IO_POOL.execute(() -> {
-            try {
-                String result = downloadWithCache(s);
-                if (result != null) {
-                    s.json.set(result);
-                    s.lastFetch = System.currentTimeMillis();
-                } else if (s.json.get() == null) {
-                    s.lastFetch = now - (s.ttlMs - TimeUnit.MINUTES.toMillis(1));
+        try {
+            IO_POOL.execute(() -> {
+                try {
+                    String result = downloadWithCache(s);
+                    if (result != null) {
+                        s.json.set(result);
+                        s.lastFetch = System.currentTimeMillis();
+                    } else {
+                        // A stale cached response may remain usable after an HTTP error. Still
+                        // back off the next refresh; otherwise hot getData() callers can enqueue
+                        // another request immediately after every failed fetch.
+                        long retryDelay = Math.min(TimeUnit.MINUTES.toMillis(1), Math.max(1L, s.ttlMs));
+                        s.lastFetch = System.currentTimeMillis() - Math.max(0L, s.ttlMs - retryDelay);
+                    }
+                } catch (Exception ex) {
+                    Logger.logErrorConsole("Fetch fail (" + key + "): " + ex.getMessage());
+                    s.lastFetch = System.currentTimeMillis() - Math.max(0L, s.ttlMs - TimeUnit.MINUTES.toMillis(1));
+                } finally {
+                    s.loading.set(false);
                 }
-            } catch (Exception ex) {
-                Logger.logErrorConsole("Fetch fail (" + key + "): " + ex.getMessage());
-                s.lastFetch = now - (s.ttlMs - TimeUnit.MINUTES.toMillis(1));
-            } finally {
-                s.loading.set(false);
-            }
-        });
+            });
+        } catch (RejectedExecutionException rejected) {
+            // The bounded queue is full or the pool is shutting down. AbortPolicy avoids
+            // silently dropping an older task whose SourceState.loading flag would stay true.
+            s.loading.set(false);
+            long retryDelay = Math.min(TimeUnit.MINUTES.toMillis(1), Math.max(1L, s.ttlMs));
+            s.lastFetch = System.currentTimeMillis() - Math.max(0L, s.ttlMs - retryDelay);
+        }
     }
 
     private static String downloadWithCache(SourceState s) throws Exception {
         HttpURLConnection conn = (HttpURLConnection) new URL(s.url).openConnection();
-        conn.setRequestMethod("GET");
-        conn.setConnectTimeout(CONNECTION_TIMEOUT);
-        conn.setReadTimeout(READ_TIMEOUT);
-        conn.setRequestProperty("User-Agent", USER_AGENT);
+        try {
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(CONNECTION_TIMEOUT);
+            conn.setReadTimeout(READ_TIMEOUT);
+            conn.setRequestProperty("User-Agent", USER_AGENT);
 
-        if (s.etag != null)         conn.setRequestProperty("If-None-Match", s.etag);
-        if (s.lastModified != null) conn.setRequestProperty("If-Modified-Since", s.lastModified);
+            if (s.etag != null)         conn.setRequestProperty("If-None-Match", s.etag);
+            if (s.lastModified != null) conn.setRequestProperty("If-Modified-Since", s.lastModified);
 
-        int code = conn.getResponseCode();
-        if (code == HttpURLConnection.HTTP_NOT_MODIFIED) {
-            return s.json.get();
+            int code = conn.getResponseCode();
+            if (code == HttpURLConnection.HTTP_NOT_MODIFIED) {
+                return s.json.get();
+            }
+            if (code >= 200 && code < 300) {
+                String etag = conn.getHeaderField("ETag");
+                String lm   = conn.getHeaderField("Last-Modified");
+                String body = readAll(conn);
+
+                if (etag != null) s.etag = etag;
+                if (lm != null)   s.lastModified = lm;
+                return body;
+            }
+            if (s.json.get() != null) return null;
+            throw new RuntimeException("HTTP " + code + " on " + s.url);
+        } finally {
+            conn.disconnect();
         }
-        if (code >= 200 && code < 300) {
-            String etag = conn.getHeaderField("ETag");
-            String lm   = conn.getHeaderField("Last-Modified");
-            String body = readAll(conn);
-
-            if (etag != null) s.etag = etag;
-            if (lm != null)   s.lastModified = lm;
-            return body;
-        }
-        if (s.json.get() != null) return null;
-        throw new RuntimeException("HTTP " + code + " on " + s.url);
     }
 
     private static String readAll(HttpURLConnection conn) throws Exception {
@@ -186,8 +194,6 @@ public class RepoHandler {
             return sb.toString();
         }
     }
-
-    // Dynamic data loading
 
     private static final class ParsedCache {
         volatile Object parsed;
@@ -204,7 +210,7 @@ public class RepoHandler {
     }
 
     public static <T> T getData(String key, Type type, T defaultValue) {
-        // kick off a load if needed, but return immediately
+        
         ensureLoadedAsync(key);
 
         final String json = getJson(key);
@@ -212,14 +218,13 @@ public class RepoHandler {
 
         final ParsedCache pc = cacheFor(key, type);
 
-        // parse only if JSON changed (by content, NOT reference)
         if (!Objects.equals(json, pc.lastJsonRef)) {
+            // Mark this exact payload as attempted before parsing so malformed repository
+            // data is logged once rather than reparsed on every render-frame getData() call.
+            pc.lastJsonRef = json;
             try {
                 T parsed = gson.fromJson(json, type);
-                if (parsed != null) {
-                    pc.parsed = parsed;
-                    pc.lastJsonRef = json;
-                }
+                if (parsed != null) pc.parsed = parsed;
             } catch (Exception e) {
                 Logger.logErrorConsole("JSON parse error (" + key + "): " + e.getMessage());
             }

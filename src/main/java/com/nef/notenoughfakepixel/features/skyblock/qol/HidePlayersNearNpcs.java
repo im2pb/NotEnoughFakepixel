@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.StringUtils;
 import com.nef.notenoughfakepixel.variables.Location;
@@ -60,12 +63,13 @@ public class HidePlayersNearNpcs {
     public void onRenderPlayerPre(net.minecraftforge.client.event.RenderPlayerEvent.Pre e) {
         if (mc.theWorld == null || mc.thePlayer == null) return;
         if (!SkyblockData.getCurrentGamemode().isSkyblock()) return;
-        if (!Config.feature.qol.visualTweaks.qolHidePlayerNearNpcs) return;
+        if (!Config.feature.qol.qolHidePlayerNearNpcs) return;
         if (SkyblockData.getCurrentLocation() == Location.PRIVATE_ISLAND || SkyblockData.getCurrentLocation() == Location.DUNGEON) return;
 
         final Entity entity = e.entity;
-        if (!(entity instanceof EntityOtherPlayerMP)) return;
-        if (isNpc(entity)) return;
+        // Do not treat player-model mobs or NPCs as online players. Only entities that
+        // have a real player-info entry may be hidden by this proximity feature.
+        if (!PlayerVisibility.isRealOnlinePlayer(entity)) return;
 
         final EntityOtherPlayerMP other = (EntityOtherPlayerMP) entity;
 
@@ -94,12 +98,9 @@ public class HidePlayersNearNpcs {
     }
 
     public static boolean checkForMixin(Entity entity) {
-        return entity instanceof EntityOtherPlayerMP
-                && !HidePlayersNearNpcs.isNpc(entity)
-                && HidePlayersNearNpcs.isCurrentlyHidden(entity.getUniqueID());
+        return PlayerVisibility.isRealOnlinePlayer(entity) && isCurrentlyHidden(entity.getUniqueID());
     }
 
-    // ---------- Distance + hysteresis + stability logic ----------
     private static boolean shouldHideWithHysteresis(EntityOtherPlayerMP player, int worldTick) {
         final UUID id = player.getUniqueID();
         HideState state = hideStateByPlayer.computeIfAbsent(id, k -> new HideState(false, worldTick));
@@ -138,7 +139,6 @@ public class HidePlayersNearNpcs {
         return best;
     }
 
-    // ---------- Cleaning ----------
     private static void cleanupStaleNpcs(int worldTick) {
         if (npcMap.isEmpty()) return;
         final int cutoff = worldTick - NPC_KEEP_ALIVE_TICKS;
@@ -181,7 +181,6 @@ public class HidePlayersNearNpcs {
         hideDecisionCache.remove(id);
     }
 
-    // ---------- Aux ----------
     private static final class TrackedNpc {
         double x, y, z;
         int lastSeenTick;
@@ -198,6 +197,4 @@ public class HidePlayersNearNpcs {
         }
     }
 
-
 }
-

@@ -1,8 +1,11 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol.customaliases;
 
 import com.google.gson.GsonBuilder;
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.features.skyblock.qol.Aliases;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.ClientCommandHandler;
@@ -67,7 +70,7 @@ public class CustomAliases {
     public static void registerAliases() {
         for (Alias a : aliases) {
             if (a != null && a.toggled && a.alias != null && a.command != null) {
-                // Register only if not already registered
+                
                 if (!ClientCommandHandler.instance.getCommands().containsKey(a.alias)) {
                     ClientCommandHandler.instance.registerCommand(new Aliases.AliasCommand(a.alias, a.command));
                 }

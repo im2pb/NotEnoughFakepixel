@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.nefrepo;
 
 import com.nef.notenoughfakepixel.events.handlers.RepoHandler;
@@ -9,7 +12,7 @@ public class NefRepo {
 
     private static final String BASE = "https://raw.githubusercontent.com/davidbelesp/NotEnoughFakepixel-REPO/refs/heads/main/data/";
 
-    private static final List<String> KEYS = ListUtils.of("fairysouls", "update", "accessories", "pets");
+    private static final List<String> KEYS = ListUtils.of("fairysouls", "accessories", "pets");
 
     public static void init() {
         registerSources();
@@ -21,7 +24,7 @@ public class NefRepo {
             RepoHandler.registerSource(
                     key,
                     BASE + key + ".json",
-                    24 * 60 * 60 * 1000L // 24 hours
+                    24 * 60 * 60 * 1000L 
             );
         }
     }

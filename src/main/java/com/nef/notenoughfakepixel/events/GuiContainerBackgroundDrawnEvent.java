@@ -1,9 +1,11 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.events;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import net.minecraft.client.gui.inventory.GuiContainer;
-
 
 @EqualsAndHashCode(callSuper = true)
 @Value

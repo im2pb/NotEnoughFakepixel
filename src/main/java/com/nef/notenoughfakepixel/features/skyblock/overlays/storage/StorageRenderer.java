@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.overlays.storage;
 
 import com.nef.notenoughfakepixel.features.skyblock.overlays.storage.config.StorageContainer;
@@ -31,7 +34,6 @@ import static com.nef.notenoughfakepixel.utils.ResolutionUtils.getYStatic;
 
 public class StorageRenderer {
 
-
     public float xStart,yStart,boxWidth,boxHeight,containersHeight;
     public float buttonOffsetX,buttonOffsetY;
     public int scrollBarX, scrollBarY, scrollBarWidth, scrollBarHeight;
@@ -60,8 +62,6 @@ public class StorageRenderer {
 
     private void loadContainers() {
 
-        // Ender Chests
-
         for(int i = 0;i < 9;i++){
             Slot s = gc.inventorySlots.getSlot(9 + i);
             if(s.getStack().getItem().equals(Item.getItemFromBlock(Blocks.stained_glass_pane))){
@@ -80,8 +80,6 @@ public class StorageRenderer {
                 }
             }
         }
-
-        // Backpacks
 
         for(int i = 0;i < 18;i++){
             Slot s = gc.inventorySlots.getSlot(27 + i);
@@ -182,7 +180,7 @@ public class StorageRenderer {
         int height = (int) getYStatic(300);
         GlStateManager.resetColor();
         Color ce = Color.CYAN;
-                // = ColorUtils.getColor(Config.feature.overlays.invTint);
+                
         GlStateManager.color(ce.getRed()/255f,ce.getGreen()/255f,ce.getBlue()/255f,ce.getAlpha()/255f);
         Gui.drawScaledCustomSizeModalRect(
                 xPos,
@@ -282,14 +280,12 @@ public class StorageRenderer {
         float maxScroll = getMaxScroll();
         if(maxScroll <= 0) return;
 
-
         scrollHandleHeight = Math.max(20, scrollBarHeight * (boxHeight / (boxHeight + maxScroll)));
         scrollHandleY = scrollBarY + (scrollBarHeight - scrollHandleHeight) * (scrollOffset / maxScroll);
 
         Gui.drawRect(scrollBarX, scrollBarY, scrollBarX + scrollBarWidth, scrollBarY + scrollBarHeight, new Color(0,0,0,255).getRGB());
         Gui.drawRect(scrollBarX, (int) scrollHandleY, scrollBarX + scrollBarWidth, (int)(scrollHandleY + scrollHandleHeight), new Color(200,200,200,255).getRGB());
     }
-
 
     public void handleMouseInput() {
         int wheel = Mouse.getDWheel();
@@ -319,7 +315,6 @@ public class StorageRenderer {
         if (xi > 0) totalHeight += rowHeight + buttonOffsetY;
         return Math.max(0, totalHeight - boxHeight + getYStatic(14));
     }
-
 
     public boolean mouseClicked(int mouseX, int mouseY, int button) {
         if(button == 0) {

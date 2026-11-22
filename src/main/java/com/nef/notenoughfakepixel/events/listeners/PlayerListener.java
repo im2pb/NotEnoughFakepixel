@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.events.listeners;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.features.skyblock.qol.HidePlayersNearNpcs;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.variables.Location;
@@ -15,7 +18,7 @@ public class PlayerListener {
     @SubscribeEvent
     public void onLivingUpdate(net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent e) {
         if (!SkyblockData.getCurrentGamemode().isSkyblock()) return;
-        if (!Config.feature.qol.visualTweaks.qolHidePlayerNearNpcs) return;
+        if (!Config.feature.qol.qolHidePlayerNearNpcs) return;
         if (SkyblockData.getCurrentLocation() == Location.PRIVATE_ISLAND || SkyblockData.getCurrentLocation() == Location.DUNGEON) return;
 
         final Entity entity = e.entity;
@@ -27,4 +30,3 @@ public class PlayerListener {
     }
 
 }
-

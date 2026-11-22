@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -21,7 +24,6 @@ public class GoldenEnchants {
     static {
         Map<String, String> tempEnchants = new HashMap<>();
 
-        // NORMAL enchantments
         tempEnchants.put("§9Aiming IV", "§6Aiming IV");
         tempEnchants.put("§9Dragon Tracer V", "§6Dragon Tracer V");
         tempEnchants.put("§9Angler VI", "§6Angler VI");
@@ -120,7 +122,6 @@ public class GoldenEnchants {
         tempEnchants.put("§9Venomous VI", "§6Venomous VI");
         tempEnchants.put("§9Vicious V", "§6Vicious V");
 
-        // STACKING enchantments
         tempEnchants.put("§9Compact X", "§6Compact X");
         tempEnchants.put("§9Cultivating X", "§6Cultivating X");
         tempEnchants.put("§9Expertise X", "§6Expertise X");
@@ -140,7 +141,7 @@ public class GoldenEnchants {
         if (!SkyblockData.getCurrentGamemode().isSkyblock()) return;
         if (event.toolTip == null || event.itemStack == null) return;
 
-        if (Config.feature.qol.visualTweaks.qolGoldenEnchants) {
+        if (Config.feature.qol.qolGoldenEnchants) {
             for (int i = 0; i < event.toolTip.size(); i++) {
                 String line = event.toolTip.get(i);
                 if (line != null) {

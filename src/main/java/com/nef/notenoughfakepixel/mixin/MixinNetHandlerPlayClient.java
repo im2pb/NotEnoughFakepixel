@@ -1,19 +1,23 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.mixin;
 
 import com.nef.notenoughfakepixel.events.ParticlePacketEvent;
-import com.nef.notenoughfakepixel.features.skyblock.qol.EnderNodesHighlighter;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import net.minecraft.entity.player.EntityPlayer;
 import com.nef.notenoughfakepixel.features.skyblock.qol.SmoothAote;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.NetHandlerPlayClient;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.network.play.server.S04PacketEntityEquipment;
 import net.minecraft.network.play.server.S2APacketParticles;
-import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.MinecraftForge;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(NetHandlerPlayClient.class)
@@ -27,58 +31,51 @@ public abstract class MixinNetHandlerPlayClient {
             cancellable = true
     )
     private void nef$onHandleParticles(S2APacketParticles packet, CallbackInfo ci) {
-        ParticlePacketEvent evt = new ParticlePacketEvent(packet);
-        boolean canceled = MinecraftForge.EVENT_BUS.post(evt);
-        if (canceled) {
+        if (MinecraftForge.EVENT_BUS.post(new ParticlePacketEvent(packet))) {
+            ci.cancel();
+            return;
+        }
+
+    }
+
+    @Inject(
+            method = "handleUpdateTileEntity(Lnet/minecraft/network/play/server/S35PacketUpdateTileEntity;)V",
+            at = @At("HEAD"),
+            cancellable = true
+    )
+    private void nef$guardTileEntityUpdate(S35PacketUpdateTileEntity packet, CallbackInfo ci) {
+        if (packet == null || packet.getPos() == null || packet.getNbtCompound() == null ||
+                gameController == null || gameController.theWorld == null) {
+            ci.cancel();
+            return;
+        }
+
+        if (gameController.theWorld.isBlockLoaded(packet.getPos())) {
+            TileEntity tileEntity = gameController.theWorld.getTileEntity(packet.getPos());
+            if (tileEntity == null) {
+                ci.cancel();
+            }
+        }
+    }
+
+    @Inject(
+            method = "handleEntityEquipment(Lnet/minecraft/network/play/server/S04PacketEntityEquipment;)V",
+            at = @At("HEAD"),
+            cancellable = true
+    )
+    private void nef$guardEntityEquipment(S04PacketEntityEquipment packet, CallbackInfo ci) {
+        if (packet == null || packet.getEquipmentSlot() < 0 || packet.getEquipmentSlot() > 4 ||
+                gameController == null || gameController.theWorld == null) {
             ci.cancel();
         }
     }
 
-    @Inject(
-            method = "handleParticles(Lnet/minecraft/network/play/server/S2APacketParticles;)V",
-            at = @At("HEAD")
-    )
-    private void nef$postPacketEvent(S2APacketParticles packet, CallbackInfo ci) {
-        ParticlePacketEvent evt = new ParticlePacketEvent(packet);
-        MinecraftForge.EVENT_BUS.post(evt);
-    }
 
-    @Inject(
-            method = "handleParticles(Lnet/minecraft/network/play/server/S2APacketParticles;)V",
-            at = @At("HEAD")
-    )
-    private void nef$onHandleParticles_endNodes(S2APacketParticles packet, CallbackInfo ci) {
-        if (packet.getParticleType() == EnumParticleTypes.PORTAL) {
-            EnderNodesHighlighter.INSTANCE.onPortalParticle(
-                    packet.getXCoordinate(),
-                    packet.getYCoordinate(),
-                    packet.getZCoordinate()
-            );
-        }
-    }
-
-    @Redirect(method = "handlePlayerPosLook", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/EntityPlayer;setPositionAndRotation(DDDFF)V"))
-    public void handlePlayerPosLook_setPositionAndRotation(
-            EntityPlayer player,
-            double x,
-            double y,
-            double z,
-            float yaw,
-            float pitch
-    ) {
-        if (SmoothAote.getInstance() == null) {
-            player.setPositionAndRotation(x, y, z, yaw, pitch);
-            return;
-        }
-
-        if (SmoothAote.getInstance().teleportCurrentPos != null) {
-            SmoothAote.getInstance().teleportMillis += Math.max(
-                    0,
-                    Math.min(300, SmoothAote.getInstance().teleportTime)
-            );
-        }
-
+    @Redirect(method = "handlePlayerPosLook", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/entity/player/EntityPlayer;setPositionAndRotation(DDDFF)V"))
+    private void smoothAote$positionPacket(EntityPlayer player, double x, double y, double z, float yaw, float pitch) {
+        SmoothAote feature = SmoothAote.getInstance();
+        if (feature != null) feature.onTeleportApplied();
         player.setPositionAndRotation(x, y, z, yaw, pitch);
     }
-
 }

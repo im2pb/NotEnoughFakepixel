@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.mixin;
 
 import com.nef.notenoughfakepixel.features.capes.CapeManager;
@@ -22,11 +25,13 @@ public abstract class MixinAbstractClientPlayer {
 
     @Inject(method = "getLocationCape", at = @At("HEAD"), cancellable = true)
     public void onGetCape(CallbackInfoReturnable<ResourceLocation> cir) {
+        if (!CapeManager.hasCape() || playerInfo == null) return;
 
-        if (CapeManager.hasCape() && playerInfo != null) {
-            if (Minecraft.getMinecraft().thePlayer.getGameProfile().getName().equals(playerInfo.getGameProfile().getName())) {
-                cir.setReturnValue(CapeManager.getCapeTexture(CapeManager.getCape()));
-            }
+        net.minecraft.client.entity.EntityPlayerSP self = Minecraft.getMinecraft().thePlayer;
+        if (self == null) return;
+
+        if (self.getGameProfile().getName().equals(playerInfo.getGameProfile().getName())) {
+            cir.setReturnValue(CapeManager.getCapeTexture(CapeManager.getCape()));
         }
     }
 }

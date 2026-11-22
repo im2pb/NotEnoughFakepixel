@@ -1,5 +1,9 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.events;
 
+import com.nef.notenoughfakepixel.envcheck.registers.GatedListener;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.util.EnumChatFormatting;
@@ -10,7 +14,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import java.util.Collections;
 import java.util.List;
 
-public abstract class ChatNotifier {
+public abstract class ChatNotifier implements GatedListener {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onChatMessage(ClientChatReceivedEvent event) {
@@ -32,6 +36,11 @@ public abstract class ChatNotifier {
                 }
             }
         }
+    }
+
+    @Override
+    public boolean isListenerActive() {
+        return shouldNotify();
     }
 
     protected void notifyUser() {

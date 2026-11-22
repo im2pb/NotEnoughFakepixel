@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.cosmetics.loader;
 
 import org.lwjgl.opengl.GL11;
@@ -11,16 +14,8 @@ import java.util.Scanner;
 
 import static org.lwjgl.opengl.GL11.*;
 
-/**
- * OBJloader class. Loads in Wavefront .obj file in to the program.
- *
- * @author Matthew Van der Bijl
- */
 public class OBJLoader {
 
-    /**
-     * Constructs a new <code>OBJLoader</code>.
-     */
     public OBJLoader() {
         super();
     }
@@ -35,11 +30,6 @@ public class OBJLoader {
         return displayList;
     }
 
-    /**
-     * Renders a given <code>Obj</code> file.
-     *
-     * @param model the <code>Obj</code> file to be rendered
-     */
     public void render(Obj model) {
         GL11.glMaterialf(GL_FRONT, GL_SHININESS, 120);
         GL11.glBegin(GL_TRIANGLES);
@@ -76,27 +66,14 @@ public class OBJLoader {
         GL11.glEnd();
     }
 
-    /**
-     * @param file the file to be loaded
-     * @return the loaded <code>Obj</code>
-     * @throws java.io.FileNotFoundException thrown if the Obj file is not found
-     */
     public Obj loadModel(File file) throws FileNotFoundException {
         return this.loadModel(new Scanner(file));
     }
 
-    /**
-     * @param stream the stream to be loaded
-     * @return the loaded <code>Obj</code>
-     */
     public Obj loadModel(InputStream stream) {
         return this.loadModel(new Scanner(stream));
     }
 
-    /**
-     * @param sc the <code>Obj</code> to be loaded
-     * @return the loaded <code>Obj</code>
-     */
     public Obj loadModel(Scanner sc) {
         Obj model = new Obj();
         while (sc.hasNextLine()) {

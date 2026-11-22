@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows.waypoints;
 
 import com.google.gson.*;
@@ -22,7 +25,7 @@ public final class ChWaypointAdapter implements JsonDeserializer<ChWaypoint>, Js
         Boolean temporary = o.has("temporary") ? o.get("temporary").getAsBoolean() : Boolean.FALSE;
         Integer colorRgb = o.has("colorRgb")
                 ? o.get("colorRgb").getAsInt()
-                : ColorUtils.getColor(Config.feature.mining.waypointSettings.crystalWaypointColor).getRGB();
+                : ColorUtils.getColor(Config.feature.mining.crystalWaypointColor).getRGB();
         Boolean toggled = o.has("toggled") ? o.get("toggled").getAsBoolean() : Boolean.TRUE;
 
         return new ChWaypoint(x, y, z, id, name, temporary, colorRgb, toggled);

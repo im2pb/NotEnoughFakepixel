@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows.waypoints.gui;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
@@ -48,7 +51,6 @@ public class GuiWaypointCreate extends GuiScreen {
 
         this.buttonList.clear();
 
-        // ---- Fields ----
         this.nameField = new GuiTextField(0, this.fontRendererObj, left + 90, top + 20, 200, 18);
         this.nameField.setMaxStringLength(48);
 
@@ -146,7 +148,7 @@ public class GuiWaypointCreate extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        // Black Overlay + panel
+        
         drawGradientRect(0, 0, this.width, this.height, 0xAA000000, 0xAA000000);
         int panelW = 320, panelH = 160;
         int cx = this.width / 2, cy = this.height / 2;
@@ -158,23 +160,19 @@ public class GuiWaypointCreate extends GuiScreen {
         drawVerticalLine(left, top, bottom, 0x33FFFFFF);
         drawVerticalLine(right, top, bottom, 0x33FFFFFF);
 
-        // Title
         String title = EnumChatFormatting.AQUA + "New Waypoint";
         this.drawCenteredString(this.fontRendererObj, title, cx, top - 12, 0xFFFFFF);
 
-        // Labels
         this.fontRendererObj.drawString("Name:", left + 20, top + 24, 0xFFFFFF, false);
         this.fontRendererObj.drawString("X:", left + 120, top + 48, 0xFFFFFF, false);
         this.fontRendererObj.drawString("Y:", left + 156, top + 48, 0xFFFFFF, false);
         this.fontRendererObj.drawString("Z:", left + 222, top + 48, 0xFFFFFF, false);
 
-        // Fields
         nameField.drawTextBox();
         xField.drawTextBox();
         yField.drawTextBox();
         zField.drawTextBox();
 
-        // Error message
         if (errorMsg != null && System.currentTimeMillis() < errorUntilMs) {
             int w = this.fontRendererObj.getStringWidth(errorMsg);
             drawRect(cx - w/2 - 6, bottom + 6, cx + w/2 + 6, bottom + 6 + 14, 0xAA7F1B1B);
@@ -205,8 +203,6 @@ public class GuiWaypointCreate extends GuiScreen {
         }
         mc.displayGuiScreen(null);
     }
-
-    // ---- Helpers ----
 
     private static String fmt1(double d) {
         return String.format(Locale.ROOT, "%.1f", d);
@@ -240,7 +236,7 @@ public class GuiWaypointCreate extends GuiScreen {
     private int getColorOrDefault(ChWaypoint wp) {
         try { return (int) ChWaypoint.class.getMethod("getColorRgbOrDefault").invoke(wp); }
         catch (Exception ignore) {
-            return ColorUtils.getColor(Config.feature.mining.waypointSettings.crystalWaypointColor).getRGB();
+            return ColorUtils.getColor(Config.feature.mining.crystalWaypointColor).getRGB();
         }
     }
 
@@ -271,4 +267,3 @@ public class GuiWaypointCreate extends GuiScreen {
         tf.textboxKeyTyped(typedChar, keyCode);
     }
 }
-

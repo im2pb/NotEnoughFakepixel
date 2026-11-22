@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.ItemUtils;
 import com.nef.notenoughfakepixel.utils.Logger;
@@ -32,7 +35,7 @@ public class SalvagePrevention {
         if (Mouse.getEventButton() < 0
                 || !SkyblockData.getCurrentGamemode().isSkyblock()
                 || !(mc.currentScreen instanceof GuiChest)
-                || (!Config.feature.qol.itemSalvaging.salvageLegendaryPrevention && !Config.feature.qol.itemSalvaging.salvageEpicPrevention)) return;
+                || (!Config.feature.qol.salvageLegendaryPrevention && !Config.feature.qol.salvageEpicPrevention)) return;
 
         GuiChest chestGui = (GuiChest) mc.currentScreen;
         ContainerChest container = (ContainerChest) chestGui.inventorySlots;
@@ -44,9 +47,9 @@ public class SalvagePrevention {
             if (item == null) continue;
 
             Rarity rarity = ItemUtils.getRarity(item);
-            if ((rarity == Rarity.LEGENDARY && Config.feature.qol.itemSalvaging.salvageLegendaryPrevention)
-                    || (rarity == Rarity.EPIC && Config.feature.qol.itemSalvaging.salvageEpicPrevention)
-                    || (rarity == Rarity.MYTHIC && Config.feature.qol.itemSalvaging.salvageMythicPrevention)
+            if ((rarity == Rarity.LEGENDARY && Config.feature.qol.salvageLegendaryPrevention)
+                    || (rarity == Rarity.EPIC && Config.feature.qol.salvageEpicPrevention)
+                    || (rarity == Rarity.MYTHIC && Config.feature.qol.salvageMythicPrevention)
             ) {
                 cancelEvents(event, (rarity == Rarity.LEGENDARY ? " Legendary item, " : "n Epic item, ") + item.getDisplayName());
                 return;
@@ -76,4 +79,3 @@ public class SalvagePrevention {
     }
 
 }
-

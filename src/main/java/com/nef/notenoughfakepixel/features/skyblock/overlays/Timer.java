@@ -1,5 +1,9 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.overlays;
 
+import com.nef.notenoughfakepixel.envcheck.registers.GatedListener;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
@@ -9,89 +13,25 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-/**
- * Abstract base class for creating timer overlays on the screen.
- * <p>
- * A {@code Timer} displays an icon and a formatted text (typically a countdown
- * to a goal in epoch milliseconds). The logic for when and how the timer should
- * appear is left to subclasses, allowing configurable overlays for different
- * in-game events (e.g. cooldowns, spawn timers, ability durations).
- *
- * <h2>Core Features</h2>
- * <ul>
- *   <li>Automatically subscribes to
- *       {@link net.minecraftforge.client.event.RenderGameOverlayEvent.Text}
- *       and renders each frame if {@link #shouldShow()} returns {@code true}.</li>
- *   <li>Caches the formatted text per whole second to minimize memory
- *       allocations and improve performance.</li>
- *   <li>Renders an optional icon and text side by side, with configurable
- *       position, padding, scale, and shadow.</li>
- *   <li>Utility methods for computing the overlay’s dimensions
- *       ({@link #getObjectWidth()} / {@link #getObjectHeight()}) which can be
- *       used to clamp the element inside the screen bounds on different
- *       resolutions and aspect ratios.</li>
- * </ul>
- *
- * <h2>Typical Usage</h2>
- * <pre>{@code
- * public class WormSpawnTimer extends Timer {
- *
- *     @Override
- *     public boolean shouldShow() {
- *         return Config.feature.mining.crystalHollows.wormTimerCooldown && Timer.getGoalEpochMs() > 0;
- *     }
- *
- *     @Override
- *     public ResourceLocation getIcon() {
- *         return Resources.SCATHA.getResource();
- *     }
- * }
- * }</pre>
- *
- * Subclasses are expected to override:
- * <ul>
- *   <li>{@link #shouldShow()} – logic to control visibility (config, world checks, etc.)</li>
- *   <li>{@link #getIcon()} – resource location of the icon to display (may be {@code null})</li>
- *   <li>{@link #preRender()} – optional hook to update state before rendering</li>
- *   <li>Optionally override {@link #getTextColor(long)},
- *       {@link #formatDelta(long)}, {@link #getScale()}, {@link #getX()},
- *       {@link #getY()}, etc. for customization.</li>
- * </ul>
- */
-public abstract class Timer {
+public abstract class Timer implements GatedListener {
 
-    /**
-     * Last cached whole-second bucket used to avoid reformatting strings every frame.
-     */
     private long lastBucketSec = Long.MIN_VALUE;
 
-    /**
-     * Cached text corresponding to {@link #lastBucketSec}.
-     */
     private String cachedText = "0:00";
 
-    /**
-     * Shared goal epoch timestamp in milliseconds.
-     * <p>
-     * Represents the absolute target time for this timer.
-     */
     private static final long goal = 0L;
 
-    /**
-     * Forge overlay event listener.
-     * <p>
-     * Called each frame when the HUD is rendered. Updates the cached text
-     * and delegates to {@link #render(RenderGameOverlayEvent.Text)} if
-     * {@link #shouldShow()} returns true.
-     *
-     * @param event the overlay render event
-     */
     @SubscribeEvent
     public void onRenderGameOverlayEvent(RenderGameOverlayEvent.Text event) {
         if (!shouldShow()) return;
 
         updateCache();
         render(event);
+    }
+
+    @Override
+    public boolean isListenerActive() {
+        return shouldShow();
     }
 
     private void updateCache() {
@@ -103,14 +43,6 @@ public abstract class Timer {
         }
     }
 
-    /**
-     * Renders the timer overlay on the screen.
-     * <p>
-     * This draws the icon (if provided) and the cached text next to it,
-     * applying scale, padding, and shadow options.
-     *
-     * @param event the render overlay event
-     */
     public void render(RenderGameOverlayEvent.Text event) {
         preRender();
         Minecraft mc = Minecraft.getMinecraft();
@@ -140,11 +72,9 @@ public abstract class Timer {
         int rx = (int) (clampedX / scale);
         int ry = (int) (clampedY / scale);
 
-        // --- text measuring ---
         int textW = fr.getStringWidth(cachedText);
         int textH = fr.FONT_HEIGHT;
 
-        // --- icon ---
         int texW = getIconTextureWidth();
         int texH = getIconTextureHeight();
         int iconDrawH = textH;
@@ -205,20 +135,12 @@ public abstract class Timer {
         return (int)(getScale() * textH);
     }
 
-    // ====================== ABSTRACT / OVERRIDE ======================
-
     protected int getTextColor(long deltaMs) {
         if (deltaMs < 0) return 0xFFFFFF55;
         if (deltaMs < 5000L) return 0xFF55FF55;
         return 0xFFFFFFFF;
     }
 
-    /**
-     * Formats the delta time in ms into a string, by default "mm:ss".
-     *
-     * @param deltaMs the difference (goal - currentTimeMillis)
-     * @return formatted string for display
-     */
     protected String formatDelta(long deltaMs) {
         if (deltaMs < 0) deltaMs = 0L;
         long totalSec = deltaMs / 1000L;
@@ -228,21 +150,15 @@ public abstract class Timer {
                 (sec < 10 ? "0" + sec : String.valueOf(sec));
     }
 
-    // Should the countdown be shown?
     public abstract boolean shouldShow();
 
-    // Runs pre render logic
     public void preRender() {}
 
-    // ResourceLocation of the texture to display as icon
     public abstract ResourceLocation getIcon();
     protected int getIconTextureWidth()  { return 16; }
     protected int getIconTextureHeight() { return 16; }
 
-    // Goal in epoch milliseconds to count to
     public abstract long getGoalEpochMs();
-
-    // ====================== UTILS ======================
 
     public int getX() { return 0; }
     public int getY() { return 0; }
@@ -251,6 +167,4 @@ public abstract class Timer {
     public float getScale() { return 1f; }
     public int getPadding() { return 3; }
 
-
 }
-

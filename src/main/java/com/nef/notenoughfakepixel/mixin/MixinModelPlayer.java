@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.mixin;
 
 import com.nef.notenoughfakepixel.features.cosmetics.CosmeticsHandler;
@@ -33,6 +36,8 @@ public class MixinModelPlayer extends ModelBiped {
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;popMatrix()V"))
     private void onRender(Entity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale, CallbackInfo ci) {
+        
+        if (CosmeticsManager.cosmetics.isEmpty()) return;
         if (entityIn.getName().equals(Minecraft.getMinecraft().getSession().getProfile().getName())) {
             for (CosmeticsHandler handler : CosmeticsManager.cosmetics) {
                 if (handler.getType() == CosmeticsHandler.CosmeticsType.HAT) {

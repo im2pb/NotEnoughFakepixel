@@ -1,7 +1,11 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.dungeons;
 
+import com.nef.notenoughfakepixel.envcheck.registers.GatedListener;
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.ColorUtils;
 import net.minecraft.block.Block;
@@ -29,7 +33,13 @@ import java.util.*;
 import java.util.List;
 
 @RegisterEvents
-public class WitherDoors {
+public class WitherDoors implements GatedListener {
+
+    @Override
+    public boolean isListenerActive() {
+        return Config.feature.dungeons.dungeonsWitherDoors;
+    }
+
     public enum ROOMSIZE {
         ONE_ONE("1x1"),
         ONE_TWO("2x1"),
@@ -215,16 +225,16 @@ public class WitherDoors {
                         (block == Blocks.stained_hardened_clay &&
                                 state.getValue(BlockColored.COLOR) == EnumDyeColor.RED)) {
                     foundCoalBlocks.add(pos);
-                    // Check standard orientation (positive x, positive z)
+                    
                     if (isWitherDoorStructure(w, pos)) {
                         doorBases.add(pos);
                     }
-                    // Check west-facing orientation (negative x)
+                    
                     BlockPos westBase = pos.add(-2, 0, 0);
                     if (isWitherDoorStructure(w, westBase)) {
                         doorBases.add(westBase);
                     }
-                    // Check south-facing orientation (negative z)
+                    
                     BlockPos southBase = pos.add(0, 0, -2);
                     if (isWitherDoorStructure(w, southBase)) {
                         doorBases.add(southBase);

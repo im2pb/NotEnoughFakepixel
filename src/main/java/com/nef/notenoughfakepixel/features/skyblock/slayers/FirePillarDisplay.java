@@ -1,7 +1,11 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.slayers;
 
+import com.nef.notenoughfakepixel.envcheck.registers.GatedListener;
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.SoundUtils;
 import com.nef.notenoughfakepixel.utils.TitleUtils;
@@ -12,7 +16,13 @@ import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 @RegisterEvents
-public class FirePillarDisplay {
+public class FirePillarDisplay implements GatedListener {
+
+    @Override
+    public boolean isListenerActive() {
+        return Config.feature.slayer.slayerFirePillarDisplay && SkyblockData.getCurrentGamemode().isSkyblock() && SkyblockData.getCurrentLocation().isCrimson();
+    }
+
     private static final Minecraft mc = Minecraft.getMinecraft();
     private EntityArmorStand trackedPillar;
     private long lastSoundTime;
@@ -21,7 +31,7 @@ public class FirePillarDisplay {
 
     @SubscribeEvent
     public void onRenderLiving(RenderLivingEvent.Pre<EntityLivingBase> event) {
-        if (!Config.feature.slayer.infernoDemonlord.slayerFirePillarDisplay || mc.theWorld == null) return;
+        if (!Config.feature.slayer.slayerFirePillarDisplay || mc.theWorld == null) return;
         if (!SkyblockData.getCurrentGamemode().isSkyblock()) return;
         if (!SkyblockData.getCurrentLocation().isCrimson()) return;
 
@@ -37,7 +47,6 @@ public class FirePillarDisplay {
 
         if (armorStand.getDisplayName() == null) return;
 
-
         String rawName = armorStand.getDisplayName().getUnformattedText();
         String cleanName = rawName.trim().replaceAll("§.", "");
 
@@ -45,12 +54,10 @@ public class FirePillarDisplay {
         if (parts.length != 3) return;
         if (!parts[0].endsWith("s") || !parts[2].equals("hits")) return;
 
-
         if (trackedPillar == null || trackedPillar.isDead) {
             trackedPillar = armorStand;
             lastSoundTime = System.currentTimeMillis();
         }
-
 
         if (trackedPillar.equals(armorStand)) {
             updatePillarDisplay(cleanName);
@@ -60,7 +67,6 @@ public class FirePillarDisplay {
     private void updatePillarDisplay(String cleanName) {
 
         int seconds = Integer.parseInt(cleanName.split(" ")[0].replace("s", ""));
-
 
         TitleUtils.showTitle(
                 trackedPillar.getDisplayName().getFormattedText(),

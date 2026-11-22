@@ -1,10 +1,13 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.dungeons.score;
 
+import com.nef.notenoughfakepixel.envcheck.registers.GatedListener;
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.features.skyblock.dungeons.DungeonManager;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
-import com.nef.notenoughfakepixel.variables.Mayor;
 import com.nef.notenoughfakepixel.utils.SoundUtils;
 import com.nef.notenoughfakepixel.utils.TablistParser;
 import com.nef.notenoughfakepixel.utils.TitleUtils;
@@ -17,7 +20,13 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 @RegisterEvents
-public class ScoreManager {
+public class ScoreManager implements GatedListener {
+
+    @Override
+    public boolean isListenerActive() {
+        return DungeonManager.checkEssentials();
+    }
+
     static int failedPuzzles = 0;
     public static int currentSeconds = -1;
     private static int reducedPenalty = 0;
@@ -55,11 +64,12 @@ public class ScoreManager {
                 Minecraft.getMinecraft().thePlayer == null) return;
 
         int currentScore = getSkillScore() + getExplorationClearScore() + getSpeedScore() + getBonusScore();
-        int virtualSecretScore = Math.min(40, getSecretPercentage() * 40 /
-                DungeonFloor.getFloor(SkyblockData.getCurrentFloor().name()).getSecretPercentage());
+        DungeonFloor floor = SkyblockData.getCurrentFloor();
+        int secretNeeded = floor == null ? -1 : floor.getSecretPercentage();
+        int virtualSecretScore = secretNeeded > 0 ? Math.min(40, getSecretPercentage() * 40 / secretNeeded) : 0;
         int virtualTotalScore = currentScore + virtualSecretScore;
 
-        if (virtualTotalScore >= 270 && !hasNotified270 & Config.feature.dungeons.scoreSecrets.dungeonsSNotifier) {
+        if (virtualTotalScore >= 270 && !hasNotified270 && Config.feature.dungeons.dungeonsSNotifier) {
             Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc 270 Score!");
             SoundUtils.playSound(mc.thePlayer.getPosition(), "note.pling", 2.0F, 2.0F);
             TitleUtils.showTitle(EnumChatFormatting.RED + "270 Score!", 2000);
@@ -80,23 +90,16 @@ public class ScoreManager {
     }
 
     public static int getSkillScore() {
-        int deaths = TablistParser.deaths;
-        return Math.max(Math.min(100 - (deaths - reducedPenalty) * 2 - failedPuzzles * 14, 100), 0);
+        return DungeonScoreCalculator.skillScore(TablistParser.deaths, reducedPenalty, failedPuzzles);
     }
 
     public static int getExplorationClearScore() {
-        int clearedPercentage = SkyblockData.getClearedPercentage();
-        if (isBloodOpen) {
-            clearedPercentage = Math.min(clearedPercentage + 9, 100);
-        }
-        int baseScore = (int) Math.max(Math.min(Math.floor(60f * clearedPercentage / 100f), 60), 0);
-        return baseScore;
+        return DungeonScoreCalculator.explorationClearScore(SkyblockData.getClearedPercentage(), isBloodOpen);
     }
 
     public static int getExplorationSecretScore() {
-        int secretPercentage = getSecretPercentage();
-        int secretNeeded = DungeonFloor.getFloor(SkyblockData.getCurrentFloor().name()).getSecretPercentage();
-        return (int) Math.max(Math.min(Math.floor(40f * secretPercentage / secretNeeded), 40f), 0);
+        DungeonFloor floor = SkyblockData.getCurrentFloor();
+        return DungeonScoreCalculator.explorationSecretScore(getSecretPercentage(), floor);
     }
 
     public static int getExplorationScore() {
@@ -104,23 +107,12 @@ public class ScoreManager {
     }
 
     public static int getSpeedScore() {
-        String currentTimeString = TablistParser.time;
-        currentSeconds = convertToSeconds(currentTimeString);
-        if (currentSeconds == -1) {
-            return 100;
-        }
-        int t = currentSeconds + DungeonFloor.getFloor(SkyblockData.getCurrentFloor().name()).getT();
-        if (t < 480) return 100;
-        if (t < 600) return 140 - (int) Math.ceil(t * (1f / 12f));
-        if (t < 840) return 115 - (int) Math.ceil(t * (1f / 24f));
-        if (t < 1140) return 108 - (int) Math.ceil(t * (1f / 30f));
-        if (t < 3940) return (int) Math.ceil(98.5f - (int) Math.ceil(t * (1f / 40f)));
-        return 0;
+        currentSeconds = convertToSeconds(TablistParser.time);
+        return DungeonScoreCalculator.speedScore(currentSeconds, SkyblockData.getCurrentFloor());
     }
 
     public static int getBonusScore() {
-        int crypts = TablistParser.crypts;
-        return (SkyblockData.isMayor(Mayor.PAUL) ? 10 : 0) + Math.min(5, crypts);
+        return DungeonScoreCalculator.bonusScore(TablistParser.crypts, Config.feature.dungeons.dungeonsIsPaul);
     }
 
     public static int getSecretPercentage() {
@@ -128,19 +120,21 @@ public class ScoreManager {
     }
 
     public static int getRequiredSecretNeeded() {
-        int secretScoreNeeded = 300 - 60 - getSkillScore() - getSpeedScore() - getBonusScore();
-        if (secretScoreNeeded > 40) {
-            // cannot reach
-            return -1;
-        }
-        return (int) Math.ceil(secretScoreNeeded * DungeonFloor.getFloor(SkyblockData.getCurrentFloor().name()).getSecretPercentage() / 40f);
+        return DungeonScoreCalculator.requiredSecretPercentage(
+                getSkillScore(), getSpeedScore(), getBonusScore(), SkyblockData.getCurrentFloor());
     }
 
     public static int convertToSeconds(String time) {
-        if (time.isEmpty()) return -1;
-        String[] parts = time.split(":");
-        int minutes = Integer.parseInt(parts[0]);
-        int seconds = Integer.parseInt(parts[1]);
-        return (minutes * 60) + seconds;
+        if (time == null || time.trim().isEmpty()) return -1;
+        String[] parts = time.trim().split(":");
+        if (parts.length != 2) return -1;
+        try {
+            int minutes = Integer.parseInt(parts[0]);
+            int seconds = Integer.parseInt(parts[1]);
+            if (minutes < 0 || seconds < 0 || seconds > 59) return -1;
+            return minutes * 60 + seconds;
+        } catch (NumberFormatException ignored) {
+            return -1;
+        }
     }
 }

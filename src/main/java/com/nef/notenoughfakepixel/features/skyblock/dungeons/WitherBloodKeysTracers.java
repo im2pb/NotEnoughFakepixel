@@ -1,7 +1,11 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.dungeons;
 
+import com.nef.notenoughfakepixel.envcheck.registers.GatedListener;
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.RenderUtils;
 import net.minecraft.client.Minecraft;
@@ -13,39 +17,31 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import java.awt.*;
 
 @RegisterEvents
-public class WitherBloodKeysTracers {
-    private static final Minecraft MC = Minecraft.getMinecraft();
-    private static final String WITHER_KEY_NAME = "§8Wither key";
-    private static final String BLOOD_KEY_NAME = "§cBlood key";
+public class WitherBloodKeysTracers implements GatedListener {
+
+    @Override
+    public boolean isListenerActive() {
+        return Config.feature.dungeons.dungeonsKeyTracers && SkyblockData.getCurrentLocation().isDungeon();
+    }
 
     @SubscribeEvent
     public void onRenderLast(RenderWorldLastEvent event) {
-        if (!Config.feature.dungeons.general.dungeonsKeyTracers) return;
+        if (!Config.feature.dungeons.dungeonsKeyTracers) return;
         if (!SkyblockData.getCurrentLocation().isDungeon()) return;
-        if (MC.theWorld == null || MC.thePlayer == null) return;
-
-        final Vec3 eyePos = MC.thePlayer.getPositionEyes(event.partialTicks);
-        for (Object obj : MC.theWorld.loadedEntityList) {
-            if (!(obj instanceof EntityArmorStand)) continue;
-
-            EntityArmorStand entity = (EntityArmorStand) obj;
-            String name = entity.getName();
-            if (name == null) continue;
-
-            Color color;
-            if (WITHER_KEY_NAME.equals(name)) {
-                color = Color.BLACK;
-            } else if (BLOOD_KEY_NAME.equals(name)) {
-                color = Color.RED;
-            } else {
-                continue;
+        Minecraft.getMinecraft().theWorld.loadedEntityList.forEach(entity -> {
+            if (entity == null) return;
+            if (entity.getName() == null) return;
+            if (entity instanceof EntityArmorStand) {
+                if (!entity.getName().equals("§8Wither key") && !entity.getName().equals("§cBlood key")) return;
+                Color color = entity.getName().equals("§8Wither key") ? Color.BLACK : Color.RED;
+                RenderUtils.draw3DLine(new Vec3(entity.posX, entity.posY + 1.75, entity.posZ),
+                        Minecraft.getMinecraft().thePlayer.getPositionEyes(event.partialTicks),
+                        color,
+                        8,
+                        true,
+                        event.partialTicks
+                );
             }
-
-            RenderUtils.draw3DLine(
-                    entity.posX, entity.posY + 1.75D, entity.posZ,
-                    eyePos.xCoord, eyePos.yCoord, eyePos.zCoord,
-                    color, 8, true, event.partialTicks
-            );
-        }
+        });
     }
 }

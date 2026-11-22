@@ -1,8 +1,11 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows.waypoints;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.utils.StringUtils;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.config.gui.core.util.StringUtils;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.ColorUtils;
 import com.nef.notenoughfakepixel.utils.NumberUtils;
@@ -35,33 +38,35 @@ public class ChWaypointEvents {
                     "([-+]?\\d+(?:[\\.,]\\d+)?)$",
             java.util.regex.Pattern.CASE_INSENSITIVE);
 
-    // Save waypoints on world unload
     @SubscribeEvent
     public void onWorldUnload(WorldEvent.Unload e) {
         CrystalWaypoints.getInstance().saveIfDirty();
     }
 
-    // Save waypoints on disconnect
     @SubscribeEvent
     public void onClientDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent e) {
         CrystalWaypoints.getInstance().saveIfDirty();
     }
 
-    // Render waypoints
     @SubscribeEvent
     public void onRenderWorldLast(RenderWorldLastEvent event) {
-        if (!SkyblockData.getCurrentLocation().equals(Location.CRYSTAL_HOLLOWS) || !Config.feature.mining.crystalHollows.crystalWaypoints) return;
+        if (!SkyblockData.getCurrentLocation().equals(Location.CRYSTAL_HOLLOWS) || !Config.feature.mining.crystalWaypoints) return;
 
-        if (Config.feature.mining.waypointSettings.crystalWaypointsBeacons) {
-            Color color = ColorUtils.getColor(Config.feature.mining.waypointSettings.crystalWaypointColor);
-            for (ChWaypoint waypoint : CrystalWaypoints.getInstance().getAll()) {
+        boolean renderBeacons = Config.feature.mining.crystalWaypointsBeacons;
+        boolean renderNames = Config.feature.mining.crystalWaypointsNames;
+        if (!renderBeacons && !renderNames) return;
+
+        java.util.List<ChWaypoint> waypoints = CrystalWaypoints.getInstance().getAll();
+        if (renderBeacons) {
+            Color color = ColorUtils.getColor(Config.feature.mining.crystalWaypointColor);
+            for (ChWaypoint waypoint : waypoints) {
                 if (Boolean.FALSE.equals(waypoint.toggled)) continue;
                 RenderUtils.renderBeaconBeam(new BlockPos(waypoint.x, waypoint.y, waypoint.z), color.getRGB(), 1, event.partialTicks);
             }
         }
 
-        if (Config.feature.mining.waypointSettings.crystalWaypointsNames) {
-            for (ChWaypoint waypoint : CrystalWaypoints.getInstance().getAll()) {
+        if (renderNames) {
+            for (ChWaypoint waypoint : waypoints) {
                 if (Boolean.FALSE.equals(waypoint.toggled)) continue;
                 RenderUtils.renderWaypointText(waypoint.getName() ,new BlockPos(waypoint.x, waypoint.y + 3, waypoint.z), event.partialTicks);
             }
@@ -69,7 +74,6 @@ public class ChWaypointEvents {
 
     }
 
-    // Chat Event to check for waypoints
     @SubscribeEvent
     public void onChatReceived(net.minecraftforge.client.event.ClientChatReceivedEvent event) {
 
@@ -106,4 +110,3 @@ public class ChWaypointEvents {
     }
 
 }
-

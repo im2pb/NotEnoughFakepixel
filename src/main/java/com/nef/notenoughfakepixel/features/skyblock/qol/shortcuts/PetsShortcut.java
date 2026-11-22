@@ -1,19 +1,22 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol.shortcuts;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 
 @RegisterEvents
 public class PetsShortcut extends KeyShortcut {
 
     @Override
     public boolean getConfigOption() {
-        return Config.feature.pets.qolShortcutPets;
+        return Config.feature.qol.qolShortcutPets;
     }
 
     @Override
     public int getKeyBind() {
-        return Config.feature.pets.qolPetsKey;
+        return Config.feature.qol.qolPetsKey;
     }
 
     @Override
@@ -25,6 +28,5 @@ public class PetsShortcut extends KeyShortcut {
     public String getMenuTitle() {
         return "Pets";
     }
-
 
 }

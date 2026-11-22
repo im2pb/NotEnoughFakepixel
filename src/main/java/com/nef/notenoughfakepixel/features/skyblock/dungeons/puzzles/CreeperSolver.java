@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.dungeons.puzzles;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -32,22 +35,22 @@ import java.util.Set;
 public class CreeperSolver {
 
     static final int[] CREEPER_COLOURS = {
-            0xFF50EF39,  // Green
-            0xFFC51111,  // Red
-            0xFF132ED1,  // Blue
-            0xFF117F2D,  // Dark Green
-            0xFFED54BA,  // Pink
-            0xFFEF7D0D,  // Orange
-            0xFFF5F557,  // Yellow
-            0xFFD6E0F0,  // Light Gray
-            0xFF6B2FBB,  // Purple
-            0xFF39FEDC   // Cyan
+            0xFF50EF39,  
+            0xFFC51111,  
+            0xFF132ED1,  
+            0xFF117F2D,  
+            0xFFED54BA,  
+            0xFFEF7D0D,  
+            0xFFF5F557,  
+            0xFFD6E0F0,  
+            0xFF6B2FBB,  
+            0xFF39FEDC   
     };
     static boolean drawCreeperLines = false;
     static Vec3 creeperLocation = new Vec3(0, 0, 0);
     static List<Vec3[]> creeperLines = new ArrayList<>();
     private static int ticks = 0;
-    private static final Set<BlockPos> usedEndBlocks = new HashSet<>(); // Track used endpoints
+    private static final Set<BlockPos> usedEndBlocks = new HashSet<>(); 
 
     @SubscribeEvent
     public void onTick(TickEvent.ClientTickEvent event) {
@@ -58,7 +61,7 @@ public class CreeperSolver {
         EntityPlayerSP player = mc.thePlayer;
         ticks++;
         if (ticks % 20 == 0) {
-            if (Config.feature.dungeons.puzzles.dungeonsCreeper && SkyblockData.getCurrentLocation().isDungeon() && world != null && player != null) {
+            if (Config.feature.dungeons.dungeonsCreeper && SkyblockData.getCurrentLocation().isDungeon() && world != null && player != null) {
                 double x = player.posX;
                 double y = player.posY;
                 double z = player.posZ;
@@ -129,7 +132,7 @@ public class CreeperSolver {
         for (BlockPos block : blocks) {
             for (Block blockType : blockTypes) {
                 if (mc.theWorld.getBlockState(block).getBlock() == blockType &&
-                        !usedEndBlocks.contains(block) && // Skip if already used
+                        !usedEndBlocks.contains(block) && 
                         block.distanceSq(pos) < closestBlockDistance) {
                     closestBlock = block;
                     closestBlockDistance = block.distanceSq(pos);
@@ -141,7 +144,7 @@ public class CreeperSolver {
 
     @SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
-        if (Config.feature.dungeons.puzzles.dungeonsCreeper && drawCreeperLines && !creeperLines.isEmpty()) {
+        if (Config.feature.dungeons.dungeonsCreeper && drawCreeperLines && !creeperLines.isEmpty()) {
             for (int i = 0; i < creeperLines.size(); i++) {
                 Vec3[] line = creeperLines.get(i);
                 if (line == null || line.length < 2 || line[0] == null || line[1] == null) {

@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.RenderUtils;
 import com.nef.notenoughfakepixel.variables.Location;
@@ -109,7 +112,6 @@ public class RelicWaypoints {
                 }
             }
 
-            // hide the nearest relic
             if (nearestRelic != null) {
                 hiddenRelics.add(nearestRelic);
             }

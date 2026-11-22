@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.dungeons.terminals;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.features.skyblock.dungeons.DungeonManager;
 import com.nef.notenoughfakepixel.utils.ColorUtils;
 import com.nef.notenoughfakepixel.utils.RenderUtils;
@@ -41,7 +44,7 @@ public class ClickOnColorsSolver {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onDrawScreenPre(GuiScreenEvent.DrawScreenEvent.Pre event) {
-        if (!Config.feature.dungeons.terminals.dungeonsTerminalSelectColorsSolver) return;
+        if (!Config.feature.dungeons.dungeonsTerminalSelectColorsSolver) return;
         if (!(event.gui instanceof GuiChest)) return;
         if (!DungeonManager.checkEssentialsF7()) return;
 
@@ -50,14 +53,14 @@ public class ClickOnColorsSolver {
         if (!(container instanceof ContainerChest)) return;
 
         String displayName = ((ContainerChest) container).getLowerChestInventory().getDisplayName().getUnformattedText().trim();
-        if (Config.feature.dungeons.terminals.dungeonsCustomGuiColors && displayName.startsWith("Select all the")) {
+        if (Config.feature.dungeons.dungeonsCustomGuiColors && displayName.startsWith("Select all the")) {
             event.setCanceled(true);
         }
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)
     public void onDrawScreenPost(GuiScreenEvent.DrawScreenEvent.Post event) {
-        if (!Config.feature.dungeons.terminals.dungeonsTerminalSelectColorsSolver) return;
+        if (!Config.feature.dungeons.dungeonsTerminalSelectColorsSolver) return;
         if (!(event.gui instanceof GuiChest)) return;
         if (!DungeonManager.checkEssentialsF7()) return;
 
@@ -76,7 +79,7 @@ public class ClickOnColorsSolver {
             lastRecheckTime = currentTime;
         }
 
-        if (Config.feature.dungeons.terminals.dungeonsCustomGuiColors) {
+        if (Config.feature.dungeons.dungeonsCustomGuiColors) {
             List<Slot> correctSlots = new ArrayList<>();
             for (Slot slot : container.inventorySlots) {
                 int slotId = container.inventorySlots.indexOf(slot);
@@ -103,7 +106,7 @@ public class ClickOnColorsSolver {
 
     private void renderCustomGui(GuiChest chest, List<Slot> correctSlots, String targetColor) {
         ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
-        float scale = Config.feature.dungeons.terminals.dungeonsTerminalsScale;
+        float scale = Config.feature.dungeons.dungeonsTerminalsScale;
         int guiWidth = (int) (INNER_COLUMNS * SLOT_SIZE * scale);
         int guiHeight = (int) (INNER_ROWS * SLOT_SIZE * scale);
         int guiLeft = (sr.getScaledWidth() - guiWidth) / 2;
@@ -134,7 +137,7 @@ public class ClickOnColorsSolver {
                 drawRect(innerX + 1, innerY + 1,
                         innerX + SLOT_SIZE - 1,
                         innerY + SLOT_SIZE - 1,
-                        ColorUtils.getColor(Config.feature.dungeons.terminals.dungeonsCorrectColor).getRGB());
+                        ColorUtils.getColor(Config.feature.dungeons.dungeonsCorrectColor).getRGB());
             }
         }
         GlStateManager.popMatrix();
@@ -150,7 +153,7 @@ public class ClickOnColorsSolver {
 
             int slotId = container.inventorySlots.indexOf(slot);
             if (slotId == 49) {
-                if (Config.feature.dungeons.terminals.dungeonsTerminalHideIncorrect) {
+                if (Config.feature.dungeons.dungeonsTerminalHideIncorrect) {
                     item.setItem(container.inventorySlots.get(0).getStack().getItem());
                     item.getItem().setDamage(item, 15);
                 }
@@ -158,7 +161,7 @@ public class ClickOnColorsSolver {
             }
 
             if (item.isItemEnchanted()) {
-                if (Config.feature.dungeons.terminals.dungeonsTerminalHideIncorrect) {
+                if (Config.feature.dungeons.dungeonsTerminalHideIncorrect) {
                     item.setItem(container.inventorySlots.get(0).getStack().getItem());
                     item.getItem().setDamage(item, 15);
                 }
@@ -168,8 +171,8 @@ public class ClickOnColorsSolver {
             if (isCorrectColor(item, targetColor)) {
                 RenderUtils.drawOnSlot(container.inventorySlots.size(),
                         slot.xDisplayPosition, slot.yDisplayPosition,
-                        ColorUtils.getColor(Config.feature.dungeons.terminals.dungeonsCorrectColor).getRGB());
-            } else if (Config.feature.dungeons.terminals.dungeonsTerminalHideIncorrect) {
+                        ColorUtils.getColor(Config.feature.dungeons.dungeonsCorrectColor).getRGB());
+            } else if (Config.feature.dungeons.dungeonsTerminalHideIncorrect) {
                 item.setItem(container.inventorySlots.get(0).getStack().getItem());
                 item.getItem().setDamage(item, 15);
             }
@@ -178,7 +181,7 @@ public class ClickOnColorsSolver {
 
     @SubscribeEvent
     public void onMouseClick(GuiScreenEvent.MouseInputEvent.Pre event) {
-        if (!Config.feature.dungeons.terminals.dungeonsPreventMissclicks) return;
+        if (!Config.feature.dungeons.dungeonsPreventMissclicks) return;
         if (!DungeonManager.checkEssentialsF7()) return;
         if (!Mouse.getEventButtonState()) return;
 
@@ -192,7 +195,7 @@ public class ClickOnColorsSolver {
         String title = ((ContainerChest) container).getLowerChestInventory().getDisplayName().getUnformattedText();
         if (!title.startsWith("Select all the")) return;
 
-        if (Config.feature.dungeons.terminals.dungeonsCustomGuiColors) {
+        if (Config.feature.dungeons.dungeonsCustomGuiColors) {
             handleCustomGuiClick(event, guiChest, title);
         } else {
             handleDefaultGuiClick(event, guiChest);
@@ -202,7 +205,7 @@ public class ClickOnColorsSolver {
     private void handleCustomGuiClick(GuiScreenEvent.MouseInputEvent.Pre event, GuiChest guiChest, String title) {
         Minecraft mc = Minecraft.getMinecraft();
         ScaledResolution sr = new ScaledResolution(mc);
-        float scale = Config.feature.dungeons.terminals.dungeonsTerminalsScale;
+        float scale = Config.feature.dungeons.dungeonsTerminalsScale;
 
         int mouseX = (Mouse.getEventX() * sr.getScaledWidth()) / mc.displayWidth;
         int mouseY = sr.getScaledHeight() - (Mouse.getEventY() * sr.getScaledHeight()) / mc.displayHeight - 1;

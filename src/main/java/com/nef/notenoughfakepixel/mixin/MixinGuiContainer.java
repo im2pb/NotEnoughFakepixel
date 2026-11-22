@@ -1,12 +1,15 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.mixin;
-
 
 import com.nef.notenoughfakepixel.NotEnoughFakepixel;
 import com.nef.notenoughfakepixel.config.gui.Config;
 import com.nef.notenoughfakepixel.events.GuiContainerBackgroundDrawnEvent;
 import com.nef.notenoughfakepixel.events.SlotClickEvent;
 import com.nef.notenoughfakepixel.features.skyblock.enchanting.EnchantingSolvers;
-import com.nef.notenoughfakepixel.features.skyblock.garden.VacuumPestsBag;
+import com.nef.notenoughfakepixel.features.inventory.search.SearchBar;
+import com.nef.notenoughfakepixel.features.protection.ItemProtection;
 import com.nef.notenoughfakepixel.features.skyblock.slotlocking.SlotLocking;
 import com.nef.notenoughfakepixel.utils.ReforgePair;
 import net.minecraft.client.Minecraft;
@@ -29,7 +32,6 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.awt.*;
 
-
 @Mixin(value = GuiContainer.class, priority = 500)
 public class MixinGuiContainer extends GuiScreen {
 
@@ -40,19 +42,21 @@ public class MixinGuiContainer extends GuiScreen {
 
     @Inject(method = "drawSlot", at = @At("RETURN"))
     public void drawSlotRet(Slot slotIn, CallbackInfo ci) {
+        GuiContainer container = (GuiContainer) (Object) this;
+        // Search is highlight-only; normal slot overlays and interactions remain untouched.
         SlotLocking.getInstance().drawSlot(slotIn);
+        ItemProtection.renderIndicator(container, slotIn, guiLeft, guiTop);
+        SearchBar.renderSlotHighlight(container, slotIn, guiLeft, guiTop);
     }
 
+    // Preserve the existing EnchantingSolvers display override. Search never replaces or hides
+    // the stack returned by a server-backed Slot.
     @Redirect(method = "drawSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/inventory/Slot;getStack()Lnet/minecraft/item/ItemStack;"))
     public ItemStack drawSlot_getStack(Slot slot) {
-
         ItemStack stack = slot.getStack();
-
         if (stack != null) {
-            ItemStack newStack = EnchantingSolvers.overrideStack(slot.inventory, slot.getSlotIndex(), stack);
-            if (newStack != null) {
-                stack = newStack;
-            }
+            ItemStack replacement = EnchantingSolvers.overrideStack(slot.inventory, slot.getSlotIndex(), stack);
+            if (replacement != null) return replacement;
         }
         return stack;
     }
@@ -60,6 +64,7 @@ public class MixinGuiContainer extends GuiScreen {
     @Inject(method = "drawSlot", at = @At("HEAD"), cancellable = true)
     public void drawSlot(Slot slot, CallbackInfo ci) {
         if (slot == null) return;
+
         ItemStack stack = slot.getStack();
 
         if (stack != null) {
@@ -75,11 +80,11 @@ public class MixinGuiContainer extends GuiScreen {
             }
         }
 
-        RenderHelper.enableGUIStandardItemLighting();
     }
 
     @Redirect(method = "drawScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/inventory/Slot;getStack()Lnet/minecraft/item/ItemStack;"))
     public ItemStack drawScreen_getStack(Slot slot) {
+        // Keep vanilla tooltip/hover behavior for every item. Search is cosmetic only.
         if (theSlot != null && theSlot == slot && theSlot.getStack() != null) {
             ItemStack newStack = EnchantingSolvers.overrideStack(
                     theSlot.inventory,
@@ -95,6 +100,12 @@ public class MixinGuiContainer extends GuiScreen {
 
     @Shadow
     private Slot theSlot;
+
+    @Shadow
+    protected int guiLeft;
+
+    @Shadow
+    protected int guiTop;
 
     @Redirect(method = "drawScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/inventory/GuiContainer;drawGradientRect(IIIIII)V"))
     public void drawScreen_drawGradientRect(
@@ -134,7 +145,6 @@ public class MixinGuiContainer extends GuiScreen {
 
     @Inject(method = "handleMouseClick", at = @At(value = "HEAD"), cancellable = true)
     public void handleMouseClick(Slot slotIn, int slotId, int clickedButton, int clickType, CallbackInfo ci) {
-        if (slotIn == null) return;
         GuiContainer $this = (GuiContainer) (Object) this;
         SlotClickEvent event = new SlotClickEvent($this, slotIn, slotId, clickedButton, clickType);
         event.post();
@@ -142,7 +152,7 @@ public class MixinGuiContainer extends GuiScreen {
             ci.cancel();
             return;
         }
-        if (event.usePickblockInstead) {
+        if (event.usePickblockInstead && $this.mc.thePlayer != null) {
             $this.mc.playerController.windowClick(
                     $this.inventorySlots.windowId,
                     slotId, 2, 3, $this.mc.thePlayer
@@ -157,8 +167,6 @@ public class MixinGuiContainer extends GuiScreen {
             ordinal = 0), locals = LocalCapture.CAPTURE_FAILSOFT)
     private void drawSlot(Slot slotIn, CallbackInfo ci, int x, int y, ItemStack item, boolean flag, boolean flag1,
                           ItemStack itemstack1, String s) {
-        VacuumPestsBag.render(item, x, y);
-
         if (!Config.feature.qol.qolReforgeHelper) return;
 
         if (slotIn.inventory.getDisplayName().getUnformattedText().equals("Reforge Item") && slotIn.slotNumber == 13) {
@@ -181,20 +189,25 @@ public class MixinGuiContainer extends GuiScreen {
                 }
             }
         }
-        if (slotIn.slotNumber == 53) {
+        if (slotIn.slotNumber == 53 && reforgeToRender != null) {
+            GL11.glPushAttrib(
+                    GL11.GL_ENABLE_BIT
+                            | GL11.GL_COLOR_BUFFER_BIT
+                            | GL11.GL_DEPTH_BUFFER_BIT
+                            | GL11.GL_TEXTURE_BIT);
             GL11.glPushMatrix();
-            GL11.glDisable(GL11.GL_LIGHTING);
-            GL11.glDisable(GL11.GL_DEPTH_TEST);
-            GL11.glDisable(GL11.GL_BLEND);
-            if (reforgeToRender != null) {
+            try {
+                GL11.glDisable(GL11.GL_LIGHTING);
+                GL11.glDisable(GL11.GL_DEPTH_TEST);
+                GL11.glDisable(GL11.GL_BLEND);
+                GL11.glColor4f(1F, 1F, 1F, 1F);
                 FontRenderer fr = Minecraft.getMinecraft().fontRendererObj;
-                fr.drawStringWithShadow(reforgeToRender.getEnchant(), reforgeToRender.getX(), reforgeToRender.getY(), new Color(255, 255, 255, 255).getRGB());
+                fr.drawStringWithShadow(reforgeToRender.getEnchant(), reforgeToRender.getX(), reforgeToRender.getY(), 0xFFFFFFFF);
+            } finally {
                 reforgeToRender = null;
+                GL11.glPopMatrix();
+                GL11.glPopAttrib();
             }
-            GL11.glEnable(GL11.GL_BLEND);
-            GL11.glEnable(GL11.GL_LIGHTING);
-            GL11.glEnable(GL11.GL_DEPTH_TEST);
-            GL11.glPopMatrix();
         }
     }
 }

@@ -1,8 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.overlays.stats;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.config.position.Position;
-import net.minecraft.client.gui.Gui;
+import com.nef.notenoughfakepixel.config.gui.core.config.Position;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
@@ -18,41 +20,29 @@ public class PositionEditorScreen extends GuiScreen {
 
     @Override
     public void initGui() {
-        editingPositions.put(StatBars.BarType.HEALTH, Config.feature.overlays.healthBarSettings.posHealth);
-        editingPositions.put(StatBars.BarType.MANA, Config.feature.overlays.manaBarSettings.posMana);
-        editingPositions.put(StatBars.BarType.EXP, Config.feature.overlays.expBarSettings.posExp);
-        editingPositions.put(StatBars.BarType.SPEED, Config.feature.overlays.speedBarSettings.posSpeed);
-        editingPositions.put(StatBars.BarType.DEFENCE, Config.feature.overlays.defenceBarSettings.posDefense);
+        editingPositions.put(StatBars.BarType.HEALTH, Config.feature.overlays.posHealth);
+        editingPositions.put(StatBars.BarType.MANA, Config.feature.overlays.posMana);
+        editingPositions.put(StatBars.BarType.EXP, Config.feature.overlays.posExp);
+        editingPositions.put(StatBars.BarType.SPEED, Config.feature.overlays.posSpeed);
+        editingPositions.put(StatBars.BarType.DEFENCE, Config.feature.overlays.posDefense);
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        ScaledResolution res = new ScaledResolution(mc);
+
         for (StatBars.BarType type : StatBars.BarType.values()) {
             Position pos = editingPositions.get(type);
             int x = pos.getRawX();
             int y = pos.getRawY();
             StatBars.BarLength length = new StatBars().getBarLength(type);
-            int w = length.width;
 
             GlStateManager.pushMatrix();
             GlStateManager.enableBlend();
-            GlStateManager.enableAlpha();
+            GlStateManager.color(type.color[0],type.color[1],type.color[2]);
+            mc.getTextureManager().bindTexture(length.fill);
+            drawTexturedModalRect(x, y, 0, 0, length.width, 7);
 
-            // Draw the dark base (background pill)
-            GlStateManager.color(1f, 1f, 1f, 1f);
-            mc.getTextureManager().bindTexture(length.baseTexture);
-            Gui.drawModalRectWithCustomSizedTexture(x, y, 0, 0, w, StatBars.BAR_H, w, StatBars.BAR_H);
-
-            // Draw fully-filled fill texture tinted to the bar's colour
-            GlStateManager.color(
-                    type.color.getRed()   / 255f,
-                    type.color.getGreen() / 255f,
-                    type.color.getBlue()  / 255f,
-                    1f);
-            mc.getTextureManager().bindTexture(length.fillTexture);
-            Gui.drawModalRectWithCustomSizedTexture(x, y, 0, 0, w, StatBars.BAR_H, w, StatBars.BAR_H);
-
-            GlStateManager.color(1f, 1f, 1f, 1f);
             GlStateManager.popMatrix();
         }
 
@@ -67,7 +57,7 @@ public class PositionEditorScreen extends GuiScreen {
             int y = pos.getRawY();
             StatBars.BarLength length = new StatBars().getBarLength(type);
 
-            if (mouseX >= x && mouseX <= x + length.width && mouseY >= y && mouseY <= y + StatBars.BAR_H) {
+            if (mouseX >= x && mouseX <= x + length.width && mouseY >= y && mouseY <= y + 7) {
                 draggingBar = type;
                 dragOffsetX = mouseX - x;
                 dragOffsetY = mouseY - y;
@@ -91,7 +81,6 @@ public class PositionEditorScreen extends GuiScreen {
             int newX = mouseX - dragOffsetX;
             int newY = mouseY - dragOffsetY;
 
-            // Hotbar snapping threshold (within 5px)
             ScaledResolution res = new ScaledResolution(mc);
             int screenWidth = res.getScaledWidth();
             int screenHeight = res.getScaledHeight();
@@ -99,7 +88,7 @@ public class PositionEditorScreen extends GuiScreen {
             int barWidth = new StatBars().getBarLength(draggingBar).width;
 
             int vanillaHotbarX = (screenWidth / 2) - (barWidth / 2);
-            int vanillaHotbarY = screenHeight - 49; // Vanilla position just above hotbar
+            int vanillaHotbarY = screenHeight - 49; 
 
             int snapDistance = 5;
 
@@ -119,4 +108,3 @@ public class PositionEditorScreen extends GuiScreen {
         return false;
     }
 }
-

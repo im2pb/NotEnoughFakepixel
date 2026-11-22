@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.capes.gui;
 
 import net.minecraft.client.Minecraft;
@@ -8,7 +11,6 @@ import net.minecraft.util.ResourceLocation;
 public class ResetButton extends GuiButton {
 
     public ResourceLocation tex = new ResourceLocation("notenoughfakepixel", "cape_gui.png");
-
 
     public ResetButton(int buttonId, int x, int y, int widthIn, int heightIn) {
         super(buttonId, x, y, widthIn, heightIn, "NO CAPE");

@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows.waypoints;
 
 import com.google.common.reflect.TypeToken;
@@ -19,6 +22,7 @@ public class CrystalWaypoints {
 
     private static final CrystalWaypoints INSTANCE = new CrystalWaypoints();
     private final List<ChWaypoint> waypoints = new ArrayList<>(128);
+    private volatile List<ChWaypoint> publishedWaypoints = Collections.emptyList();
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(ChWaypoint.class, new ChWaypointAdapter())
             .setPrettyPrinting()
@@ -55,7 +59,7 @@ public class CrystalWaypoints {
 
                         String id = w.getId();
                         if (id == null || id.isEmpty()) {
-                            // Generating new id if missing
+                            
                             w = new ChWaypoint(w.getX(), w.getY(), w.getZ(),
                                     UUID.randomUUID().toString(),
                                     w.getName() != null ? w.getName() : "Waypoint",
@@ -63,11 +67,10 @@ public class CrystalWaypoints {
                             migrated = true;
                         }
 
-                        // Fixing potential issues with old waypoints
                         boolean needsRewrite = false;
                         Boolean tmp = w.isTemporarySafe();
                         int color = w.getColorRgbOrDefault();
-                        // if any is null/invalid, set to default and mark for rewrite
+                        
                         if (w.getClass() == ChWaypoint.class) {}
                         map.put(w.getId(), new ChWaypoint(
                                 w.getX(), w.getY(), w.getZ(),
@@ -83,23 +86,31 @@ public class CrystalWaypoints {
             }
         }
 
+        publishWaypointsSnapshot();
         dirty.set(migrated);
         if (migrated) saveIfDirty();
         else dirty.set(false);
     }
 
     public synchronized void addWaypoint(ChWaypoint wp) {
+        if (wp == null) return;
         waypoints.add(wp);
+        publishWaypointsSnapshot();
         dirty.set(true);
     }
 
-    public synchronized List<ChWaypoint> getAll() {
-        return Collections.unmodifiableList(new ArrayList<>(waypoints));
+    /** Returns the last published immutable list snapshot. Waypoint objects retain their existing mutable compatibility API. */
+    public List<ChWaypoint> getAll() {
+        return publishedWaypoints;
     }
 
     public synchronized boolean removeById(String id) {
-        boolean removed = waypoints.removeIf(w -> w.id.equalsIgnoreCase(id));
-        if (removed) dirty.set(true);
+        if (id == null || id.isEmpty()) return false;
+        boolean removed = waypoints.removeIf(w -> w != null && w.id != null && w.id.equalsIgnoreCase(id));
+        if (removed) {
+            publishWaypointsSnapshot();
+            dirty.set(true);
+        }
         return removed;
     }
 
@@ -129,17 +140,20 @@ public class CrystalWaypoints {
     }
 
     public synchronized ChWaypoint findById(String id) {
+        if (id == null || id.isEmpty()) return null;
         for (ChWaypoint w : waypoints) {
-            if (w.getId().equalsIgnoreCase(id)) return w;
+            if (w != null && w.getId() != null && w.getId().equalsIgnoreCase(id)) return w;
         }
         return null;
     }
 
     public synchronized boolean updateWaypoint(ChWaypoint updated) {
+        if (updated == null || updated.id == null) return false;
         for (int i = 0; i < waypoints.size(); i++) {
             ChWaypoint w = waypoints.get(i);
-            if (w.id.equalsIgnoreCase(updated.id)) {
+            if (w != null && w.id != null && w.id.equalsIgnoreCase(updated.id)) {
                 waypoints.set(i, updated);
+                publishWaypointsSnapshot();
                 markDirty();
                 return true;
             }
@@ -148,8 +162,11 @@ public class CrystalWaypoints {
     }
 
     public synchronized void removeAllTemp() {
-        boolean removed = waypoints.removeIf(ChWaypoint::isTemporarySafe);
-        if (removed) dirty.set(true);
+        boolean removed = waypoints.removeIf(w -> w != null && w.isTemporarySafe());
+        if (removed) {
+            publishWaypointsSnapshot();
+            dirty.set(true);
+        }
     }
 
     public synchronized boolean hasTemp() {
@@ -159,7 +176,10 @@ public class CrystalWaypoints {
         return false;
     }
 
-    public void markDirty() { dirty.set(true); }
+    private void publishWaypointsSnapshot() {
+        publishedWaypoints = Collections.unmodifiableList(new ArrayList<>(waypoints));
+    }
 
+    public void markDirty() { dirty.set(true); }
 
 }

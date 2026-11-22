@@ -1,8 +1,11 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.utils.KeybindHelper;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import org.lwjgl.input.Keyboard;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.events.PacketReadEvent;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import net.minecraft.block.BlockChest;
@@ -18,160 +21,193 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraft.client.renderer.entity.RenderManager;
 import org.lwjgl.opengl.GL11;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
+
+/** Packet-driven, bounded chest tracker for Crystal Hollows. */
 @RegisterEvents
 public class ChestTracker {
-
+    private static final int DETECT_RADIUS_SQ = 100;
+    private static final int MAX_TRACKED = 48;
+    private static final long LIFETIME_MS = 30000L;
+    private static final long CLEANUP_INTERVAL_MS = 500L;
     private final Minecraft mc = Minecraft.getMinecraft();
-    private final List<TrackedChest> chests = new ArrayList<>();
-    private static final int DETECT_RADIUS = 10;
+    // PacketReadEvent runs on Netty's channel thread. Only immutable block coordinates cross threads;
+    // the map and all Minecraft world/player reads are kept on the client tick/render thread.
+    private static final int MAX_PENDING = 256;
+    private final Object pendingLock = new Object();
+    private final ConcurrentLinkedQueue<BlockPos> pending = new ConcurrentLinkedQueue<>();
+    private int pendingCount;
+    private final LinkedHashMap<BlockPos, Long> chests = new LinkedHashMap<>();
+    private long lastCleanupMs;
 
     @SubscribeEvent
     public void onPacketRead(PacketReadEvent event) {
-        if (!Config.feature.mining.crystalHollows.chestTracker) return;
-        if (!SkyblockData.getCurrentLocation().isCrystalHollows()) return;
-
+        if (!Config.feature.mining.crystalChestTracker || event == null || event.packet == null) return;
         if (event.packet instanceof S23PacketBlockChange) {
-            S23PacketBlockChange p = (S23PacketBlockChange) event.packet;
-            if (p.blockState != null && p.blockState.getBlock() instanceof BlockChest)
-                trackChest(p.getBlockPosition());
+            S23PacketBlockChange packet = (S23PacketBlockChange) event.packet;
+            if (packet.blockState != null && packet.blockState.getBlock() instanceof BlockChest) enqueue(packet.getBlockPosition());
         } else if (event.packet instanceof S22PacketMultiBlockChange) {
-            S22PacketMultiBlockChange p = (S22PacketMultiBlockChange) event.packet;
-            for (S22PacketMultiBlockChange.BlockUpdateData upd : p.getChangedBlocks()) {
-                if (upd.getBlockState().getBlock() instanceof BlockChest)
-                    trackChest(upd.getPos());
+            S22PacketMultiBlockChange packet = (S22PacketMultiBlockChange) event.packet;
+            for (S22PacketMultiBlockChange.BlockUpdateData update : packet.getChangedBlocks()) {
+                if (update != null && update.getBlockState() != null && update.getBlockState().getBlock() instanceof BlockChest)
+                    enqueue(update.getPos());
             }
         }
     }
 
-    private void trackChest(BlockPos pos) {
-        if (mc.thePlayer == null) return;
+    private boolean enabled() {
+        return Config.feature.mining.crystalChestTracker && SkyblockData.getCurrentLocation().isCrystalHollows();
+    }
+
+    private void enqueue(BlockPos pos) {
+        if (pos == null) return;
+        synchronized (pendingLock) {
+            if (pendingCount >= MAX_PENDING) return;
+            pending.offer(pos);
+            pendingCount++;
+        }
+    }
+
+    private void track(BlockPos pos) {
+        if (pos == null || mc.thePlayer == null) return;
         double dx = pos.getX() + 0.5 - mc.thePlayer.posX;
         double dy = pos.getY() + 0.5 - mc.thePlayer.posY;
         double dz = pos.getZ() + 0.5 - mc.thePlayer.posZ;
-        if (Math.sqrt(dx * dx + dy * dy + dz * dz) > DETECT_RADIUS) return;
-        for (TrackedChest existing : chests) {
-            if (existing.pos.equals(pos)) return;
+        if (dx * dx + dy * dy + dz * dz > DETECT_RADIUS_SQ) return;
+        if (chests.containsKey(pos)) return;
+        chests.put(pos, System.currentTimeMillis());
+        while (chests.size() > MAX_TRACKED) {
+            Iterator<BlockPos> iterator = chests.keySet().iterator();
+            if (!iterator.hasNext()) break;
+            iterator.next(); iterator.remove();
         }
-        chests.add(new TrackedChest(pos));
     }
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || mc.thePlayer == null) return;
-        if (!Config.feature.mining.crystalHollows.chestTracker) return;
-
-        if (!SkyblockData.getCurrentLocation().isCrystalHollows()
-                || KeybindHelper.isKeyDown(Config.feature.mining.crystalHollows.chestTrackerClearKey)) {
+        if (event.phase != TickEvent.Phase.END) return;
+        if (!enabled() || mc.theWorld == null || mc.thePlayer == null) {
             chests.clear();
+            clearPending();
             return;
         }
-
-        if (mc.theWorld == null) return;
-        List<TrackedChest> toRemove = new ArrayList<>();
-        for (TrackedChest chest : chests) {
-            if (!mc.theWorld.isBlockLoaded(chest.pos)) continue;
-            if (!(mc.theWorld.getBlockState(chest.pos).getBlock() instanceof BlockChest))
-                toRemove.add(chest);
+        boolean clearDown = Keyboard.isKeyDown(Config.feature.mining.crystalChestTrackerClearKey);
+        if (clearDown) {
+            chests.clear();
+            clearPending();
+            return;
         }
-        chests.removeAll(toRemove);
+        for (int processed = 0; processed < 64; processed++) {
+            BlockPos candidate = pollPending();
+            if (candidate == null) break;
+            track(candidate);
+        }
+
+        long now = System.currentTimeMillis();
+        if (now - lastCleanupMs < CLEANUP_INTERVAL_MS) return;
+        lastCleanupMs = now;
+        Iterator<Map.Entry<BlockPos, Long>> iterator = chests.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<BlockPos, Long> entry = iterator.next();
+            if (now - entry.getValue() > LIFETIME_MS) { iterator.remove(); continue; }
+            BlockPos pos = entry.getKey();
+            if (mc.theWorld.isBlockLoaded(pos) && !(mc.theWorld.getBlockState(pos).getBlock() instanceof BlockChest)) iterator.remove();
+        }
     }
 
     @SubscribeEvent
     public void onRenderWorld(RenderWorldLastEvent event) {
-        if (!Config.feature.mining.crystalHollows.chestTracker) return;
-        if (!SkyblockData.getCurrentLocation().isCrystalHollows()) return;
-        if (chests.isEmpty()) return;
-        if (mc.thePlayer == null) return;
-
-        double px = mc.getRenderManager().viewerPosX;
-        double py = mc.getRenderManager().viewerPosY;
-        double pz = mc.getRenderManager().viewerPosZ;
-
+        if (!enabled() || chests.isEmpty() || mc.thePlayer == null || mc.theWorld == null) return;
+        RenderManager renderManager = mc.getRenderManager();
+        double px = renderManager.viewerPosX;
+        double py = renderManager.viewerPosY;
+        double pz = renderManager.viewerPosZ;
+        long now = System.currentTimeMillis();
+        Tessellator tessellator = Tessellator.getInstance();
+        WorldRenderer renderer = tessellator.getWorldRenderer();
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_LINE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_CURRENT_BIT);
         GlStateManager.pushMatrix();
         GlStateManager.disableDepth();
         GlStateManager.disableTexture2D();
         GlStateManager.enableBlend();
-        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
         GlStateManager.disableLighting();
-
-        Tessellator tess = Tessellator.getInstance();
-        WorldRenderer wr = tess.getWorldRenderer();
-
+        GL11.glLineWidth(1.2f);
         boolean drawing = false;
         try {
-            wr.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+            renderer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
             drawing = true;
+            BlockPos previous = null;
+            for (Map.Entry<BlockPos, Long> entry : chests.entrySet()) {
+                BlockPos pos = entry.getKey();
+                double age = Math.max(0.0, Math.min(1.0, (now - entry.getValue()) / (double) LIFETIME_MS));
+                float red = (float) age;
+                float green = (float) (1.0 - age);
+                double x = pos.getX() - px, y = pos.getY() - py, z = pos.getZ() - pz;
+                double cx = x + 0.5, cy = y + 0.5, cz = z + 0.5;
 
-            // Line from player to first chest
-            TrackedChest first = chests.get(0);
-            float[] fc = getColor(first.getLifeRatio());
-            double fx = first.pos.getX() + 0.5 - px;
-            double fy = first.pos.getY() + 0.5 - py;
-            double fz = first.pos.getZ() + 0.5 - pz;
-            wr.pos(0, 0, 0).color(fc[0], fc[1], 0f, 1f).endVertex();
-            wr.pos(fx, fy, fz).color(fc[0], fc[1], 0f, 1f).endVertex();
+                if (previous == null) addLine(renderer, 0, 0, 0, cx, cy, cz, red, green);
+                else addLine(renderer,
+                        previous.getX() + 0.5 - px, previous.getY() + 0.5 - py, previous.getZ() + 0.5 - pz,
+                        cx, cy, cz, red, green);
 
-            // Chain lines between chests
-            for (int i = 0; i < chests.size() - 1; i++) {
-                TrackedChest a = chests.get(i);
-                TrackedChest b = chests.get(i + 1);
-                float[] ca = getColor(a.getLifeRatio());
-                float[] cb = getColor(b.getLifeRatio());
-                double ax = a.pos.getX() + 0.5 - px, ay = a.pos.getY() + 0.5 - py, az = a.pos.getZ() + 0.5 - pz;
-                double bx = b.pos.getX() + 0.5 - px, by = b.pos.getY() + 0.5 - py, bz = b.pos.getZ() + 0.5 - pz;
-                wr.pos(ax, ay, az).color(ca[0], ca[1], 0f, 1f).endVertex();
-                wr.pos(bx, by, bz).color(cb[0], cb[1], 0f, 1f).endVertex();
+                // Twelve wireframe edges are emitted into the same batch, not one GL draw per chest.
+                double x2 = x + 1.0, y2 = y + 1.0, z2 = z + 1.0;
+                addLine(renderer, x, y, z, x2, y, z, red, green);
+                addLine(renderer, x2, y, z, x2, y, z2, red, green);
+                addLine(renderer, x2, y, z2, x, y, z2, red, green);
+                addLine(renderer, x, y, z2, x, y, z, red, green);
+                addLine(renderer, x, y2, z, x2, y2, z, red, green);
+                addLine(renderer, x2, y2, z, x2, y2, z2, red, green);
+                addLine(renderer, x2, y2, z2, x, y2, z2, red, green);
+                addLine(renderer, x, y2, z2, x, y2, z, red, green);
+                addLine(renderer, x, y, z, x, y2, z, red, green);
+                addLine(renderer, x2, y, z, x2, y2, z, red, green);
+                addLine(renderer, x2, y, z2, x2, y2, z2, red, green);
+                addLine(renderer, x, y, z2, x, y2, z2, red, green);
+                previous = pos;
             }
-
-            // Wireframe box around each chest
-            for (TrackedChest chest : chests) {
-                float[] c = getColor(chest.getLifeRatio());
-                double x = chest.pos.getX() - px, y = chest.pos.getY() - py, z = chest.pos.getZ() - pz;
-                double x2 = x + 1, y2 = y + 1, z2 = z + 1;
-                float r = c[0], g = c[1];
-
-                wr.pos(x,  y,  z ).color(r,g,0f,1f).endVertex(); wr.pos(x2, y,  z ).color(r,g,0f,1f).endVertex();
-                wr.pos(x2, y,  z ).color(r,g,0f,1f).endVertex(); wr.pos(x2, y,  z2).color(r,g,0f,1f).endVertex();
-                wr.pos(x2, y,  z2).color(r,g,0f,1f).endVertex(); wr.pos(x,  y,  z2).color(r,g,0f,1f).endVertex();
-                wr.pos(x,  y,  z2).color(r,g,0f,1f).endVertex(); wr.pos(x,  y,  z ).color(r,g,0f,1f).endVertex();
-
-                wr.pos(x,  y2, z ).color(r,g,0f,1f).endVertex(); wr.pos(x2, y2, z ).color(r,g,0f,1f).endVertex();
-                wr.pos(x2, y2, z ).color(r,g,0f,1f).endVertex(); wr.pos(x2, y2, z2).color(r,g,0f,1f).endVertex();
-                wr.pos(x2, y2, z2).color(r,g,0f,1f).endVertex(); wr.pos(x,  y2, z2).color(r,g,0f,1f).endVertex();
-                wr.pos(x,  y2, z2).color(r,g,0f,1f).endVertex(); wr.pos(x,  y2, z ).color(r,g,0f,1f).endVertex();
-
-                wr.pos(x,  y,  z ).color(r,g,0f,1f).endVertex(); wr.pos(x,  y2, z ).color(r,g,0f,1f).endVertex();
-                wr.pos(x2, y,  z ).color(r,g,0f,1f).endVertex(); wr.pos(x2, y2, z ).color(r,g,0f,1f).endVertex();
-                wr.pos(x2, y,  z2).color(r,g,0f,1f).endVertex(); wr.pos(x2, y2, z2).color(r,g,0f,1f).endVertex();
-                wr.pos(x,  y,  z2).color(r,g,0f,1f).endVertex(); wr.pos(x,  y2, z2).color(r,g,0f,1f).endVertex();
-            }
-
-            tess.draw();
+            tessellator.draw();
             drawing = false;
         } finally {
             if (drawing) {
-                try { tess.draw(); } catch (Exception ignored) {}
+                try { tessellator.draw(); } catch (Exception ignored) { }
             }
-            GlStateManager.enableDepth();
-            GlStateManager.enableTexture2D();
-            GlStateManager.disableBlend();
-            GlStateManager.enableLighting();
             GlStateManager.popMatrix();
+            GL11.glPopAttrib();
+        }
+    }
+
+    private void addLine(WorldRenderer renderer, double ax, double ay, double az,
+                         double bx, double by, double bz, float red, float green) {
+        renderer.pos(ax, ay, az).color(red, green, 0.0f, 1.0f).endVertex();
+        renderer.pos(bx, by, bz).color(red, green, 0.0f, 1.0f).endVertex();
+    }
+
+    private BlockPos pollPending() {
+        synchronized (pendingLock) {
+            BlockPos pos = pending.poll();
+            if (pos != null) pendingCount = Math.max(0, pendingCount - 1);
+            return pos;
+        }
+    }
+
+    private void clearPending() {
+        synchronized (pendingLock) {
+            pending.clear();
+            pendingCount = 0;
         }
     }
 
     @SubscribeEvent
     public void onWorldUnload(WorldEvent.Unload event) {
-        chests.clear();
-    }
-
-    private float[] getColor(float lifeRatio) {
-        return new float[]{ 1.0f - lifeRatio, lifeRatio };
+        chests.clear(); clearPending(); lastCleanupMs = 0L;
     }
 }
-

@@ -1,9 +1,12 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.utils.StringUtils;
-import com.nef.notenoughfakepixel.utils.Utils;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.config.gui.core.util.StringUtils;
+import com.nef.notenoughfakepixel.config.gui.utils.Utils;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.utils.ColorUtils;
 import com.nef.notenoughfakepixel.utils.ItemUtils;
 import net.minecraft.block.Block;
@@ -49,7 +52,6 @@ public class EtherwarpZoom {
 
     private final Pattern etherwarpDistancePattern = Pattern.compile("(?<distance>\\d{2}) blocks away\\.");
 
-
     private static class RaycastResult {
         IBlockState state;
         BlockPos pos;
@@ -78,7 +80,7 @@ public class EtherwarpZoom {
             IBlockState state = world.getBlockState(position);
 
             if (state.getBlock() != Blocks.air) {
-                //Back-step
+                
                 Vector3f.sub(pos, look, pos);
                 look.scale(0.1f);
 
@@ -126,7 +128,7 @@ public class EtherwarpZoom {
         double d1 = player.lastTickPosY + (player.posY - player.lastTickPosY) * (double) event.partialTicks;
         double d2 = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * (double) event.partialTicks;
 
-        if (tick - lastEtherwarpUse > 10 || !Config.feature.qol.etherwarpSettings.qolEtherwarpZoom)
+        if (tick - lastEtherwarpUse > 10 || !Config.feature.qol.qolEtherwarpZoom)
             if (onRenderBlockEtherwarp(
                     heldInternal,
                     held,
@@ -137,7 +139,6 @@ public class EtherwarpZoom {
             )) {
                 return;
             }
-
 
     }
 
@@ -185,7 +186,7 @@ public class EtherwarpZoom {
         if(dist == 0) return false;
         etherwarpRaycast = raycast(Minecraft.getMinecraft().thePlayer, 1f, dist, 0.1f);
 
-        if (etherwarpRaycast != null && Config.feature.qol.etherwarpSettings.qolEtherwarpOverlay) {
+        if (etherwarpRaycast != null && Config.feature.qol.qolEtherwarpOverlay) {
             if (denyTpReason == null) {
                 AxisAlignedBB box = etherwarpRaycast.state.getBlock().getSelectedBoundingBox(
                         Minecraft.getMinecraft().theWorld,
@@ -193,8 +194,8 @@ public class EtherwarpZoom {
                 );
                 String color;
                 if (denyTpReason != null) {
-                    color = Config.feature.qol.etherwarpSettings.qolEtherwarpFailedOverlayColor;
-                } else color = Config.feature.qol.etherwarpSettings.qolEtherwarpOverlayColor;
+                    color = Config.feature.qol.qolEtherwarpFailedOverlayColor;
+                } else color = Config.feature.qol.qolEtherwarpOverlayColor;
 
                 AxisAlignedBB bb = box.expand(0.01D, 0.01D, 0.01D).offset(-d0, -d1, -d2);
                 drawFilledBoundingBox(
@@ -216,7 +217,7 @@ public class EtherwarpZoom {
                 GlStateManager.disableBlend();
             }
 
-            if (Config.feature.qol.etherwarpSettings.qolEtherwarpZoom) {
+            if (Config.feature.qol.qolEtherwarpZoom) {
                 float distFactor = 1 -
                         (float) Math.sqrt(etherwarpRaycast.pos.distanceSq(Minecraft.getMinecraft().thePlayer.getPosition())) /
                                 60;
@@ -226,7 +227,7 @@ public class EtherwarpZoom {
 
                 targetSensMult = distFactor * 0.76f + 0.25f;
             }
-        } else if (Config.feature.qol.etherwarpSettings.qolEtherwarpZoom) {
+        } else if (Config.feature.qol.qolEtherwarpZoom) {
             targetFOVMult = lastFOVMult;
         }
         return true;
@@ -247,10 +248,10 @@ public class EtherwarpZoom {
 
                     Block block = etherwarpRaycast.state.getBlock();
                     if (!block.isCollidable() ||
-                            //Don't allow teleport at this block
+                            
                             block == Blocks.carpet || block == Blocks.skull ||
                             block.getCollisionBoundingBox(world, etherwarpRaycast.pos, etherwarpRaycast.state) == null &&
-                                    //Allow teleport at this block
+                                    
                                     block != Blocks.wall_sign && block != Blocks.standing_sign) {
                         denyTpReason = "Not solid!";
                     } else {
@@ -259,12 +260,12 @@ public class EtherwarpZoom {
 
                         Block twoBlockAbove = world.getBlockState(pos.add(0, 2, 0)).getBlock();
                         if (blockAbove != Blocks.air &&
-                                //Allow teleport to the block below this block
+                                
                                 blockAbove != Blocks.carpet && blockAbove != Blocks.skull && blockAbove.isCollidable() &&
                                 blockAbove.getCollisionBoundingBox(world, blockPosAbove, world.getBlockState(blockPosAbove)) != null ||
-                                //Don't allow teleport to the block below this block
+                                
                                 blockAbove == Blocks.wall_sign || block == Blocks.standing_sign ||
-                                //Allow teleport to the block 2 blocks below this block
+                                
                                 twoBlockAbove != Blocks.air && twoBlockAbove != Blocks.double_plant && twoBlockAbove != Blocks.carpet &&
                                         blockAbove != Blocks.skull) {
                             denyTpReason = "No air above!";
@@ -272,7 +273,7 @@ public class EtherwarpZoom {
                     }
                 }
 
-                if (Config.feature.qol.etherwarpSettings.qolEtherwarpText) {
+                if (Config.feature.qol.qolEtherwarpText) {
                     if (denyTpReason != null) {
                         ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
                         Utils.drawStringCentered(EnumChatFormatting.RED + "Can't TP: " + denyTpReason,
@@ -320,7 +321,7 @@ public class EtherwarpZoom {
         } else {
             float deltaSens = targetSensMult - currentSensMult;
 
-            currentSensMult += deltaSens * lastPartialDelta * 0.1;// (0.05 * );
+            currentSensMult += deltaSens * lastPartialDelta * 0.1;
             if (currentSensMult < 0.25f) currentSensMult = 0.25f;
             if (currentSensMult > 1) currentSensMult = 1;
         }
@@ -399,7 +400,6 @@ public class EtherwarpZoom {
 
         GlStateManager.color(c.getRed() / 255f, c.getGreen() / 255f, c.getBlue() / 255f, c.getAlpha() / 255f * alpha);
 
-        //vertical
         worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
         worldrenderer.pos(p_181561_0_.minX, p_181561_0_.minY, p_181561_0_.minZ).endVertex();
         worldrenderer.pos(p_181561_0_.maxX, p_181561_0_.minY, p_181561_0_.minZ).endVertex();
@@ -420,7 +420,6 @@ public class EtherwarpZoom {
                 c.getAlpha() / 255f * alpha
         );
 
-        //x
         worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
         worldrenderer.pos(p_181561_0_.minX, p_181561_0_.minY, p_181561_0_.maxZ).endVertex();
         worldrenderer.pos(p_181561_0_.minX, p_181561_0_.maxY, p_181561_0_.maxZ).endVertex();
@@ -440,7 +439,7 @@ public class EtherwarpZoom {
                 c.getBlue() / 255f * 0.9f,
                 c.getAlpha() / 255f * alpha
         );
-        //z
+        
         worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
         worldrenderer.pos(p_181561_0_.minX, p_181561_0_.maxY, p_181561_0_.minZ).endVertex();
         worldrenderer.pos(p_181561_0_.maxX, p_181561_0_.maxY, p_181561_0_.minZ).endVertex();
@@ -456,4 +455,3 @@ public class EtherwarpZoom {
     }
 
 }
-

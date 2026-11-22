@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.capes;
 
 import net.minecraft.client.Minecraft;
@@ -7,7 +10,6 @@ import net.minecraft.util.ResourceLocation;
 public class CapePreviewRenderer {
 
     private static final Minecraft mc = Minecraft.getMinecraft();
-
 
     public static void drawCape(int x, int y, int scale, Cape cape) {
         ResourceLocation capeTexture = CapeManager.getCapeTexture(cape);

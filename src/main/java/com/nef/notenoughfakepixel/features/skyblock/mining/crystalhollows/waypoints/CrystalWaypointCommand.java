@@ -1,8 +1,11 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows.waypoints;
 
 import com.nef.notenoughfakepixel.config.gui.commands.SimpleCommand;
-import com.nef.notenoughfakepixel.utils.StringUtils;
-import com.nef.notenoughfakepixel.env.registers.RegisterCommand;
+import com.nef.notenoughfakepixel.config.gui.core.util.StringUtils;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterCommand;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.NumberUtils;
 import com.nef.notenoughfakepixel.variables.Location;
@@ -95,7 +98,6 @@ public class CrystalWaypointCommand extends SimpleCommand {
                 return;
             }
 
-            // share message: CHW:<name>:<x>:<y>:<z>
             String msgToShare = String.format("CHW:%s:%.1f:%.1f:%.1f", w.getName(), w.x, w.y, w.z);
             if (sender instanceof EntityPlayerSP) {
                 ((EntityPlayerSP) sender).sendChatMessage(msgToShare);
@@ -153,4 +155,3 @@ public class CrystalWaypointCommand extends SimpleCommand {
     }
 
 }
-

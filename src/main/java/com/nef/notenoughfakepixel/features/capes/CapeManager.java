@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.capes;
 
 import com.google.gson.Gson;
@@ -26,7 +29,6 @@ public class CapeManager {
     private static final ExecutorService executor = Executors.newCachedThreadPool();
     private static final Map<UUID, Integer> syncedCapes = new HashMap<>();
 
-    // Configuration handling
     private static final File CONFIG_DIR = new File(Minecraft.getMinecraft().mcDataDir, "config/Notenoughfakepixel");
     private static final File CONFIG_FILE = new File(CONFIG_DIR, "capes.cfg");
 

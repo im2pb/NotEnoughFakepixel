@@ -8,12 +8,12 @@ This is a remaster of NotEnoughFakepixel mod from GinaFro.
     <a href="https://discord.gg/xjFy4GQmbp" target="_blank">
         <img alt="Discord" src="https://img.shields.io/discord/1318248790452342784?style=for-the-badge&logo=github&logoColor=white&color=008b8b">
     </a>
-     <a href="https://github.com/davidbelesp/NotEnoughFakepixel/graphs/contributors" target="_blank">
+    <a href="https://github.com/davidbelesp/NotEnoughFakepixel/graphs/contributors" target="_blank">
         <img alt="GitHub contributors" src="https://img.shields.io/github/contributors-anon/davidbelesp/NotEnoughFakepixel?style=for-the-badge&color=008b8b">
     </a>
     <a href="https://deepwiki.com/davidbelesp/NotEnoughFakepixel"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
     <a href="https://github.com/davidbelesp/NotEnoughFakepixel/releases" target="_blank">
-       <img alt="GitHub Downloads (all assets, all releases)" src="https://img.shields.io/github/downloads/davidbelesp/NotEnoughFakepixel/total?style=for-the-badge&color=008b8b">
+        <img alt="GitHub Downloads (all assets, all releases)" src="https://img.shields.io/github/downloads/davidbelesp/NotEnoughFakepixel/total?style=for-the-badge&color=008b8b">
     </a>
 </div>
 
@@ -31,7 +31,7 @@ See the [LICENSE](LICENSE) file for details.
   - Aliases
   - Disable block breaking particles
   - Always sprint
-  - Copy chat message
+  - Copy chat message — Shift-click to copy formatted messages; regular clicks keep their usual behavior **(FIXED)**
   - Full block lever
   - Block placing items
   - Show unclaimed Jacob rewards
@@ -63,12 +63,17 @@ See the [LICENSE](LICENSE) file for details.
   - Wardrobe key shortcut
   - Equipment key shortcut
   - Hide players close to NPCs **(NEW)**
+  - Global Hide Players — Hide real players while keeping NPCs and player-like mobs visible **(ADDED)**
+  - Abiphone Panel — Custom panel for fast calling **(ADDED)**
+  - Inventory Search Bar **(ADDED)**
   - Missing Accessories GUI **(NEW)**
   - Show Ender Nodes **(NEW)**
 - Chat
   - Disable Friend > joined messages
   - Disable Info & Watchdog messages
   - Disable selling ranks messages
+  - Configurable Chat History — Choose how many messages to keep **(ADDED)**
+  - Server Announcement & Game Invite Filters **(ADDED)**
 
 ### Farming
 - 1.12 Crop height
@@ -77,6 +82,9 @@ See the [LICENSE](LICENSE) file for details.
 - Fishing countdown
 - Fishing notifier for Legendary Sea Creatures
 - Notifier for Trophy Fishing
+
+### Pets
+- Pet Tracker Pages — Collected pets stay with you when you switch pages **(FIXED)**
 
 ### Dungeons
 - General
@@ -98,6 +106,13 @@ See the [LICENSE](LICENSE) file for details.
   - S+ reminder
   - Score overlay
   - Secret overlay
+  - Protected item **(ADDED)**
+  - Blood Mob Highlight **(ADDED)**
+  - Dungeon Personal Bests **(ADDED)**
+  - Dungeon Map Player Names — Hold CTRL to see the player names **(ADDED)**
+  - Leaping Sword Cobweb disable **(ADDED)**
+  - Spirit Leap Colors — Shows the correct colors for players and classes **(FIXED)**
+  - Third Device Solver — Fixed the inability to modify the arrows **(FIXED)**
 - Starred mobs
   - Starred mob display
   - Fel position display
@@ -109,6 +124,11 @@ See the [LICENSE](LICENSE) file for details.
 - Master Mode 7
   - M7 dragon highlight
   - M7 relic waypoints
+
+### Performance
+- Low-End Performance **(IMPROVED)**
+- Ultra dungeon performance — Hides dungeon mobs to improve FPS (use with caution) **(ADDED)**
+
 ### Mining
 - General
   - Drill Animation Reset FIX
@@ -121,10 +141,10 @@ See the [LICENSE](LICENSE) file for details.
   - Mithril Powder Overlay
   - Puzzler NPC Solver
 - Crystal Hollows **(NEW)**
-  - Crystal Hollows Map  **(NEW)**
-  - Crystal Hollows Waypoints  **(NEW)**
+  - Crystal Hollows Map **(NEW)**
+  - Crystal Hollows Waypoints **(NEW)**
   - FullBlock glass panes **(NEW)**
-  - Treasure Found notifier  **(NEW)**
+  - Treasure Found notifier **(NEW)**
   - Precursor City Overlay **(NEW)**
   - Automaton Overlay **(NEW)**
   - Metal Detector Guesser **(NEW)**
@@ -153,7 +173,9 @@ See the [LICENSE](LICENSE) file for details.
 - Gaia construct helper
 - Syamese Lynx helper
 - Minos Inquisitor party chat & waypoint
-- Inquisitor Outline
+- Minos Inquisitor Glow — The glow goes on the Inquisitor, not its name marker or nearby mobs **(FIXED)**
+- Inquisitor Countdown — Removed duplicate warning message **(FIXED)**
+- Wilderness Area — Fixed the guesser bug in wilderness **(FIXED)**
 - Some QOL features
 
 ### Slayers
@@ -163,6 +185,5 @@ See the [LICENSE](LICENSE) file for details.
 - Slayer boss time
 - Blaze pillar title
 - Blaze attunements
-
 
 </div>

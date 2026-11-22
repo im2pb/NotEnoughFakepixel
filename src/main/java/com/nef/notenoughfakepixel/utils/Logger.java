@@ -1,7 +1,9 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.utils;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.variables.Colors;
 import com.nef.notenoughfakepixel.variables.Constants;
 import lombok.Setter;
 import net.minecraft.client.Minecraft;
@@ -24,13 +26,6 @@ public class Logger {
     @Setter
     private static volatile Boolean debugOverride = null;
 
-    /* ----------------- Public API ----------------- */
-
-    /**
-     * Logs a message to the chat.
-     *
-     * @param message The String message to log.
-     */
     public static void log(String message) {
         if (!isDebugEnabled()) return;
         if (!isClientChatReady()) return;
@@ -39,20 +34,11 @@ public class Logger {
                     new ChatComponentText(Constants.PREFIX + message)
             );
         } catch (Throwable ignored) {
-            // If chat logging fails (e.g., headless), fall back to console
+            
             logConsole(message);
         }
     }
 
-    public static void log(Colors color, String message) {
-        log(color + message + Colors.RESET);
-    }
-
-    /**
-     * Logs a message to the chat only once every second.
-     *
-     * @param message The String message to log.
-     */
     public static void logOnlyOnce(String message) {
         if (!isClientChatReady()) return;
         long now = System.currentTimeMillis();
@@ -60,17 +46,12 @@ public class Logger {
             try {
                 Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(Constants.PREFIX + message));
             } catch (Throwable ignored) {
-                // ignore
+                
             }
             lastLogTime = now;
         }
     }
 
-    /**
-     * Logs an error message to the chat.
-     *
-     * @param message The String message to log.
-     */
     public static void logError(String message) {
         if (!isDebugEnabled()) return;
         if (!isClientChatReady()) return;
@@ -83,41 +64,21 @@ public class Logger {
         }
     }
 
-    /**
-     * Logs an object to the chat.
-     *
-     * @param object The object to log.
-     */
     public static void log(Object object) {
         if (object == null) return;
         log(object.toString());
     }
 
-    /**
-     * Logs a message to the console.
-     *
-     * @param message The String message to log.
-     */
     public static void logConsole(String message) {
         if (!isDebugEnabled()) return;
         safeJulLog(Level.INFO, message);
     }
 
-    /**
-     * Logs an error to the console with a new line.
-     *
-     * @param error The String message to log.
-     */
     public static void logErrorConsole(String error) {
         if (!isDebugEnabled()) return;
         safeJulLog(Level.WARNING, error);
     }
 
-    /**
-     * Logs an object to the console.
-     *
-     * @param object The object to log.
-     */
     public static void logConsole(Object object) {
         if (!isDebugEnabled()) return;
         try {
@@ -127,7 +88,6 @@ public class Logger {
         }
     }
 
-    /** Never throws; if JUL has issues, fallback to stdout/stderr. */
     private static void safeJulLog(Level level, String msg) {
         String text = String.valueOf(msg);
         try {
@@ -144,14 +104,13 @@ public class Logger {
     private static boolean isDebugEnabled() {
         if (debugOverride != null) return debugOverride;
         try {
-            // Guard every hop to avoid NPEs during early lifecycle
+            
             return Config.feature.debug.debug;
         } catch (Throwable __) {
             return false;
         }
     }
 
-    /** Safe check: only true when chat is actually usable. */
     private static boolean isClientChatReady() {
         try {
             Minecraft mc = Minecraft.getMinecraft();
@@ -161,7 +120,6 @@ public class Logger {
         }
     }
 
-    // Log error to players
     public static void logErrorPlayers(String message) {
         if (!isClientChatReady()) return;
         try {

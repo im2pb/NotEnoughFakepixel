@@ -1,8 +1,11 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol.shortcuts;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.utils.KeybindHelper;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.config.gui.core.config.KeybindHelper;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.Logger;
 import net.minecraft.client.Minecraft;
@@ -25,26 +28,26 @@ public class WardrobeShortcut {
 
     @SubscribeEvent
     public void onKeyPress(InputEvent.KeyInputEvent event) {
-        if (!Config.feature.qol.shortcuts.qolShortcutWardrobe) return;
+        if (!Config.feature.qol.qolShortcutWardrobe) return;
         if (!SkyblockData.getCurrentGamemode().isSkyblock()) return;
         EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
 
-        boolean keyPressed = KeybindHelper.isKeyDown(Config.feature.qol.shortcuts.qolWardrobeKey);
+        boolean keyPressed = KeybindHelper.isKeyDown(Config.feature.qol.qolWardrobeKey);
 
-        if (keyPressed && !activeKeySet.contains(Config.feature.qol.shortcuts.qolWardrobeKey)) {
+        if (keyPressed && !activeKeySet.contains(Config.feature.qol.qolWardrobeKey)) {
             player.sendChatMessage("/wardrobe");
 
-            activeKeySet.add(Config.feature.qol.shortcuts.qolWardrobeKey);
+            activeKeySet.add(Config.feature.qol.qolWardrobeKey);
         }
 
-        if (!KeybindHelper.isKeyDown(Config.feature.qol.shortcuts.qolWardrobeKey)) {
-            activeKeySet.remove(Config.feature.qol.shortcuts.qolWardrobeKey);
+        if (!KeybindHelper.isKeyDown(Config.feature.qol.qolWardrobeKey)) {
+            activeKeySet.remove(Config.feature.qol.qolWardrobeKey);
         }
     }
 
     @SubscribeEvent
     public void onKeyPressOnGui(GuiScreenEvent.KeyboardInputEvent event) {
-        if (!Config.feature.qol.shortcuts.qolShortcutWardrobe) return;
+        if (!Config.feature.qol.qolShortcutWardrobe) return;
         if (!SkyblockData.getCurrentGamemode().isSkyblock()) return;
         if (!(event.gui instanceof GuiChest)) return;
         GuiChest chest = (GuiChest) event.gui;
@@ -56,16 +59,16 @@ public class WardrobeShortcut {
 
         EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
 
-        boolean keyPressed = KeybindHelper.isKeyDown(Config.feature.qol.shortcuts.qolWardrobeKey);
+        boolean keyPressed = KeybindHelper.isKeyDown(Config.feature.qol.qolWardrobeKey);
 
-        if (keyPressed && !activeKeySet.contains(Config.feature.qol.shortcuts.qolWardrobeKey)) {
+        if (keyPressed && !activeKeySet.contains(Config.feature.qol.qolWardrobeKey)) {
             Minecraft.getMinecraft().thePlayer.closeScreen();
 
-            activeKeySet.add(Config.feature.qol.shortcuts.qolWardrobeKey);
+            activeKeySet.add(Config.feature.qol.qolWardrobeKey);
         }
 
-        if (!KeybindHelper.isKeyDown(Config.feature.qol.shortcuts.qolWardrobeKey)) {
-            activeKeySet.remove(Config.feature.qol.shortcuts.qolWardrobeKey);
+        if (!KeybindHelper.isKeyDown(Config.feature.qol.qolWardrobeKey)) {
+            activeKeySet.remove(Config.feature.qol.qolWardrobeKey);
         }
     }
 
@@ -95,7 +98,7 @@ public class WardrobeShortcut {
 
     private void handleWardrobeInput(GuiChest chestGui) {
         if (!SkyblockData.getCurrentGamemode().isSkyblock() ||
-                !Config.feature.qol.shortcuts.qolShortcutSlotsWardrobe) {
+                !Config.feature.qol.qolShortcutSlotsWardrobe) {
             return;
         }
 
@@ -111,7 +114,6 @@ public class WardrobeShortcut {
                 Config.feature.qol.resetWardrobeSlotKeybinds();
                 continue;
             }
-
 
             if (keyDown && !keyStates[slot] && (now - lastClickTime) > 100) {
                 clickSlot(chestGui, slot);
@@ -138,15 +140,15 @@ public class WardrobeShortcut {
 
     private int getKeyCode(int slot) {
         switch (slot) {
-            case 1: return Config.feature.qol.shortcuts.qolWardrobeKey1;
-            case 2: return Config.feature.qol.shortcuts.qolWardrobeKey2;
-            case 3: return Config.feature.qol.shortcuts.qolWardrobeKey3;
-            case 4: return Config.feature.qol.shortcuts.qolWardrobeKey4;
-            case 5: return Config.feature.qol.shortcuts.qolWardrobeKey5;
-            case 6: return Config.feature.qol.shortcuts.qolWardrobeKey6;
-            case 7: return Config.feature.qol.shortcuts.qolWardrobeKey7;
-            case 8: return Config.feature.qol.shortcuts.qolWardrobeKey8;
-            case 9: return Config.feature.qol.shortcuts.qolWardrobeKey9;
+            case 1: return Config.feature.qol.qolWardrobeKey1;
+            case 2: return Config.feature.qol.qolWardrobeKey2;
+            case 3: return Config.feature.qol.qolWardrobeKey3;
+            case 4: return Config.feature.qol.qolWardrobeKey4;
+            case 5: return Config.feature.qol.qolWardrobeKey5;
+            case 6: return Config.feature.qol.qolWardrobeKey6;
+            case 7: return Config.feature.qol.qolWardrobeKey7;
+            case 8: return Config.feature.qol.qolWardrobeKey8;
+            case 9: return Config.feature.qol.qolWardrobeKey9;
             default: return Keyboard.KEY_NONE;
         }
     }

@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.ItemUtils;
 import com.nef.notenoughfakepixel.variables.Skins;
@@ -27,7 +30,7 @@ public class HideFlamingFists {
     @SubscribeEvent
     public void onEntitySpawn(EntityJoinWorldEvent event) {
         if (!Config.feature.qol.qolHideFlamingFists || !SkyblockData.getCurrentGamemode().isSkyblock()) return;
-        if (!event.world.isRemote) return; // client only
+        if (!event.world.isRemote) return; 
 
         if (event.entity instanceof EntityArmorStand) {
             trackedStands.add((EntityArmorStand) event.entity);
@@ -47,7 +50,7 @@ public class HideFlamingFists {
         trackedStands.removeIf(s -> s == null || s.isDead || !s.isEntityAlive());
 
         for (EntityArmorStand stand : trackedStands) {
-            ItemStack head = stand.getEquipmentInSlot(4);  // helmet (1-based API)
+            ItemStack head = stand.getEquipmentInSlot(4);  
 
             if (head == null) continue;
             if (isTargetSkull(head)) {
@@ -56,7 +59,6 @@ public class HideFlamingFists {
         }
     }
 
-    // Unified skull detection method
     public static boolean isTargetSkull(ItemStack stack) {
         if (stack == null || stack.getItem() != Items.skull) return false;
         String texture = ItemUtils.getSkullTexture(stack);
@@ -74,7 +76,7 @@ public class HideFlamingFists {
         if (!Config.feature.qol.qolHideFlamingFists || !(event.entity instanceof EntityArmorStand)) return;
 
         EntityArmorStand stand = (EntityArmorStand) event.entity;
-        ItemStack head = stand.getEquipmentInSlot(4); // helmet
+        ItemStack head = stand.getEquipmentInSlot(4); 
         if (isTargetSkull(head)) {
             event.setCanceled(true);
         }

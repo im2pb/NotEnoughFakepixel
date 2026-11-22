@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.commands;
 
-import com.nef.notenoughfakepixel.utils.Utils;
-import com.nef.notenoughfakepixel.env.registers.RegisterCommand;
+import com.nef.notenoughfakepixel.config.gui.utils.Utils;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterCommand;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 
@@ -31,5 +34,3 @@ public class CopyCommand extends CommandBase {
     }
 
 }
-
-

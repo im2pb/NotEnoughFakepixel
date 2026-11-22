@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.mixin.accesors.EntityPlayerAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
@@ -34,18 +37,18 @@ public class ItemAnimations {
     private static float lastCustomZ = Float.NaN;
 
     private static void recacheIfNeeded() {
-        final float cSize = Config.feature.qol.itemAnimation.customSize;
-        final float cX    = Config.feature.qol.itemAnimation.customX;
-        final float cY    = Config.feature.qol.itemAnimation.customY;
-        final float cZ    = Config.feature.qol.itemAnimation.customZ;
+        final float cSize = Config.feature.qol.customSize;
+        final float cX    = Config.feature.qol.customX;
+        final float cY    = Config.feature.qol.customY;
+        final float cZ    = Config.feature.qol.customZ;
 
         if (cSize != lastCustomSize) {
-            // era: 0.4f * exp(size)
+            
             cachedSizeScale = (float) (0.4f * Math.exp(cSize));
             lastCustomSize = cSize;
         }
         if (cX != lastCustomX || cY != lastCustomY || cZ != lastCustomZ) {
-            // Mantengo tu convención de signos (X: +, Y: -, Z: -)
+            
             cachedPivotX = RenderConstants.VANILLA_PIVOT_X * (1.0f + cX);
             cachedPivotY = -RenderConstants.VANILLA_PIVOT_Y * (1.0f - cY);
             cachedPivotZ = -RenderConstants.VANILLA_PIVOT_Z * (1.0f + cZ);
@@ -59,30 +62,19 @@ public class ItemAnimations {
         return v < 0f ? 0f : (Math.min(v, 1f));
     }
 
-    /**
-     * Transforma el ítem en primera persona (equip + swing + rotaciones personalizadas + escala).
-     *
-     * @param equipProgress 0..1
-     * @param swingProgress 0..1
-     */
     public static void processItemAnimation(float equipProgress, float swingProgress) {
         recacheIfNeeded();
 
-        // Custom offsets
         GlStateManager.translate(cachedPivotX, cachedPivotY, cachedPivotZ);
 
-        // Equip animation (vanilla-like)
         GlStateManager.translate(0.0f, -0.6f * equipProgress, 0.0f);
 
-        // Custom Rotations
-        GlStateManager.rotate(Config.feature.qol.itemAnimation.customPitch, 1.0f, 0.0f, 0.0f);
-        GlStateManager.rotate(Config.feature.qol.itemAnimation.customYaw,   0.0f, 1.0f, 0.0f);
-        GlStateManager.rotate(Config.feature.qol.itemAnimation.customRoll,  0.0f, 0.0f, 1.0f);
+        GlStateManager.rotate(Config.feature.qol.customPitch, 1.0f, 0.0f, 0.0f);
+        GlStateManager.rotate(Config.feature.qol.customYaw,   0.0f, 1.0f, 0.0f);
+        GlStateManager.rotate(Config.feature.qol.customRoll,  0.0f, 0.0f, 1.0f);
 
-        // Vanilla-like yaw
         GlStateManager.rotate(45.0f, 0.0f, 1.0f, 0.0f);
 
-        // Swing (precompute)
         final float swingSin     = MathHelper.sin(swingProgress * swingProgress * PI_F);
         final float swingSqrtSin = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * PI_F);
 
@@ -93,15 +85,9 @@ public class ItemAnimations {
         GlStateManager.scale(cachedSizeScale, cachedSizeScale, cachedSizeScale);
     }
 
-    /**
-     * Applies a custom swing-based translation to the held item.
-     *
-     * @param swingProgress Swing animation progress (0.0F - 1.0F).
-     */
     public static void changeSwingScale(float swingProgress) {
         recacheIfNeeded();
 
-        // Precompute common
         final float swingSqrt = MathHelper.sqrt_float(swingProgress) * PI_F;
         final float sinSqrt   = MathHelper.sin(swingSqrt);
         final float sinSqrt2  = MathHelper.sin(swingSqrt * 2.0f);
@@ -114,12 +100,6 @@ public class ItemAnimations {
         GlStateManager.translate(offsetX, offsetY, offsetZ);
     }
 
-    /**
-     * Applies a vertical "drinking" bobbing effect without rotating the item.
-     *
-     * @param clientPlayer The player rendering the drink animation.
-     * @param partialTicks Partial render ticks for smooth interpolation.
-     */
     public static void rotationlessDrink(AbstractClientPlayer clientPlayer, float partialTicks) {
         if (clientPlayer == null || mc.thePlayer == null || mc.thePlayer.getHeldItem() == null) return;
 
@@ -135,14 +115,6 @@ public class ItemAnimations {
         GlStateManager.translate(0.0f, yOffset, 0.0f);
     }
 
-    /**
-     * Drinking animation con pivot personalizado y sin fugas de transformaciones.
-     * Compatible con MC 1.8.9 (MathHelper.sqrt_float).
-     *
-     * @param clientPlayer jugador (render)
-     * @param partialTicks partial ticks
-     * @param itemToRender item actualmente en uso (no asumo mc.thePlayer.getHeldItem())
-     */
     public static void scaledDrinking(AbstractClientPlayer clientPlayer, float partialTicks, ItemStack itemToRender) {
         if (clientPlayer == null || itemToRender == null) return;
         recacheIfNeeded();
@@ -175,22 +147,19 @@ public class ItemAnimations {
         GlStateManager.popMatrix();
     }
 
-    // Flags
-
     public static boolean shouldChange() {
-        return Config.feature.qol.itemAnimation.customAnimations;
+        return Config.feature.qol.customAnimations;
     }
 
     public static boolean shouldChangeScaleSwing() {
-        return shouldChange() && Config.feature.qol.itemAnimation.doesScaleSwing;
+        return shouldChange() && Config.feature.qol.doesScaleSwing;
     }
 
     public static boolean shouldRotationlessDrink() {
-        return shouldChange() && Config.feature.qol.itemAnimation.drinkingSelector == 1;
+        return shouldChange() && Config.feature.qol.drinkingSelector == 1;
     }
 
     public static boolean shouldScaledDrink() {
-        return shouldChange() && Config.feature.qol.itemAnimation.drinkingSelector == 2;
+        return shouldChange() && Config.feature.qol.drinkingSelector == 2;
     }
 }
-

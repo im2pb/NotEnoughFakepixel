@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.dungeons.puzzles;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -33,7 +36,7 @@ public class TeleportMazeSolver {
     @SubscribeEvent
     public void onTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.START) return;
-        if (!Config.feature.dungeons.puzzles.dungeonsTeleportMaze || !SkyblockData.getCurrentLocation().isDungeon()) return;
+        if (!Config.feature.dungeons.dungeonsTeleportMaze || !SkyblockData.getCurrentLocation().isDungeon()) return;
         if (mc.thePlayer == null || mc.theWorld == null) return;
         BlockPos groundBlock = new BlockPos(mc.thePlayer.posX, 69, mc.thePlayer.posZ);
         IBlockState state = mc.theWorld.getBlockState(groundBlock);
@@ -73,7 +76,7 @@ public class TeleportMazeSolver {
 
     @SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
-        if (!Config.feature.dungeons.puzzles.dungeonsTeleportMaze) return;
+        if (!Config.feature.dungeons.dungeonsTeleportMaze) return;
         Entity viewer = Minecraft.getMinecraft().getRenderViewEntity();
         double viewerX = viewer.lastTickPosX + (viewer.posX - viewer.lastTickPosX) * event.partialTicks;
         double viewerY = viewer.lastTickPosY + (viewer.posY - viewer.lastTickPosY) * event.partialTicks;
@@ -106,7 +109,6 @@ public class TeleportMazeSolver {
 
         GlStateManager.color(c.getRed() / 255f, c.getGreen() / 255f, c.getBlue() / 255f, c.getAlpha() / 255f * alphaMultiplier);
 
-        //vertical
         worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
         worldrenderer.pos(aabb.minX, aabb.minY, aabb.minZ).endVertex();
         worldrenderer.pos(aabb.maxX, aabb.minY, aabb.minZ).endVertex();
@@ -119,11 +121,9 @@ public class TeleportMazeSolver {
         worldrenderer.pos(aabb.maxX, aabb.maxY, aabb.minZ).endVertex();
         worldrenderer.pos(aabb.minX, aabb.maxY, aabb.minZ).endVertex();
         tessellator.draw();
-
 
         GlStateManager.color(c.getRed() / 255f * 0.8f, c.getGreen() / 255f * 0.8f, c.getBlue() / 255f * 0.8f, c.getAlpha() / 255f * alphaMultiplier);
 
-        //x
         worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
         worldrenderer.pos(aabb.minX, aabb.minY, aabb.maxZ).endVertex();
         worldrenderer.pos(aabb.minX, aabb.maxY, aabb.maxZ).endVertex();
@@ -137,9 +137,8 @@ public class TeleportMazeSolver {
         worldrenderer.pos(aabb.maxX, aabb.minY, aabb.maxZ).endVertex();
         tessellator.draw();
 
-
         GlStateManager.color(c.getRed() / 255f * 0.9f, c.getGreen() / 255f * 0.9f, c.getBlue() / 255f * 0.9f, c.getAlpha() / 255f * alphaMultiplier);
-        //z
+        
         worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
         worldrenderer.pos(aabb.minX, aabb.maxY, aabb.minZ).endVertex();
         worldrenderer.pos(aabb.maxX, aabb.maxY, aabb.minZ).endVertex();
@@ -156,4 +155,3 @@ public class TeleportMazeSolver {
         GlStateManager.disableBlend();
     }
 }
-

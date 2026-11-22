@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.ColorUtils;
 import com.nef.notenoughfakepixel.utils.ItemUtils;
@@ -31,7 +34,7 @@ public class GiftWaypoints {
 
     @SubscribeEvent
     public void onRenderWorldLast(RenderWorldLastEvent event) {
-        if (!Config.feature.waypoints.giftWaypointsSettings.giftWaypoints) return;
+        if (!Config.feature.waypoints.giftWaypoints) return;
         if (SkyblockData.getCurrentLocation() != Location.JERRY) return;
         List<BlockPos> toRender = new ArrayList<>(giftWaypoints);
 
@@ -41,20 +44,20 @@ public class GiftWaypoints {
             if (foundGifts.stream().anyMatch(blockPos -> blockPos.distanceSq(pos) < 0.01)) {
                 continue;
             }
-            renderGiftWaypoint(pos.add(0, 1, 0), event.partialTicks, ColorUtils.getColor(Config.feature.waypoints.giftWaypointsSettings.giftWaypointsColor));
+            renderGiftWaypoint(pos.add(0, 1, 0), event.partialTicks, ColorUtils.getColor(Config.feature.waypoints.giftWaypointsColor));
         }
 
     }
 
     public void renderStJerry(float partialTicks) {
-        if (!Config.feature.waypoints.giftWaypointsSettings.stJerryLocation) return;
+        if (!Config.feature.waypoints.stJerryLocation) return;
         renderGiftBeacon(new BlockPos(-22.5, 76, 92.5), partialTicks, new Color(224, 78, 78));
         RenderUtils.renderWaypointText("St. Jerry", new BlockPos(-22.5, 77.5, 92.5), partialTicks, false);
     }
 
     @SubscribeEvent
     public void onTickEvent(TickEvent.ClientTickEvent event) {
-        if (!Config.feature.waypoints.giftWaypointsSettings.giftWaypoints) return;
+        if (!Config.feature.waypoints.giftWaypoints) return;
         if (SkyblockData.getCurrentLocation() != Location.JERRY) return;
         if (event.phase != TickEvent.Phase.END) return;
         if (lastGiftSearchTime == 0) lastGiftSearchTime = System.currentTimeMillis();
@@ -79,7 +82,7 @@ public class GiftWaypoints {
 
     @SubscribeEvent
     public void onChatReceived(ClientChatReceivedEvent event) {
-        if (!Config.feature.waypoints.giftWaypointsSettings.giftWaypoints) return;
+        if (!Config.feature.waypoints.giftWaypoints) return;
         if (SkyblockData.getCurrentLocation() != Location.JERRY) return;
 
         if (event.message.getUnformattedText().equals("GIFT! You found all of the Gifts! Talk to St. Jerry to receive a reward!")) {
@@ -129,6 +132,4 @@ public class GiftWaypoints {
         foundGifts.clear();
     }
 
-
 }
-

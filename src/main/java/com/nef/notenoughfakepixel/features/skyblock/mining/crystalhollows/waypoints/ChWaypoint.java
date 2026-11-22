@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows.waypoints;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
@@ -34,7 +37,6 @@ public class ChWaypoint {
         return temporary == null || temporary;
     }
 
-    // Returns true if toggled is null or true
     public boolean isToggledSafe() {
         return toggled == null || toggled;
     }
@@ -42,11 +44,10 @@ public class ChWaypoint {
     public int getColorRgbOrDefault() {
         Integer c = colorRgb;
         if (c != null) return c;
-        return ColorUtils.getColor(Config.feature.mining.waypointSettings.crystalWaypointColor).getRGB();
+        return ColorUtils.getColor(Config.feature.mining.crystalWaypointColor).getRGB();
     }
 
     public void setColorRgb(int rgb) {
         this.colorRgb = rgb;
     }
 }
-

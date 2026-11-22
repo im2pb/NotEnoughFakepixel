@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.overlays;
 
 import net.minecraft.client.Minecraft;
@@ -13,15 +16,15 @@ public abstract class Overlay {
     public final Minecraft mc = Minecraft.getMinecraft();
 
     public void draw(float x, float y, float scale, String bgColorOption) {
-        draw(getLines(), x, y, scale, bgColorOption);
+        draw(x, y, scale, bgColorOption, getLines());
     }
 
-    public void draw(List<String> lines, float x, float y, float scale, String bgColorOption) {
+    /** Draws a pre-collected line snapshot so callers can reuse it for layout and rendering. */
+    public void draw(float x, float y, float scale, String bgColorOption, List<String> lines) {
         GlStateManager.pushMatrix();
         GlStateManager.translate(x, y, 0);
         GlStateManager.scale(scale, scale, scale);
 
-        // Parse background color
         String[] colorParts = bgColorOption.split(":");
         int alpha = Integer.parseInt(colorParts[1]);
         int red = Integer.parseInt(colorParts[2]);
@@ -29,18 +32,12 @@ public abstract class Overlay {
         int blue = Integer.parseInt(colorParts[4]);
         int bgColor = (alpha << 24) | (red << 16) | (green << 8) | blue;
 
-        // Draw background
         int width = (int) getWidth(scale, lines);
         int height = (int) getHeight(scale, lines);
         Gui.drawRect(0, 0, width, height, bgColor);
 
-        // Draw text
         for (int i = 0; i < lines.size(); i++) {
-            if (useTextShadow()) {
-                mc.fontRendererObj.drawStringWithShadow(lines.get(i), 2, (i * LINE_HEIGHT) + 2, -1);
-            } else {
-                mc.fontRendererObj.drawString(lines.get(i), 2, (i * LINE_HEIGHT) + 2, -1);
-            }
+            mc.fontRendererObj.drawString(lines.get(i), 2, (i * LINE_HEIGHT) + 2, -1);
         }
 
         GlStateManager.popMatrix();
@@ -52,10 +49,6 @@ public abstract class Overlay {
             if (line.length() > longest) longest = line.length();
         }
         return Math.max(longest, MINIMUM_WIDTH);
-    }
-
-    protected boolean useTextShadow() {
-        return false;
     }
 
     public abstract boolean shouldShow();

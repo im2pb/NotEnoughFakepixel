@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.features.skyblock.overlays.Timer;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.variables.Location;
@@ -17,7 +20,7 @@ public class WormSpawnTimer extends Timer {
 
     @Override
     public boolean shouldShow() {
-        return Config.feature.mining.crystalHollows.wormTimerCooldown && SkyblockData.getCurrentGamemode().isSkyblock() && SkyblockData.getCurrentLocation().equals(Location.CRYSTAL_HOLLOWS);
+        return Config.feature.mining.wormTimerCooldown && SkyblockData.getCurrentGamemode().isSkyblock() && SkyblockData.getCurrentLocation().equals(Location.CRYSTAL_HOLLOWS);
     }
 
     @Override
@@ -39,7 +42,7 @@ public class WormSpawnTimer extends Timer {
 
     @Override
     public float getScale() {
-        return Config.feature.mining.wormTimerSettings.wormTimerScale;
+        return Config.feature.mining.wormTimerScale;
     }
 
     @Override
@@ -50,14 +53,14 @@ public class WormSpawnTimer extends Timer {
     @Override
     public int getX() {
         ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
-        int x = Config.feature.mining.wormTimerSettings.wormTimerPos.getAbsX(sr, this.getObjectWidth());
+        int x = Config.feature.mining.wormTimerPos.getAbsX(sr, this.getObjectWidth());
         return x - getObjectWidth()/2;
     }
 
     @Override
     public int getY() {
         ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
-        int y = Config.feature.mining.wormTimerSettings.wormTimerPos.getAbsY(sr, this.getObjectHeight());
+        int y = Config.feature.mining.wormTimerPos.getAbsY(sr, this.getObjectHeight());
         return y - getObjectHeight()/2;
     }
 
@@ -66,4 +69,3 @@ public class WormSpawnTimer extends Timer {
     }
 
 }
-

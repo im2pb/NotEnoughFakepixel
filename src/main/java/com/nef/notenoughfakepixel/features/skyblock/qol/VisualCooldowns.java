@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.StringUtils;
 import com.nef.notenoughfakepixel.variables.Gamemode;
@@ -69,16 +72,18 @@ public class VisualCooldowns {
                     break;
                 }
             }
+
+            if (Minecraft.getMinecraft().thePlayer == null) return;
             ItemStack item = Minecraft.getMinecraft().thePlayer.getHeldItem();
-            //System.out.println(item);
+            if (item == null) return;
             for (ItemStack stack : cooldowns.keySet()) {
                 if (stack.getDisplayName().equals(item.getDisplayName())) {
-                    cooldowns.replace(item, cooldownTime);
+                    cooldowns.replace(stack, cooldownTime);
                     return;
                 }
             }
             cooldowns.put(item, cooldownTime);
-            //System.out.println(cooldowns);
+            
         }
     }
 

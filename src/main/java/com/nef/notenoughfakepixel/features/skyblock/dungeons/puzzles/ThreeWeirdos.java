@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.dungeons.puzzles;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.SoundUtils;
 import net.minecraft.client.Minecraft;
@@ -48,7 +51,7 @@ public class ThreeWeirdos {
 
     @SubscribeEvent
     public void onChatReceive(ClientChatReceivedEvent e) {
-        if (!Config.feature.dungeons.puzzles.dungeonsThreeWeirdos) return;
+        if (!Config.feature.dungeons.dungeonsThreeWeirdos) return;
         if (mc.thePlayer == null) return;
         if (!SkyblockData.getCurrentGamemode().isSkyblock()) return;
         if (!SkyblockData.getCurrentLocation().isDungeon()) return;
@@ -108,7 +111,7 @@ public class ThreeWeirdos {
 
     @SubscribeEvent
     public void onRenderLast(RenderWorldLastEvent event) {
-        if (!Config.feature.dungeons.puzzles.dungeonsThreeWeirdos) return;
+        if (!Config.feature.dungeons.dungeonsThreeWeirdos) return;
         if (mc.theWorld == null) return;
         if (!foundResponse) return;
         if (correctName.isEmpty()) return;
@@ -154,46 +157,43 @@ public class ThreeWeirdos {
             GlStateManager.depthMask(false);
         }
 
-        // Prevent Z-fighting
         GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
         GL11.glPolygonOffset(1.0f, 1.0f);
 
         GlStateManager.color(colour.getRed() / 255f, colour.getGreen() / 255f, colour.getBlue() / 255f, colour.getAlpha() / 255f);
         worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
 
-        // Bottom
         worldRenderer.pos(aabb.minX, aabb.minY, aabb.minZ).endVertex();
         worldRenderer.pos(aabb.maxX, aabb.minY, aabb.minZ).endVertex();
         worldRenderer.pos(aabb.maxX, aabb.minY, aabb.maxZ).endVertex();
         worldRenderer.pos(aabb.minX, aabb.minY, aabb.maxZ).endVertex();
-        // Top
+        
         worldRenderer.pos(aabb.minX, aabb.maxY, aabb.minZ).endVertex();
         worldRenderer.pos(aabb.maxX, aabb.maxY, aabb.minZ).endVertex();
         worldRenderer.pos(aabb.maxX, aabb.maxY, aabb.maxZ).endVertex();
         worldRenderer.pos(aabb.minX, aabb.maxY, aabb.maxZ).endVertex();
-        // West
+        
         worldRenderer.pos(aabb.minX, aabb.minY, aabb.minZ).endVertex();
         worldRenderer.pos(aabb.minX, aabb.maxY, aabb.minZ).endVertex();
         worldRenderer.pos(aabb.minX, aabb.maxY, aabb.maxZ).endVertex();
         worldRenderer.pos(aabb.minX, aabb.minY, aabb.maxZ).endVertex();
-        // East
+        
         worldRenderer.pos(aabb.maxX, aabb.minY, aabb.minZ).endVertex();
         worldRenderer.pos(aabb.maxX, aabb.maxY, aabb.minZ).endVertex();
         worldRenderer.pos(aabb.maxX, aabb.maxY, aabb.maxZ).endVertex();
         worldRenderer.pos(aabb.maxX, aabb.minY, aabb.maxZ).endVertex();
-        // North
+        
         worldRenderer.pos(aabb.minX, aabb.minY, aabb.minZ).endVertex();
         worldRenderer.pos(aabb.maxX, aabb.minY, aabb.minZ).endVertex();
         worldRenderer.pos(aabb.maxX, aabb.maxY, aabb.minZ).endVertex();
         worldRenderer.pos(aabb.minX, aabb.maxY, aabb.minZ).endVertex();
-        // South
+        
         worldRenderer.pos(aabb.minX, aabb.minY, aabb.maxZ).endVertex();
         worldRenderer.pos(aabb.maxX, aabb.minY, aabb.maxZ).endVertex();
         worldRenderer.pos(aabb.maxX, aabb.maxY, aabb.maxZ).endVertex();
         worldRenderer.pos(aabb.minX, aabb.maxY, aabb.maxZ).endVertex();
         Tessellator.getInstance().draw();
 
-        // Restore state
         GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
 
         if (!depth) {
@@ -210,4 +210,3 @@ public class ThreeWeirdos {
         GlStateManager.popMatrix();
     }
 }
-

@@ -1,5 +1,9 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol.slothighlight;
 
+import com.nef.notenoughfakepixel.envcheck.registers.GatedListener;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.InventoryUtils;
 import com.nef.notenoughfakepixel.utils.ItemUtils;
@@ -14,33 +18,31 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.awt.*;
 
-public abstract class HightlightSlot {
+public abstract class HightlightSlot implements GatedListener {
 
-    // The lore line that this feature applies to
     public abstract String getLoreLine();
 
-    // The name of the item that this feature applies to
     public abstract String getName();
 
-    // The name of the container (chest) that this feature applies to
     public abstract String getContainerName();
 
-    // The config option (or boolean expression) that enables this feature
     public abstract boolean getConfigOption();
 
-    // This is used to check if the feature should only be enabled in Skyblock
     public boolean onlyInSkyblock() {
         return true;
     }
 
-    // This is the color the slot is highlighted with
     public Color getHighlightColor() {
         return new Color(55, 255, 55);
     }
 
-    // This is used to check if the feature should only highlight the first slot found
     public boolean highlightOnlyFirst() {
         return false;
+    }
+
+    @Override
+    public boolean isListenerActive() {
+        return getConfigOption() && (!onlyInSkyblock() || SkyblockData.getCurrentGamemode().isSkyblock());
     }
 
     @SubscribeEvent
@@ -73,14 +75,12 @@ public abstract class HightlightSlot {
         }
     }
 
-    // Check if the lore line, name, and container name are not null or empty
     private boolean checkForEssentials() {
         return (getLoreLine() != null && !getLoreLine().isEmpty())
                 || (getName() != null && !getName().isEmpty())
                 && getContainerName() != null && !getContainerName().isEmpty();
     }
 
-    // Highlight the slot with the specified color
     private void highlightSlot(Slot slot, GuiChest chest) {
         InventoryUtils.highlightSlot(slot, chest, getHighlightColor());
     }

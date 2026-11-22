@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol.customaliases;
 
 import com.nef.notenoughfakepixel.utils.Utils;
@@ -10,7 +13,7 @@ import java.util.List;
 
 public class AliasManagementGui extends GuiScreen {
     private int scrollOffset = 0;
-    private static final int MAX_DISPLAYED = 12; // Max aliases to display at once
+    private static final int MAX_DISPLAYED = 12; 
     private static final int ENTRY_HEIGHT = 30;
     private int sliderY = 40;
     private boolean dragging = false;
@@ -23,7 +26,7 @@ public class AliasManagementGui extends GuiScreen {
     }
 
     private void updateButtons() {
-        buttonList.removeIf(button -> button.id != 0); // Keep only "Add Alias" button
+        buttonList.removeIf(button -> button.id != 0); 
 
         int y = 40;
         List<CustomAliases.Alias> displayedAliases = CustomAliases.aliases.subList(
@@ -64,7 +67,6 @@ public class AliasManagementGui extends GuiScreen {
             y += ENTRY_HEIGHT;
         }
 
-        // Draw scrollbar
         int scrollbarX = width - 10;
         int scrollbarHeight = (int) ((float) MAX_DISPLAYED / CustomAliases.aliases.size() * (height - 60));
         drawRect(scrollbarX, sliderY, scrollbarX + 5, sliderY + scrollbarHeight, 0xFFAAAAAA);
@@ -138,7 +140,7 @@ public class AliasManagementGui extends GuiScreen {
         CustomAliases.Alias alias = CustomAliases.aliases.get(aliasIndex);
 
         int buttonType = (button.id - 1) % 3;
-        if (buttonType == 0) { // Toggle
+        if (buttonType == 0) { 
             alias.toggle();
             if (alias.toggled) {
                 CustomAliases.registerAliases();
@@ -146,12 +148,12 @@ public class AliasManagementGui extends GuiScreen {
                 CustomAliases.unregisterAlias(alias);
             }
             CustomAliases.save();
-        } else if (buttonType == 1) { // Remove
+        } else if (buttonType == 1) { 
             CustomAliases.aliases.remove(aliasIndex);
             CustomAliases.unregisterAlias(alias);
             CustomAliases.save();
             updateButtons();
-        } else if (buttonType == 2 && button instanceof EditButton) { // Edit
+        } else if (buttonType == 2 && button instanceof EditButton) { 
             mc.displayGuiScreen(new AddAliasGui(this, alias));
         }
     }

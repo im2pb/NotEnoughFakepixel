@@ -1,9 +1,12 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.dungeons;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -13,13 +16,17 @@ import net.minecraft.init.Items;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.Slot;
+import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.scoreboard.Score;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.util.StringUtils;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.input.Mouse;
@@ -27,6 +34,9 @@ import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,7 +51,7 @@ public class SpiritLeapHandler {
         public final String playerName;
         public final String colorCode;
         public final int slotId;
-        public final String className;
+        public String className;
         public int boxX, boxY, boxWidth, boxHeight;
 
         public PlayerData(String playerName, String colorCode, int slotId, String className) {
@@ -60,7 +70,6 @@ public class SpiritLeapHandler {
                 .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
                 .toString();
     }
-
 
     private static List<String> getSidebarLines() {
         List<String> lines = new ArrayList<>();
@@ -97,21 +106,73 @@ public class SpiritLeapHandler {
 
         private static final Minecraft mc = Minecraft.getMinecraft();
 
-        private String getClassFromLetter(String letter) {
-            switch (letter) {
-                case "B":
-                    return "Berserk";
-                case "A":
-                    return "Archer";
-                case "T":
-                    return "Tank";
-                case "H":
-                    return "Healer";
-                case "M":
-                    return "Mage";
-                default:
-                    return "Unknown";
+        private static final String UNKNOWN = "Unknown";
+
+        private static final Pattern LORE_CLASS = Pattern.compile("(?i)class\\W+(archer|berserk|healer|mage|tank)");
+
+        private long lastLearnTime;
+        private int learnTicks;
+
+        private static String normalizeClass(String name) {
+            String lower = name.toLowerCase(Locale.ROOT);
+            switch (lower) {
+                case "berserk": return "Berserk";
+                case "archer": return "Archer";
+                case "tank": return "Tank";
+                case "healer": return "Healer";
+                case "mage": return "Mage";
+                default: return UNKNOWN;
             }
+        }
+
+        private static int classColor(String className) {
+            switch (className) {
+                case "Berserk": return 0x55FF55; 
+                case "Mage": return 0x40D8FF;    
+                case "Tank": return 0xFF5555;    
+                case "Healer": return 0xFF55E6;  
+                case "Archer": return 0xFFAA00;  
+                default: return -1;
+            }
+        }
+
+        private static void learnClasses() {
+            DungeonParty.refresh();
+        }
+
+        private static String classFromLore(ItemStack stack) {
+            if (stack == null || !stack.hasTagCompound()) return null;
+            NBTTagCompound display = stack.getTagCompound().getCompoundTag("display");
+            if (!display.hasKey("Lore", 9)) return null;
+            NBTTagList lore = display.getTagList("Lore", 8);
+            for (int i = 0; i < lore.tagCount(); i++) {
+                Matcher matcher = LORE_CLASS.matcher(StringUtils.stripControlCodes(lore.getStringTagAt(i)));
+                if (matcher.find()) return normalizeClass(matcher.group(1));
+            }
+            return null;
+        }
+
+        private static String resolveClass(String playerName, ItemStack stack) {
+            String known = DungeonParty.classOf(playerName);
+            if (known != null) return known;
+            String fromLore = classFromLore(stack);
+            return fromLore != null ? fromLore : UNKNOWN;
+        }
+
+        @SubscribeEvent
+        public void onClientTick(net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent event) {
+            if (event.phase != net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END) return;
+            if (++learnTicks < 40) return;
+            learnTicks = 0;
+            if (!Config.feature.dungeons.dungeonsSpiritLeapGUI || !SkyblockData.getCurrentLocation().isDungeon()) return;
+            if (mc.thePlayer == null || mc.theWorld == null) return;
+            learnClasses();
+        }
+
+        @SubscribeEvent
+        public void onWorldUnload(WorldEvent.Unload event) {
+            DungeonParty.clear();
+            playerDataList.clear();
         }
 
         @SubscribeEvent(priority = EventPriority.HIGHEST)
@@ -125,7 +186,7 @@ public class SpiritLeapHandler {
                         .getUnformattedText()
                         .trim();
 
-                if (Config.feature.dungeons.general.dungeonsSpiritLeapGUI && SkyblockData.getCurrentLocation().isDungeon() && "Spirit Leap".equals(displayName)) {
+                if (Config.feature.dungeons.dungeonsSpiritLeapGUI && SkyblockData.getCurrentLocation().isDungeon() && "Spirit Leap".equals(displayName)) {
                     playerDataList.clear();
                 }
             }
@@ -142,7 +203,7 @@ public class SpiritLeapHandler {
                         .getUnformattedText()
                         .trim();
 
-                if (Config.feature.dungeons.general.dungeonsSpiritLeapGUI && SkyblockData.getCurrentLocation().isDungeon() && "Spirit Leap".equals(displayName)) {
+                if (Config.feature.dungeons.dungeonsSpiritLeapGUI && SkyblockData.getCurrentLocation().isDungeon() && "Spirit Leap".equals(displayName)) {
                     event.setCanceled(true);
 
                     if (playerDataList.isEmpty()) {
@@ -167,24 +228,36 @@ public class SpiritLeapHandler {
                     String name = matcher.group(1);
                     if (name.equals("Unknown")) continue;
 
-                    String dungeonClass = "Unknown";
-                    for (String l : getSidebarLines()) {
-                        String line = cleanSB(l);
-                        if (line.contains(name)) {
-                            int classStart = line.indexOf('[');
-                            int classEnd = line.indexOf(']');
-                            if (classStart != -1 && classEnd != -1) {
-                                String classLetter = line.substring(classStart + 1, classEnd);
-                                dungeonClass = getClassFromLetter(classLetter);
-                                break;
-                            }
-                        }
-                    }
+                    learnClasses();
+                    String dungeonClass = resolveClass(name, stack);
 
                     Matcher colorMatcher = Pattern.compile("(§[0-9a-fk-or])").matcher(stack.getDisplayName());
                     String colorCode = colorMatcher.find() ? colorMatcher.group(1) : "§f";
                     playerDataList.add(new PlayerData(name, colorCode, slot.slotNumber, dungeonClass));
                 }
+            }
+        }
+
+        private void refreshUnknownClasses(GuiChest chestGui) {
+            boolean anyUnknown = false;
+            for (PlayerData pd : playerDataList) {
+                if (UNKNOWN.equals(pd.className)) {
+                    anyUnknown = true;
+                    break;
+                }
+            }
+            if (!anyUnknown) return;
+
+            long now = System.currentTimeMillis();
+            if (now - lastLearnTime < 250L) return;
+            lastLearnTime = now;
+
+            learnClasses();
+            for (PlayerData pd : playerDataList) {
+                if (!UNKNOWN.equals(pd.className)) continue;
+                ItemStack stack = pd.slotId >= 0 && pd.slotId < chestGui.inventorySlots.inventorySlots.size()
+                        ? chestGui.inventorySlots.getSlot(pd.slotId).getStack() : null;
+                pd.className = resolveClass(pd.playerName, stack);
             }
         }
 
@@ -198,6 +271,8 @@ public class SpiritLeapHandler {
 
             int numBoxes = playerDataList.size();
             if (numBoxes == 0) return;
+
+            refreshUnknownClasses(chestGui);
 
             int columns = 2;
             int rows = (int) Math.ceil((double) numBoxes / columns);
@@ -221,12 +296,19 @@ public class SpiritLeapHandler {
                 pd.boxWidth = boxWidth;
                 pd.boxHeight = boxHeight;
 
+                int classRgb = classColor(pd.className);
                 Gui.drawRect(x, y, x + boxWidth, y + boxHeight, 0x80000000);
                 int borderColor = 0xFF202020;
-                Gui.drawRect(x, y, x + boxWidth, y + 1, borderColor);
-                Gui.drawRect(x, y + boxHeight - 1, x + boxWidth, y + boxHeight, borderColor);
-                Gui.drawRect(x, y, x + 1, y + boxHeight, borderColor);
-                Gui.drawRect(x + boxWidth - 1, y, x + boxWidth, y + boxHeight, borderColor);
+                int borderWidth = 1;
+                if (classRgb != -1) {
+                    Gui.drawRect(x, y, x + boxWidth, y + boxHeight, 0x50000000 | classRgb); 
+                    borderColor = 0xFF000000 | classRgb;
+                    borderWidth = 2;
+                }
+                Gui.drawRect(x, y, x + boxWidth, y + borderWidth, borderColor);
+                Gui.drawRect(x, y + boxHeight - borderWidth, x + boxWidth, y + boxHeight, borderColor);
+                Gui.drawRect(x, y, x + borderWidth, y + boxHeight, borderColor);
+                Gui.drawRect(x + boxWidth - borderWidth, y, x + boxWidth, y + boxHeight, borderColor);
 
                 String name = pd.playerName;
                 String className = pd.className;
@@ -247,7 +329,7 @@ public class SpiritLeapHandler {
                 mc.fontRendererObj.drawStringWithShadow(name, nameX / 2, nameY / 2, color);
                 GL11.glPopMatrix();
 
-                mc.fontRendererObj.drawStringWithShadow(className, classX, classY, 0xAAAAAA);
+                mc.fontRendererObj.drawStringWithShadow(className, classX, classY, classRgb != -1 ? (0xFF000000 | classRgb) : 0xFFAAAAAA);
             }
         }
 
@@ -299,7 +381,7 @@ public class SpiritLeapHandler {
                         .getUnformattedText()
                         .trim();
 
-                if (Config.feature.dungeons.general.dungeonsSpiritLeapGUI && SkyblockData.getCurrentLocation().isDungeon() && "Spirit Leap".equals(displayName)) {
+                if (Config.feature.dungeons.dungeonsSpiritLeapGUI && SkyblockData.getCurrentLocation().isDungeon() && "Spirit Leap".equals(displayName)) {
                     int button = Mouse.getEventButton();
                     boolean pressed = Mouse.getEventButtonState();
 
@@ -318,7 +400,7 @@ public class SpiritLeapHandler {
                                         0,
                                         0,
                                         mc.thePlayer);
-                                if (Config.feature.dungeons.general.dungeonsLeapAnnounce) {
+                                if (Config.feature.dungeons.dungeonsLeapAnnounce) {
                                     String command = String.format("/pc Leaped to %s!", pd.playerName);
                                     mc.thePlayer.sendChatMessage(command);
                                 }

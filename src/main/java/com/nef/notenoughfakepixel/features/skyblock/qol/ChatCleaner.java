@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.ChatUtils;
 import net.minecraft.client.Minecraft;
@@ -45,7 +48,7 @@ public class ChatCleaner {
         cancelMessage(Config.feature.qol.qolDisableZombieRareDrops, event, poisonousPotatoDropPattern, true);
         cancelMessage(Config.feature.qol.qolDisableZombieRareDrops, event, carrotDropPattern, true);
 
-        // Check game invites first so they don't get swallowed by the broader announcement match.
+        // Keep invite filtering separate and higher priority than general server announcements.
         String formatted = event.message.getFormattedText();
         if (gameInvitePattern.matcher(formatted).find()) {
             if (Config.feature.qol.qolDisableGameInvites) event.setCanceled(true);

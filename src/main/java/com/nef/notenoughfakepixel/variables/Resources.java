@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.variables;
 
 import lombok.AllArgsConstructor;
@@ -37,8 +40,6 @@ public enum Resources {
     EQUIPMENT(new ResourceLocation("notenoughfakepixel", "equipment.png")),
 
     RESET(new ResourceLocation("notenoughfakepixel:core/reset.png")),
-
-    STATBAR(new ResourceLocation("notenoughfakepixel:skyblock/stats/bars/bar.png")),
 
     ;
 

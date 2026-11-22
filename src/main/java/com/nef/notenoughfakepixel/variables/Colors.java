@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.variables;
 
 import lombok.AllArgsConstructor;
@@ -6,8 +9,6 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public enum Colors {
-
-    // This is a list of colors that are used in minecraft
 
     BLACK("\u00A70"),
     DARK_BLUE("\u00A71"),
@@ -26,7 +27,6 @@ public enum Colors {
     YELLOW("\u00A7e"),
     WHITE("\u00A7f"),
 
-    // This is a list of formatters
     BOLD("\u00A7l"),
     STRIKETHROUGH("\u00A7m"),
     UNDERLINE("\u00A7n"),
@@ -41,4 +41,3 @@ public enum Colors {
     }
 
 }
-

@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol.slothighlight;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.utils.ColorUtils;
 
 import java.awt.*;
@@ -26,12 +29,12 @@ public class ShowCurrentPet extends HightlightSlot {
 
     @Override
     public boolean getConfigOption() {
-        return Config.feature.pets.qolShowPetEquipped;
+        return Config.feature.qol.qolShowPetEquipped;
     }
 
     @Override
     public Color getHighlightColor() {
-        return ColorUtils.getColor(Config.feature.pets.qolPetEquippedColor);
+        return ColorUtils.getColor(Config.feature.qol.qolPetEquippedColor);
     }
 
     @Override

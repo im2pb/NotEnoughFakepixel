@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.utils.ItemUtils;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
@@ -17,132 +20,84 @@ import org.lwjgl.util.vector.Vector3f;
 import java.util.Arrays;
 import java.util.List;
 
+/** Camera interpolation helper for Aspect of the End/Void and Shadow Warp. */
 @RegisterEvents
 public class SmoothAote {
+    private static final List<String> TELEPORT_ITEMS = Arrays.asList("ASPECT_OF_THE_END", "ASPECT_OF_THE_VOID");
+    private static volatile SmoothAote instance;
+    private final Minecraft mc = Minecraft.getMinecraft();
+    private Vector3f renderPosition;
+    private int remainingMs;
+    private long lastFrameMs;
+    private long lastTeleportMs;
+    private final int transitionMs = 125;
 
-    public SmoothAote() {
-        INSTANCE = this;
-    }
-
-    private static SmoothAote INSTANCE = null;
-    public static SmoothAote getInstance() {
-        return INSTANCE;
-    }
-
-    private final List<String> tpItemNames = Arrays.asList(
-            "ASPECT_OF_THE_END",
-            "ASPECT_OF_THE_VOID"
-    );
-
-    public int teleportTime = 125;
-    public int teleportMillis = 0;
-    public Vector3f teleportCurrentPos = null;
-    private int tick;
-    public long lastMillis = 0;
-    public long tpLastMillis = 0;
+    public SmoothAote() { instance = this; }
+    public static SmoothAote getInstance() { return instance; }
 
     public Vector3f getCurrentPosition() {
-        if (teleportMillis <= 0) return null;
-        return teleportCurrentPos;
+        if (!Config.feature.qol.enableSmoothAote || remainingMs <= 0 || renderPosition == null) return null;
+        return renderPosition;
     }
 
     @SubscribeEvent
     public void onPlayerInteract(PlayerInteractEvent event) {
-        if (event.action != PlayerInteractEvent.Action.RIGHT_CLICK_AIR &&
-            event.action != PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) return;
-
-        ItemStack held = Minecraft.getMinecraft().thePlayer.getHeldItem();
+        if (!Config.feature.qol.enableSmoothAote || event == null || event.entityPlayer == null
+                || event.entityPlayer != mc.thePlayer) return;
+        if (event.action != PlayerInteractEvent.Action.RIGHT_CLICK_AIR && event.action != PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) return;
+        if (mc.thePlayer == null || mc.gameSettings.thirdPersonView != 0) return;
+        ItemStack held = event.entityPlayer.getHeldItem();
         if (held == null) return;
         String internal = ItemUtils.getInternalName(held);
         if (internal == null) return;
-
-        boolean hasShadowWarp = false;
-
+        boolean shadowWarp = false;
         NBTTagCompound tag = held.getTagCompound();
         if (tag != null && tag.hasKey("ExtraAttributes", 10)) {
-            NBTTagCompound ea = tag.getCompoundTag("ExtraAttributes");
-            if (ea.getTag("shadow_warp") != null) {
-                hasShadowWarp = true;
-            }
+            NBTTagCompound extra = tag.getCompoundTag("ExtraAttributes");
+            shadowWarp = extra.hasKey("shadow_warp");
         }
-
-        if (teleportTime <= 0 || Minecraft.getMinecraft().gameSettings.thirdPersonView != 0) return;
-
-        boolean aote = Config.feature.qol.enableSmoothAote &&
-                tpItemNames.contains(internal);
-        boolean hyp = Config.feature.qol.enableSmoothAote && hasShadowWarp;
-
-        if (aote || hyp) {
-            tpLastMillis = System.currentTimeMillis();
-            if (teleportCurrentPos == null) {
-                teleportCurrentPos = new Vector3f();
-                teleportCurrentPos.x = (float) Minecraft.getMinecraft().thePlayer.posX;
-                teleportCurrentPos.y = (float) Minecraft.getMinecraft().thePlayer.posY;
-                teleportCurrentPos.z = (float) Minecraft.getMinecraft().thePlayer.posZ;
-            }
-        }
-
-    }
-
-    @SubscribeEvent
-    public void onTick(TickEvent.RenderTickEvent event) {
-        if (Minecraft.getMinecraft().thePlayer == null) return;
-
-        long currentTime = System.currentTimeMillis();
-        int delta = (int) (currentTime - lastMillis);
-        lastMillis = currentTime;
-        if (delta <= 0) return;
-
-        if (teleportMillis > teleportTime * 2) {
-            teleportMillis = teleportTime * 2;
-        }
-        if (teleportMillis < 0) teleportMillis = 0;
-
-        if (currentTime - tpLastMillis > 1000 && teleportMillis <= 0) {
-            teleportCurrentPos = null;
-        }
-
-        if (teleportCurrentPos == null) {
-            tpLastMillis = 0;
-            teleportMillis = 0;
-            return;
-        }
-
-        if (teleportMillis > 0) {
-            int deltaMin = Math.min(delta, teleportMillis);
-
-            float factor = deltaMin / (float) teleportMillis;
-            float dX = teleportCurrentPos.x - (float) Minecraft.getMinecraft().thePlayer.posX;
-            float dY = teleportCurrentPos.y - (float) Minecraft.getMinecraft().thePlayer.posY;
-            float dZ = teleportCurrentPos.z - (float) Minecraft.getMinecraft().thePlayer.posZ;
-
-            teleportCurrentPos.x -= dX * factor;
-            teleportCurrentPos.y -= dY * factor;
-            teleportCurrentPos.z -= dZ * factor;
-
-            if (Minecraft.getMinecraft().theWorld.getBlockState(new BlockPos(teleportCurrentPos.x,
-                    teleportCurrentPos.y, teleportCurrentPos.z
-            )).getBlock().getMaterial() != Material.air) {
-                teleportCurrentPos.y = (float) Math.ceil(teleportCurrentPos.y);
-            }
-
-            teleportMillis -= deltaMin;
-        } else {
-            teleportCurrentPos.x = (float) Minecraft.getMinecraft().thePlayer.posX;
-            teleportCurrentPos.y = (float) Minecraft.getMinecraft().thePlayer.posY;
-            teleportCurrentPos.z = (float) Minecraft.getMinecraft().thePlayer.posZ;
+        if (!TELEPORT_ITEMS.contains(internal) && !shadowWarp) return;
+        lastTeleportMs = System.currentTimeMillis();
+        if (renderPosition == null) {
+            renderPosition = new Vector3f((float) mc.thePlayer.posX, (float) mc.thePlayer.posY, (float) mc.thePlayer.posZ);
         }
     }
 
+    /** Called by the local-player position packet redirect after the server confirms the teleport. */
+    public void onTeleportApplied() {
+        if (!Config.feature.qol.enableSmoothAote || renderPosition == null) return;
+        remainingMs = Math.min(transitionMs * 2, remainingMs + transitionMs);
+    }
+
     @SubscribeEvent
-    public void onGameTick(TickEvent.ClientTickEvent event) {
+    public void onRenderTick(TickEvent.RenderTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
-        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-        if (player == null) return;
-
-        tick++;
-        if (tick > Integer.MAX_VALUE / 2) tick = 0;
+        if (!Config.feature.qol.enableSmoothAote || mc.thePlayer == null || mc.theWorld == null) {
+            reset(); return;
+        }
+        long now = System.currentTimeMillis();
+        int delta = (int) Math.max(0L, Math.min(100L, now - (lastFrameMs == 0L ? now : lastFrameMs)));
+        lastFrameMs = now;
+        if (remainingMs > 0 && renderPosition != null) {
+            int step = Math.min(delta, remainingMs);
+            float factor = remainingMs <= 0 ? 1.0f : step / (float) remainingMs;
+            renderPosition.x += ((float) mc.thePlayer.posX - renderPosition.x) * factor;
+            renderPosition.y += ((float) mc.thePlayer.posY - renderPosition.y) * factor;
+            renderPosition.z += ((float) mc.thePlayer.posZ - renderPosition.z) * factor;
+            BlockPos pos = new BlockPos(renderPosition.x, renderPosition.y, renderPosition.z);
+            if (mc.theWorld.getBlockState(pos).getBlock().getMaterial() != Material.air) {
+                renderPosition.y = (float) Math.ceil(renderPosition.y);
+            }
+            remainingMs = Math.max(0, remainingMs - step);
+        } else if (now - lastTeleportMs > 1000L) {
+            renderPosition = null;
+            remainingMs = 0;
+        } else if (renderPosition != null) {
+            renderPosition.set((float) mc.thePlayer.posX, (float) mc.thePlayer.posY, (float) mc.thePlayer.posZ);
+        }
     }
 
-
+    private void reset() {
+        renderPosition = null; remainingMs = 0; lastFrameMs = 0L; lastTeleportMs = 0L;
+    }
 }

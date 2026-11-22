@@ -1,8 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol;
 
-import com.nef.notenoughfakepixel.Configuration;
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -13,15 +15,11 @@ public class Fullbright {
     private static final Minecraft mc = Minecraft.getMinecraft();
 
     private static final float BRIGHTEST = 1.0f;
-    // Very large gamma values can overflow the lightmap calculations in Pojav's GLES
-    private static final float POJAV_FULLBRIGHT = 15.0f;
     private static final float FULLBRIGHT = 10000.0f;
 
     @SubscribeEvent
     public void onRender(RenderHandEvent event) {
-        if (Config.feature.qol.visualTweaks.qolFullbright) {
-            changeBrightness(Configuration.isPojav() ? POJAV_FULLBRIGHT : FULLBRIGHT);
-        }
+        if (Config.feature.qol.qolFullbright) changeBrightness(FULLBRIGHT);
         else changeBrightness(BRIGHTEST);
     }
 
@@ -32,4 +30,3 @@ public class Fullbright {
         mc.gameSettings.saveOptions();
     }
 }
-

@@ -1,8 +1,11 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.dungeons.mobs;
 
 import com.nef.notenoughfakepixel.Configuration;
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.events.RenderEntityModelEvent;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.EntityHighlightUtils;
@@ -36,7 +39,7 @@ import java.util.List;
 @RegisterEvents
 public class LividDisplay {
 
-    static BlockPos pos = new BlockPos(45, 108, 52); // Predefined wool position
+    static BlockPos pos = new BlockPos(45, 108, 52); 
     static Entity livid = null;
     public static int LIVID_COLOUR;
     private static final Map<String, EnumChatFormatting> lividColors = new HashMap<>();
@@ -71,7 +74,6 @@ public class LividDisplay {
     public void onTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.START) return;
 
-        // Run only every 20 ticks
         if (Minecraft.getMinecraft().theWorld == null || Minecraft.getMinecraft().theWorld.getTotalWorldTime() % 20 != 0)
             return;
 
@@ -80,7 +82,7 @@ public class LividDisplay {
             World world = mc.theWorld;
             if (world == null) return;
 
-            if (!Config.feature.dungeons.general.dungeonsLividFinder) return;
+            if (!Config.feature.dungeons.dungeonsLividFinder) return;
 
             if (world.getBlockState(pos).getBlock() == Blocks.wool) {
                 int woolColor = world.getBlockState(pos).getBlock().getDamageValue(world, pos);
@@ -110,7 +112,7 @@ public class LividDisplay {
 
     @SubscribeEvent
     public void onRenderEntity(RenderLivingEvent.Pre<EntityLivingBase> event) {
-        if (!Config.feature.dungeons.general.dungeonsLividFinder || livid == null) return;
+        if (!Config.feature.dungeons.dungeonsLividFinder || livid == null) return;
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastUpdateTime > 20) {
             lividEntity.clear();
@@ -123,7 +125,7 @@ public class LividDisplay {
                 event.setCanceled(true);
             }
         }
-        if (Config.feature.dungeons.general.dungeonsLividFinderRender == 0) return;
+        if (Config.feature.dungeons.dungeonsLividFinderRender == 0) return;
         if (entity instanceof EntityArmorStand) {
             EntityArmorStand armorStand = (EntityArmorStand) entity;
             if (entity.isInvisible()) return;
@@ -150,8 +152,8 @@ public class LividDisplay {
 
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onRenderEntityModel(RenderEntityModelEvent event) {
-        if (Config.feature.dungeons.general.dungeonsLividFinder && livid != null) {
-            if (Config.feature.dungeons.general.dungeonsLividFinderRender == 0) return;
+        if (Config.feature.dungeons.dungeonsLividFinder && livid != null) {
+            if (Config.feature.dungeons.dungeonsLividFinderRender == 0) return;
             final EntityLivingBase entity = event.getEntity();
             if (!lividEntity.contains(entity)) return;
             if (Configuration.isPojav()) {
@@ -164,8 +166,8 @@ public class LividDisplay {
 
     @SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
-        if (Config.feature.dungeons.general.dungeonsLividFinder && livid != null) {
-            if (Config.feature.dungeons.general.dungeonsLividFinderRender == 0) {
+        if (Config.feature.dungeons.dungeonsLividFinder && livid != null) {
+            if (Config.feature.dungeons.dungeonsLividFinderRender == 0) {
                 AxisAlignedBB aabb = new AxisAlignedBB(livid.posX - 0.5, livid.posY - 2, livid.posZ - 0.5, livid.posX + 0.5, livid.posY, livid.posZ + 0.5);
                 draw3DBox(aabb, LIVID_COLOUR, event.partialTicks);
             }

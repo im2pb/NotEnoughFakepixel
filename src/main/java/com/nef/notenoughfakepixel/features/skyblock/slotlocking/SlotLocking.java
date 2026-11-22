@@ -1,10 +1,13 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.slotlocking;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.utils.KeybindHelper;
-import com.nef.notenoughfakepixel.utils.StringUtils;
-import com.nef.notenoughfakepixel.utils.RenderUtils;
-import com.nef.notenoughfakepixel.env.registers.RegisterInstance;
+import com.nef.notenoughfakepixel.config.gui.core.config.KeybindHelper;
+import com.nef.notenoughfakepixel.config.gui.core.util.StringUtils;
+import com.nef.notenoughfakepixel.config.gui.core.util.render.RenderUtils;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterInstance;
 import com.nef.notenoughfakepixel.events.ReplaceItemEvent;
 import com.nef.notenoughfakepixel.events.SlotClickEvent;
 import com.nef.notenoughfakepixel.mixin.accesors.AccessorGuiContainer;
@@ -50,19 +53,17 @@ public class SlotLocking {
     @RegisterInstance public static final SlotLocking INSTANCE = new SlotLocking();
     public static SlotLocking getInstance() { return INSTANCE; }
 
-    // ----- CONSTANTS -----
     private static final int HOTBAR_SIZE = 9;
-    private static final int INV_SIZE = 40; // 0-39
+    private static final int INV_SIZE = 40; 
     private static final int INV_LAST = INV_SIZE - 1;
     private static final int HOTBAR_LAST = HOTBAR_SIZE - 1;
-    private static final int ARMOR_START = 36; // 36..39
-    private static final int SLOT_THROW = 8;   // vanilla drop key protected index
+    private static final int ARMOR_START = 36; 
+    private static final int SLOT_THROW = 8;   
     private static final long[] EMPTY_CHANGES = new long[HOTBAR_SIZE];
 
     private static final Pattern WINDOW_REGEX = Pattern.compile(".+ Backpack (?:✦ )?\\(Slot #(\\d+)\\)");
     private static final Pattern ECHEST_WINDOW_REGEX = Pattern.compile("Ender Chest \\(Page (\\d+)\\)");
 
-    // ----- DATA MODEL (left public for GSON) -----
     public static class LockedSlot {
         public boolean locked = false;
         public int boundTo = -1;
@@ -77,33 +78,66 @@ public class SlotLocking {
         public HashMap<String, SlotLockProfile> profileData = new HashMap<>();
     }
 
-    // ----- FIELDS -----
     private static final LockedSlot DEFAULT_LOCKED_SLOT = new LockedSlot();
     private SlotLockingConfig config = new SlotLockingConfig();
+    private boolean configLoaded = false;
 
     private boolean lockKeyHeld = false;
     private Slot pairingSlot = null;
 
-    // tracks recent slot index changes (hotbar only) to apply swap delay
     private final long[] slotChanges = new long[HOTBAR_SIZE];
 
     @Setter @Getter private Slot realSlot = null;
 
-    // ----- LIFECYCLE/CONFIG -----
     public void loadConfig(File file) {
         SlotLockingConfig loaded = ConfigHandler.loadConfig(SlotLockingConfig.class, file, ConfigHandler.GSON);
         config = (loaded != null) ? loaded : new SlotLockingConfig();
+        boolean repaired = normalizeConfig();
+        configLoaded = true;
+        if (repaired) saveConfig();
+    }
+
+    private boolean normalizeConfig() {
+        boolean repaired = false;
+        if (config.profileData == null) {
+            config.profileData = new HashMap<>();
+            return true;
+        }
+        for (SlotLockProfile profile : config.profileData.values()) {
+            if (profile == null) continue;
+            if (profile.slotLockData == null || profile.slotLockData.length == 0) {
+                profile.slotLockData = new SlotLockData[1];
+                repaired = true;
+            }
+            if (profile.slotLockData[0] == null) {
+                profile.slotLockData[0] = new SlotLockData();
+                repaired = true;
+            }
+            SlotLockData data = profile.slotLockData[0];
+            if (data.lockedSlots == null || data.lockedSlots.length != INV_SIZE) {
+                LockedSlot[] previous = data.lockedSlots;
+                data.lockedSlots = new LockedSlot[INV_SIZE];
+                if (previous != null) {
+                    System.arraycopy(previous, 0, data.lockedSlots, 0, Math.min(previous.length, INV_SIZE));
+                }
+                repaired = true;
+            }
+        }
+        return repaired;
     }
     public void saveConfig() {
+        if (!configLoaded) return;
         ConfigHandler.saveConfig(config, new File(Config.configDirectory, "slotlocking.json"), ConfigHandler.GSON);
     }
     public void resetSlotLocking() {
         String profile = currentProfileOrGeneric();
         SlotLockProfile p = config.profileData.get(profile);
-        if (p != null) p.slotLockData[0] = new SlotLockData();
+        if (p != null) {
+            p.slotLockData[0] = new SlotLockData();
+            saveConfig();
+        }
     }
 
-    // ----- CONTEXT HELPERS -----
     private static Minecraft mc() { return Minecraft.getMinecraft(); }
     private static boolean bindingOn() { return Config.feature.sl.enableSlotBinding; }
     private static boolean lockAndOnSkyblock() { return SkyblockData.getCurrentGamemode().isSkyblock() && Config.feature.sl.enableSlotLocking; }
@@ -126,7 +160,6 @@ public class SlotLocking {
         return (p == null) ? "generic" : p;
     }
 
-    // mouse → scaled coords & hovered slot
     private static int[] getMouseScaled() {
         ScaledResolution sr = new ScaledResolution(mc());
         int sw = sr.getScaledWidth();
@@ -140,8 +173,6 @@ public class SlotLocking {
         int[] m = getMouseScaled();
         return ((AccessorGuiContainer) container).doGetSlotAtPosition(m[0], m[1]);
     }
-
-    // ----- PROFILE DATA ACCESS -----
 
     private LockedSlot[] getDataForProfile() {
         if (!lockAndOnSkyblock()) return null;
@@ -170,8 +201,6 @@ public class SlotLocking {
         return arr[idx];
     }
 
-    // ----- PUBLIC QUERIES -----
-
     public LockedSlot getLockedSlot(Slot slot) {
         if (!lockAndOnSkyblock() || slot == null || slot.inventory != mc().thePlayer.inventory) return null;
         int idx = slot.getSlotIndex();
@@ -194,7 +223,6 @@ public class SlotLocking {
         return l != null && (l.locked || (Config.feature.sl.bindingAlsoLocks && l.boundTo != -1));
     }
 
-    // ----- SWAP DELAY TRACKING -----
     public void changedSlot(int slotNumber) {
         int delay = Config.feature.sl.slotLockSwapDelay;
         if (delay == 0 || !isSlotIndexLocked(slotNumber) || !isHotbar(slotNumber)) return;
@@ -218,7 +246,6 @@ public class SlotLocking {
         return false;
     }
 
-    // ----- input handling -----
     @SubscribeEvent(priority = EventPriority.LOW)
     public void keyboardInput(GuiScreenEvent.KeyboardInputEvent.Pre event) {
         if (!lockAndOnSkyblock()) return;
@@ -231,27 +258,26 @@ public class SlotLocking {
             if (!isPlayerInventorySlot(foc)) return;
 
             int idx = foc.getSlotIndex();
-            if (idx == SLOT_THROW) return; // avoid vanilla drop slot
+            if (idx == SLOT_THROW) return; 
 
-            // decide pairing source (only if inventory/armor)
             pairingSlot = (isInventory(idx) || isArmor(idx)) ? foc : null;
 
             LockedSlot[] arr = getDataForProfile();
             if (arr != null) {
                 LockedSlot ls = getOrCreateLocked(arr, idx);
-                // toggle
+                
                 ls.locked = !ls.locked;
                 ls.boundTo = -1;
 
                 playToggleSound(ls.locked);
 
-                // if hotbar got locked, unbind any inventories bound to it
                 if (isHotbar(idx) && ls.locked) {
                     for (int i = HOTBAR_SIZE; i <= INV_LAST; i++) {
                         LockedSlot other = arr[i];
                         if (other != null && other.boundTo == idx) other.boundTo = -1;
                     }
                 }
+                saveConfig();
             }
         }
         lockKeyHeld = KeybindHelper.isKeyDown(key);
@@ -282,16 +308,18 @@ public class SlotLocking {
                             src.boundTo = targetIdx;
                             src.locked = false;
                             target.boundTo = pairingIdx;
+                            saveConfig();
                         }
                     }
                 }
             } else {
-                // mouse left pairing area → cancel temp binding preview
+                
                 int pairingIdx = pairingSlot.getSlotIndex();
                 LockedSlot[] arr = getDataForProfile();
                 if (arr != null && arr[pairingIdx] != null) {
                     if (arr[pairingIdx].boundTo >= 0) arr[arr[pairingIdx].boundTo] = null;
                     arr[pairingIdx] = null;
+                    saveConfig();
                 }
             }
         }
@@ -314,15 +342,14 @@ public class SlotLocking {
                 if (other != null && other.boundTo == lockIndex) other.boundTo = -1;
             }
         }
+        saveConfig();
     }
 
-    // ----- CLICK HANDLING / BINDING MOVES -----
     @SubscribeEvent
     public void onWindowClick(SlotClickEvent e) {
         LockedSlot locked = getLockedSlot(e.slot);
         if (locked == null) return;
 
-        // lock blocks and: swap-click (type 2) blocks if target hotbar index is locked
         if (locked.locked || (e.clickType == 2 && isSlotIndexLocked(e.clickedButton))) {
             e.setCanceled(true);
             return;
@@ -339,7 +366,6 @@ public class SlotLocking {
             int id = e.slot.getSlotIndex();
             int size = container.inventorySlots.inventorySlots.size();
 
-            // adjust clicked id to chest index space
             int idChest = id + (size - 45);
 
             int from, to;
@@ -355,6 +381,7 @@ public class SlotLocking {
             } else if (0 <= id && id < HOTBAR_SIZE && locked.boundTo >= HOTBAR_SIZE && locked.boundTo <= INV_LAST) {
                 if (boundLocked.locked || boundLocked.boundTo != id) {
                     locked.boundTo = -1;
+                    saveConfig();
                     return;
                 } else {
                     from = bound.slotNumber; to = id;
@@ -363,20 +390,19 @@ public class SlotLocking {
                 return;
             }
 
-            // armor slots remap
             if (from == 39) from = 5;
             if (from == 38) from = 6;
             if (from == 37) from = 7;
             if (from == 36) from = 8;
 
             mc().playerController.windowClick(container.inventorySlots.windowId, from, to, 2, mc().thePlayer);
+            saveConfig();
             e.setCanceled(true);
         } else if (bindingOn() && locked.boundTo != -1 && Config.feature.sl.bindingAlsoLocks) {
             e.setCanceled(true);
         }
     }
 
-    // ----- DRAW HOOKS -----
     @SubscribeEvent(priority = EventPriority.LOW)
     public void drawScreenEvent(GuiScreenEvent.DrawScreenEvent.Post event) {
         if (!bindingOn() || event.isCanceled() || pairingSlot == null || !lockKeyHeld) {
@@ -460,7 +486,7 @@ public class SlotLocking {
         if (locked == null) return;
 
         if (locked.locked) {
-            // padlock overlay
+            
             GlStateManager.translate(0, 0, 400);
             mc().getTextureManager().bindTexture(Resources.LOCK.getResource());
             GlStateManager.color(1, 1, 1, 0.5f);
@@ -487,12 +513,12 @@ public class SlotLocking {
             if (boundSlot == null) return;
 
             if (hoverOver || idx >= HOTBAR_SIZE) {
-                // draw bound icon on this slot
+                
                 drawBoundOverlay(slot);
-                // re-render item overlay text
+                
                 rerenderItemOverlay(slot);
             } else if (pairingSlot != null && lockKeyHeld && idx < HOTBAR_SIZE) {
-                // dim hotbar targets during pairing
+                
                 int x1 = agc.getGuiLeft() + pairingSlot.xDisplayPosition;
                 int y1 = agc.getGuiTop() + pairingSlot.yDisplayPosition;
                 if (!pointInRect(m[0], m[1], x1, y1, 16, 16)) {
@@ -510,7 +536,6 @@ public class SlotLocking {
                 drawBoundOverlay(boundSlot);
                 rerenderItemOverlay(boundSlot);
 
-                // draw line center-to-center trimmed to slot bounds
                 int maxIter = 100;
                 float x1 = slot.xDisplayPosition + 8, y1 = slot.yDisplayPosition + 8;
                 float x2 = boundSlot.xDisplayPosition + 8, y2 = boundSlot.yDisplayPosition + 8;
@@ -559,7 +584,6 @@ public class SlotLocking {
         }
     }
 
-    // ----- SOUND -----
     private void playToggleSound(boolean locked) {
         if (!Config.feature.sl.slotLockSound) return;
 
@@ -580,7 +604,6 @@ public class SlotLocking {
         mc().gameSettings.setSoundLevel(SoundCategory.PLAYERS, old);
     }
 
-    // ----- VISUAL BARRIERS (prevent binding on inv slots) -----
     boolean setTopHalfBarrier = false;
 
     private boolean shouldShowBarrier(int slotNumber, IInventory inv) {

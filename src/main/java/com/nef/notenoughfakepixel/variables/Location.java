@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.variables;
 
 import lombok.AllArgsConstructor;
@@ -23,7 +26,6 @@ public enum Location {
     CRIMSON_ISLE("sbcris-", "sbcris_sandbox-", "sbcris_test-"),
     DUNGEON("sbdungeon-", "sbdungeon_sandbox-", "sbdungeon_test-"),
     CRYSTAL_HOLLOWS("sbch-", "sbch_sandbox-", "sbtest_alpha-"),
-    GARDEN("sbg-", "sbg_sandbox-", "sbg_test-"),
     NONE("", "", "");
 
     private final String main;
@@ -33,16 +35,9 @@ public enum Location {
     public static Location getLocation(String s) {
         String unformatted = StringUtils.stripControlCodes(s);
         return java.util.Arrays.stream(Location.values())
-                .filter(l -> matchesServerId(unformatted, l.getMain())
-                        || matchesServerId(unformatted, l.getSandbox())
-                        || matchesServerId(unformatted, l.getAlpha()))
+                .filter(l -> l.getMain().equals(unformatted) || l.getSandbox().equals(unformatted) || l.getAlpha().equals(unformatted))
                 .findFirst()
                 .orElse(NONE);
-    }
-
-    private static boolean matchesServerId(String serverId, String prefix) {
-        if (prefix.equals(serverId)) return true;
-        return prefix.endsWith("-") && prefix.substring(0, prefix.length() - 1).equals(serverId);
     }
 
     public boolean isDungeon() {
@@ -57,12 +52,12 @@ public enum Location {
         return this == CRIMSON_ISLE;
     }
 
-    public boolean isEnd() {
-        return this == THE_END;
-    }
-
     public boolean isCrystalHollows() {
         return this == CRYSTAL_HOLLOWS;
+    }
+
+    public boolean isEnd() {
+        return this == THE_END;
     }
 
 }

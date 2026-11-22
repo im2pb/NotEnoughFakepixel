@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.capes;
 
 import net.minecraft.client.model.ModelBase;
@@ -11,7 +14,7 @@ public class CapeModel extends ModelBase {
         this.textureHeight = 32;
 
         this.cape = new ModelRenderer(this, 0, 0);
-        this.cape.addBox(-5.0F, 0.0F, 0.0F, 10, 16, 1); // width, height, depth
+        this.cape.addBox(-5.0F, 0.0F, 0.0F, 10, 16, 1); 
     }
 
     public void renderCape(float scale) {

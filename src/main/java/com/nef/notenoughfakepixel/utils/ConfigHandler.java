@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.utils;
 
 import com.google.gson.Gson;
@@ -11,7 +14,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-/* CLASS TO LOAD CONFIG FILES */
 public class ConfigHandler {
 
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -31,6 +33,23 @@ public class ConfigHandler {
             boolean useGzip,
             boolean handleError
     ) {
+        if (file == null) return null;
+
+        File tempFile = new File(file.getParent(), file.getName() + ".temp");
+        if (tempFile.isFile() && (!file.isFile() || tempFile.lastModified() >= file.lastModified())) {
+            try {
+                T recovered = loadConfig(configClass, tempFile, gson, useGzip, false);
+                if (recovered != null) {
+                    try {
+                        Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    } catch (IOException ignored) {
+                    }
+                    return recovered;
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
         if (!file.exists()) return null;
         try (
                 BufferedReader reader = useGzip ?
@@ -47,7 +66,7 @@ public class ConfigHandler {
                     "Invalid config file '" + file + "'. This will reset the config to default",
                     e
             ).printStackTrace();
-            // Try to save a version of the corrupted config for debugging purposes
+            
             makeBackup(file, ".corrupted");
         }
         return null;
@@ -81,8 +100,7 @@ public class ConfigHandler {
             try {
                 Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.ATOMIC_MOVE);
             } catch (IOException e) {
-                // If atomic move fails it could be because it isn't supported or because the implementation of it
-                // doesn't overwrite the old file, in this case we will try a normal move.
+
                 Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (Exception e) {
@@ -92,20 +110,19 @@ public class ConfigHandler {
     }
 
     private static void makeBackup(File file, String suffix) {
-        File backupFile = new File(file.getParent(), file.getName() + "-" + System.currentTimeMillis() + suffix);
-        System.out.println("trying to make backup: " + backupFile.getName());
+        if (file == null || !file.exists()) return;
 
+        File backupFile = new File(file.getParent(), file.getName() + "-" + System.currentTimeMillis() + suffix);
         try {
             Files.move(file.toPath(), backupFile.toPath(), StandardCopyOption.ATOMIC_MOVE);
-        } catch (IOException __) {
+            return;
+        } catch (IOException ignored) {
             try {
                 Files.move(file.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            } catch (Exception ___) {
-                System.out.println("nef config gone");
+                return;
+            } catch (IOException ignoredAgain) {
+                System.out.println("Could not back up config file: " + file);
             }
-        }
-        finally {
-            file.delete();
         }
     }
 

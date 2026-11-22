@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.utils;
 
 import com.nef.notenoughfakepixel.events.RenderEntityModelEvent;
@@ -34,7 +37,6 @@ public final class OutlineUtils {
         double y = camera.lastTickPosY + (camera.posY - camera.lastTickPosY) * partialTicks;
         double z = camera.lastTickPosZ + (camera.posZ - camera.lastTickPosZ) * partialTicks;
 
-        // Calculate the bounding box from both positions
         AxisAlignedBB bb = new AxisAlignedBB(pos1, pos2).expand(1, 1, 1).offset(-x, -y, -z);
 
         GlStateManager.pushAttrib();
@@ -57,7 +59,6 @@ public final class OutlineUtils {
 
         drawSelectionBoundingBox(bb);
 
-
         GlStateManager.depthMask(true);
         GlStateManager.enableDepth();
         GlStateManager.enableTexture2D();
@@ -72,7 +73,6 @@ public final class OutlineUtils {
 
         buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION);
 
-        // Bottom face
         buffer.pos(box.minX, box.minY, box.minZ).endVertex();
         buffer.pos(box.maxX, box.minY, box.minZ).endVertex();
 
@@ -85,7 +85,6 @@ public final class OutlineUtils {
         buffer.pos(box.minX, box.minY, box.maxZ).endVertex();
         buffer.pos(box.minX, box.minY, box.minZ).endVertex();
 
-        // Top face
         buffer.pos(box.minX, box.maxY, box.minZ).endVertex();
         buffer.pos(box.maxX, box.maxY, box.minZ).endVertex();
 
@@ -98,7 +97,6 @@ public final class OutlineUtils {
         buffer.pos(box.minX, box.maxY, box.maxZ).endVertex();
         buffer.pos(box.minX, box.maxY, box.minZ).endVertex();
 
-        // Vertical lines
         buffer.pos(box.minX, box.minY, box.minZ).endVertex();
         buffer.pos(box.minX, box.maxY, box.minZ).endVertex();
 

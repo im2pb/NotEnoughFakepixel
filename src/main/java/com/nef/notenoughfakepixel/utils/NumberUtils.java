@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.utils;
 
 import java.util.Locale;
@@ -7,7 +10,7 @@ public class NumberUtils {
     public static int parseIntSafe(String s) {
         try {
             return Integer.parseInt(s.trim());
-        } catch (NumberFormatException ignored) {
+        } catch (Exception ignored) {
             return 0;
         }
     }

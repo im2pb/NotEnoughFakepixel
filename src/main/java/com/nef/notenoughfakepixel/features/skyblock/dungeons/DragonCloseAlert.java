@@ -1,8 +1,11 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.dungeons;
 
 import com.nef.notenoughfakepixel.Configuration;
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.events.RenderEntityModelEvent;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.*;
@@ -13,13 +16,20 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.boss.EntityDragon;
+import net.minecraft.entity.item.EntityArmorStand;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.Vec3;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.init.Items;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.awt.*;
 import java.util.Arrays;
@@ -27,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.lwjgl.opengl.GL11;
 
 @RegisterEvents
 public class DragonCloseAlert {
@@ -56,6 +67,7 @@ public class DragonCloseAlert {
 
     private static final Map<EntityDragon, Color> DRAGON_COLOR_MAP = new HashMap<>();
     private static final Map<EntityDragon, String> DRAGON_HEALTH_MAP = new HashMap<>();
+    private static final Map<EntityArmorStand, Color> DRAGON_STATUE_COLOR_MAP = new HashMap<>();
 
     public static final Map<String, Color> DRAGON_COLORS = MapUtils.mapOf(
             new MapUtils.Pair<>("Apex Dragon", Color.GREEN),
@@ -71,6 +83,109 @@ public class DragonCloseAlert {
     public void onUnLoad(WorldEvent.Unload e){
         DRAGON_COLOR_MAP.clear();
         DRAGON_HEALTH_MAP.clear();
+        DRAGON_STATUE_COLOR_MAP.clear();
+    }
+
+    @SubscribeEvent
+    public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+        if (mc.thePlayer == null || mc.theWorld == null
+                || SkyblockData.getCurrentLocation() != Location.DUNGEON
+                || SkyblockData.getCurrentFloor() != DungeonFloor.M7) {
+            DRAGON_COLOR_MAP.clear();
+            DRAGON_STATUE_COLOR_MAP.clear();
+            return;
+        }
+
+        refreshDragonAssociations();
+    }
+
+    private void refreshDragonAssociations() {
+        Map<EntityDragon, Color> dragons = new HashMap<>();
+        Map<EntityArmorStand, Color> statues = new HashMap<>();
+
+        List<Entity> loadedEntities = new java.util.ArrayList<>(mc.theWorld.loadedEntityList);
+        for (Entity entity : loadedEntities) {
+            if (!(entity instanceof EntityArmorStand)) continue;
+
+            EntityArmorStand statue = (EntityArmorStand) entity;
+            Color color = getDragonStatueColor(statue);
+            if (color == null) continue;
+
+            statues.put(statue, color);
+
+            EntityDragon nearest = findNearestLivingDragon(statue);
+            if (nearest != null) {
+                dragons.put(nearest, color);
+            }
+        }
+
+        DRAGON_STATUE_COLOR_MAP.clear();
+        DRAGON_STATUE_COLOR_MAP.putAll(statues);
+        DRAGON_COLOR_MAP.clear();
+        DRAGON_COLOR_MAP.putAll(dragons);
+    }
+
+    private EntityDragon findNearestLivingDragon(EntityArmorStand statue) {
+        AxisAlignedBB searchBox = statue.getEntityBoundingBox().expand(2.5D, 3.5D, 2.5D);
+        EntityDragon nearest = null;
+        double nearestDistance = Double.MAX_VALUE;
+
+        for (EntityDragon dragon : mc.theWorld.getEntitiesWithinAABB(EntityDragon.class, searchBox)) {
+            if (dragon == null || dragon.isDead || dragon.getHealth() <= 0.1F) continue;
+            double distance = dragon.getDistanceSqToEntity(statue);
+            if (distance < nearestDistance) {
+                nearestDistance = distance;
+                nearest = dragon;
+            }
+        }
+
+        return nearest;
+    }
+
+    private Color getDragonStatueColor(EntityArmorStand stand) {
+        ItemStack skull = stand.getCurrentArmor(3);
+        if (skull == null || skull.getItem() != Items.skull || skull.getMetadata() != 3) return null;
+
+        String texture = ItemUtils.getSkullTexture(skull);
+        if (texture == null || texture.isEmpty()) return null;
+
+        Skins skin = Skins.getSkinByValue(texture);
+        if (skin == null) return null;
+
+        for (Orb orb : ORBS) {
+            if (orb.getSkin() == skin) return orb.getColor();
+        }
+
+        return null;
+    }
+
+    private Color resolveDragonColor(EntityDragon dragon) {
+        if (dragon == null || mc.theWorld == null) return null;
+
+        AxisAlignedBB searchBox = dragon.getEntityBoundingBox().expand(2.5D, 3.5D, 2.5D);
+        EntityArmorStand nearestStatue = null;
+        double nearestDistance = Double.MAX_VALUE;
+
+        for (EntityArmorStand statue : mc.theWorld.getEntitiesWithinAABB(EntityArmorStand.class, searchBox)) {
+            Color color = getDragonStatueColor(statue);
+            if (color == null) continue;
+
+            double distance = dragon.getDistanceSqToEntity(statue);
+            if (distance < nearestDistance) {
+                nearestDistance = distance;
+                nearestStatue = statue;
+            }
+        }
+
+        if (nearestStatue == null) return null;
+        Color color = DRAGON_STATUE_COLOR_MAP.get(nearestStatue);
+        if (color == null) color = getDragonStatueColor(nearestStatue);
+        if (color != null) {
+            DRAGON_STATUE_COLOR_MAP.put(nearestStatue, color);
+            DRAGON_COLOR_MAP.put(dragon, color);
+        }
+        return color;
     }
 
     public List<EntityDragon> getDragonsByColor(Color color) {
@@ -87,7 +202,7 @@ public class DragonCloseAlert {
     @SubscribeEvent
     public void onRender(RenderWorldLastEvent e) {
         if (SkyblockData.getCurrentLocation() != Location.DUNGEON ||
-                SkyblockData.getCurrentFloor() != DungeonFloor.M7 || !M7RelicWaypoints.isFinalPhase) return;
+                SkyblockData.getCurrentFloor() != DungeonFloor.M7) return;
 
         DRAGON_COLOR_MAP.keySet().removeIf(this::isDying);
         DRAGON_HEALTH_MAP.keySet().removeIf(this::isDying);
@@ -106,13 +221,11 @@ public class DragonCloseAlert {
                 Color color = DRAGON_COLOR_MAP.get(dragon);
                 if (color == null || !color.equals(orb.getColor())) continue;
 
-                // Render health on dragon
                 String health = DRAGON_HEALTH_MAP.get(dragon);
                 if (health != null && !health.isEmpty()) {
                     RenderUtils.renderWaypointText(health, dragon.getPosition(), e.partialTicks, false);
                 }
 
-                // Proximity warning logic
                 double distance = new Vec3(pos.getX(), pos.getY(), pos.getZ())
                         .distanceTo(new Vec3(dragon.posX, dragon.posY, dragon.posZ));
 
@@ -123,24 +236,23 @@ public class DragonCloseAlert {
                             .findFirst()
                             .orElse("Dragon");
 
-                    //TitleUtils.showTitle(dragonName, 2000);
-                    //SoundUtils.playSound(mc.thePlayer.getPosition(), "note.pling", 2.0F, 1.0F);
                 }
             }
         });
     }
 
     private void renderBoxes(RenderWorldLastEvent e) {
-        if (!M7RelicWaypoints.isFinalPhase) return;
-        drawDragonBox(e);
+        if (Config.feature.dungeons.distBox) {
+            renderDragonStatueBoxes(e);
+        }
 
-        if (!Config.feature.dungeons.masterMode7.m7Relics) return;
-        ORBS.forEach(orb -> {
+        if (!Config.feature.dungeons.m7Relics) return;
+        for (Orb orb : ORBS) {
             Color color = orb.getColor();
             BlockPos position = orb.getPos().add(0, 20, 0);
             if (orb.getSkin().equals(Skins.BLUE_RELIC) || orb.getSkin().equals(Skins.ORANGE_RELIC)) {
                 RenderUtils.renderBoxAtCoords(
-                        position.getX() - 21, position.getY() - 11, position.getZ() -11,
+                        position.getX() - 21, position.getY() - 11, position.getZ() - 11,
                         position.getX() + 11, position.getY() + 11, position.getZ() + 13,
                         e.partialTicks, color, false
                 );
@@ -161,54 +273,82 @@ public class DragonCloseAlert {
                         e.partialTicks, color, false
                 );
             }
-
-        });
+        }
     }
 
-    private Color getColorFromName(String name) {
-        if (name == null || name.length() < 2) return null;
-        if (name.startsWith("\u00a7c")) return Color.RED;    // §c Power Dragon
-        if (name.startsWith("\u00a7a")) return Color.GREEN;  // §a Apex Dragon
-        if (name.startsWith("\u00a7b")) return Color.CYAN;   // §b Ice Dragon
-        if (name.startsWith("\u00a76")) return Color.ORANGE; // §6 Flame Dragon
-        if (name.startsWith("\u00a7d")) return Color.PINK;   // §d Soul Dragon
-        return null;
-    }
+    private void renderDragonStatueBoxes(RenderWorldLastEvent e) {
+        for (Map.Entry<EntityArmorStand, Color> entry : DRAGON_STATUE_COLOR_MAP.entrySet()) {
+            EntityArmorStand statue = entry.getKey();
+            if (statue == null || statue.isDead) continue;
 
-    private void drawDragonBox(RenderWorldLastEvent e) {
-        if (!Config.feature.dungeons.masterMode7.dragOutline) return;
-        mc.theWorld.getLoadedEntityList().forEach(entity -> {
-            if (!(entity instanceof EntityDragon)) return;
-            EntityDragon dragon = (EntityDragon) entity;
-            if (isDying(dragon)) return;
-
-            String name = dragon.getDisplayName().getFormattedText();
-            Color color = getColorFromName(name);
-            if (color == null) return;
-
-            DRAGON_COLOR_MAP.put(dragon, color);
-        });
+            AxisAlignedBB box = statue.getEntityBoundingBox().expand(0.7D, 0.15D, 0.7D);
+            RenderUtils.renderBoxAtCoords(
+                    box.minX, box.minY, box.minZ,
+                    box.maxX, box.maxY, box.maxZ,
+                    e.partialTicks, entry.getValue(), true
+            );
+        }
     }
 
     @SubscribeEvent
     public void render(RenderEntityModelEvent e) {
-        if (!Config.feature.dungeons.masterMode7.dragOutline) return;
-        EntityLivingBase entity = e.getEntity();
+        if (!Config.feature.dungeons.dragOutline) return;
         if (mc.thePlayer == null || mc.theWorld == null) return;
-        if (!(entity instanceof EntityDragon) || entity.isInvisible() || isDying(entity))
-            return;
+        if (SkyblockData.getCurrentLocation() != Location.DUNGEON
+                || SkyblockData.getCurrentFloor() != DungeonFloor.M7) return;
+
+        EntityLivingBase entity = e.getEntity();
+        if (!(entity instanceof EntityDragon) || entity.isInvisible() || isDying(entity)) return;
 
         EntityDragon dragon = (EntityDragon) entity;
-        if (dragon.isDead || dragon.getHealth() <= 0.1f) return;
-
-        Color c = DRAGON_COLOR_MAP.get(dragon);
-        if (c != null) {
-            EntityHighlightUtils.renderEntityOutline(e, c);
+        Color color = DRAGON_COLOR_MAP.get(dragon);
+        if (color == null) {
+            color = resolveDragonColor(dragon);
         }
+        if (color == null) return;
+
+        renderDragonOutline(e, color);
+    }
+
+    private void renderDragonOutline(RenderEntityModelEvent e, Color color) {
+        EntityLivingBase entity = e.getEntity();
+        float r = color.getRed() / 255.0F;
+        float g = color.getGreen() / 255.0F;
+        float b = color.getBlue() / 255.0F;
+        float a = color.getAlpha() / 255.0F;
+
+        GlStateManager.pushMatrix();
+        GlStateManager.pushAttrib();
+        GlStateManager.disableLighting();
+        GlStateManager.disableTexture2D();
+        GlStateManager.disableDepth();
+        GlStateManager.depthMask(false);
+        GlStateManager.enableBlend();
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glDisable(GL11.GL_CULL_FACE);
+
+        GlStateManager.color(r, g, b, a * 0.45F);
+        GlStateManager.scale(1.045F, 1.045F, 1.045F);
+        e.getModel().render(entity, e.getLimbSwing(), e.getLimbSwingAmount(), e.getAgeInTicks(),
+                e.getHeadYaw(), e.getHeadPitch(), e.getScaleFactor());
+
+        GlStateManager.color(r, g, b, a);
+        GlStateManager.scale(1.02F / 1.045F, 1.02F / 1.045F, 1.02F / 1.045F);
+        e.getModel().render(entity, e.getLimbSwing(), e.getLimbSwingAmount(), e.getAgeInTicks(),
+                e.getHeadYaw(), e.getHeadPitch(), e.getScaleFactor());
+
+        GL11.glEnable(GL11.GL_CULL_FACE);
+        GlStateManager.depthMask(true);
+        GlStateManager.enableDepth();
+        GlStateManager.enableTexture2D();
+        GlStateManager.enableLighting();
+        GlStateManager.disableBlend();
+        GlStateManager.color(1F, 1F, 1F, 1F);
+        GlStateManager.popAttrib();
+        GlStateManager.popMatrix();
     }
 
     private boolean isDying(EntityLivingBase entity) {
-        return entity == null || entity.isDead;
+        return entity == null || entity.isDead || entity.getHealth() <= 0.1f;
     }
 }
-

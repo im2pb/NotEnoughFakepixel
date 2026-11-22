@@ -1,9 +1,13 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.mining;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.variables.Location;
+import com.nef.notenoughfakepixel.features.skyblock.mining.service.MiningAbilityCooldownService;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
@@ -17,22 +21,18 @@ import java.util.regex.Pattern;
 @RegisterEvents
 public class AbilityNotifier {
 
-    private static long lastUsed = -1;
-    private static long canUse = -1;
-    private static boolean notifyScheduled = false;
+    private static final MiningAbilityCooldownService COOLDOWN = new MiningAbilityCooldownService();
 
     private static final String READY_MESSAGE = EnumChatFormatting.GREEN + "Ready";
-
+    private static final Pattern ABILITY_PATTERN = Pattern.compile("You used your (.+) Pickaxe Ability!");
 
     @SubscribeEvent
     public void onChat(@NotNull ClientChatReceivedEvent e) {
         if (checkEssentials()) return;
 
-        Matcher matcher = Pattern.compile("You used your (.+) Pickaxe Ability!").matcher(e.message.getUnformattedText());
+        Matcher matcher = ABILITY_PATTERN.matcher(e.message.getUnformattedText());
         if (matcher.find()) {
-            lastUsed = System.currentTimeMillis();
-            canUse = lastUsed + 120000;
-            notifyScheduled = true;
+            COOLDOWN.recordAbilityUse(System.currentTimeMillis());
         }
     }
 
@@ -40,24 +40,25 @@ public class AbilityNotifier {
     public void onTick(TickEvent.ClientTickEvent e) {
         if (checkEssentials()) return;
         if (!Config.feature.mining.miningAbilityNotifier) return;
-        if (canUse == -1 || lastUsed == -1) return;
-        if (canUse > System.currentTimeMillis() || !notifyScheduled) return;
+        if (!COOLDOWN.isReminderDue(System.currentTimeMillis())) return;
 
         reminder();
     }
 
-    // This will show a message when 0 seconds are left
     public static void reminder() {
         Minecraft.getMinecraft().ingameGUI.displayTitle(EnumChatFormatting.GOLD + "Mining Ability Ready", "", 2, 70, 2);
-        notifyScheduled = false;
+        COOLDOWN.markReminderDisplayed();
     }
 
     public static String cdSecondsRemaining() {
-        if (lastUsed == -1 || canUse == -1) return READY_MESSAGE;
-        if (canUse < System.currentTimeMillis()) {
-            return READY_MESSAGE;
-        }
-        return EnumChatFormatting.RED + String.valueOf((canUse - System.currentTimeMillis()) / 1000) + "s";
+        long remaining = COOLDOWN.getRemainingMillis(System.currentTimeMillis());
+        if (remaining <= 0L) return READY_MESSAGE;
+        return EnumChatFormatting.RED + String.valueOf(remaining / 1000L) + "s";
+    }
+
+    /** Raw cooldown value for HUD data collection; zero means the ability is ready. */
+    public static long cooldownRemainingMillis() {
+        return COOLDOWN.getRemainingMillis(System.currentTimeMillis());
     }
 
     private static boolean checkEssentials() {
@@ -65,6 +66,5 @@ public class AbilityNotifier {
                 (!SkyblockData.getCurrentGamemode().isSkyblock()) ||
                 ((!SkyblockData.getCurrentLocation().equals(Location.DWARVEN) && (!SkyblockData.getCurrentLocation().equals(Location.CRYSTAL_HOLLOWS))));
     }
-
 
 }

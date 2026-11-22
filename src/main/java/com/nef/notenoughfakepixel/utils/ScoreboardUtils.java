@@ -1,6 +1,9 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.utils;
 
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.features.skyblock.dungeons.DragonCloseAlert;
 import com.nef.notenoughfakepixel.features.skyblock.overlays.stats.StatBars;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
@@ -85,7 +88,6 @@ public class ScoreboardUtils {
                     final String clean = net.minecraft.util.StringUtils.stripControlCodes(raw).trim();
                     if (clean.isEmpty()) continue;
 
-                    // " §7⏣ §cThe Catacombs §7(F1)"
                     if (raw.startsWith(" §7⏣ §cThe Catacombs §7")) {
                         final int open = raw.indexOf('(');
                         final int close = raw.indexOf(')', open + 1);
@@ -95,7 +97,6 @@ public class ScoreboardUtils {
                         }
                     }
 
-                    // --- Dungeon Cleared: 97% ---
                     if (StringUtils.startsWithFast(clean, "Dungeon Cleared: ")) {
                         final String num = StringUtils.sliceAfter(clean, "Dungeon Cleared: ");
                         SkyblockData.setClearedPercentage(NumberUtils.parseIntSafe(StringUtils.removeChars(num, "%")));
@@ -105,7 +106,6 @@ public class ScoreboardUtils {
                         }
                     }
 
-                    // get the heat from clean string "Heat: ♨ 9"
                     if (StringUtils.startsWithFast(clean, "Heat:")) {
                         final String num = StringUtils.sliceAfter(clean, "Heat:");
                         SkyblockData.setHeat(NumberUtils.parseIntSafe(StringUtils.removeChars(num, "♨ ")));
@@ -175,7 +175,6 @@ public class ScoreboardUtils {
             }
         }
 
-
         if (SkyblockData.getCurrentGamemode() == Gamemode.SKYBLOCK && mc.getNetHandler() != null) {
             final Collection<NetworkPlayerInfo> infos = mc.getNetHandler().getPlayerInfoMap();
             boolean gotSpeed = false;
@@ -188,7 +187,6 @@ public class ScoreboardUtils {
                 final String name = disp.getUnformattedText();
                 if (name == null || name.isEmpty()) continue;
 
-                // Unformatted name
                 final String unformattedName = net.minecraft.util.StringUtils.stripControlCodes(name).trim();
 
                 if (!gotSpeed) {
@@ -196,7 +194,7 @@ public class ScoreboardUtils {
                     if (star >= 0) {
                         final int val = NumberUtils.parseTrailingInt(unformattedName, star + 1);
                         if (val >= 0) {
-                            StatBars.getSTATS().setSpeed(val);
+                            StatBars.setSpeed(val);
                             gotSpeed = true;
                         }
                     } else {
@@ -204,7 +202,7 @@ public class ScoreboardUtils {
                         if (idx >= 0) {
                             final int val = NumberUtils.parseTrailingInt(unformattedName, idx + 7);
                             if (val >= 0) {
-                                StatBars.getSTATS().setSpeed(val);
+                                StatBars.setSpeed(val);
                                 gotSpeed = true;
                             }
                         }
@@ -240,7 +238,6 @@ public class ScoreboardUtils {
             final String text = disp.getUnformattedText();
             if (text == null || text.isEmpty()) continue;
 
-            // Search for "Server: " and parse after it
             final int sv = text.indexOf("Server: ");
             if (sv < 0) continue;
 
@@ -252,7 +249,6 @@ public class ScoreboardUtils {
                 if (num >= 0) { result = num; break; }
             }
 
-            // Fallback: first "-<digits>" after "Server: "
             final int dash = text.indexOf('-', pos);
             if (dash >= 0 && dash + 1 < text.length()) {
                 final int num = NumberUtils.parseTrailingInt(text,dash + 1);
@@ -311,7 +307,6 @@ public class ScoreboardUtils {
                 })
                 .collect(Collectors.toList());
     }
-
 
     @SubscribeEvent
     public void onWorldUnload(WorldEvent.Unload event) {

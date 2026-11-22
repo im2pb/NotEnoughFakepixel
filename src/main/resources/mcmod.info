@@ -2,20 +2,21 @@
   {
     "modid": "${modid}",
     "name": "NotEnoughFakepixel",
-    "description": "A utility mod for Fakepixel Skyblock",
+    "description": "Community-developed NotEnoughFakepixel client mod for Minecraft 1.8.9. See NOTICE.md for project lineage, attribution and license information.",
     "version": "${version}",
     "mcversion": "${mcversion}",
-    "url": "https://github.com/davidbelesp/NotEnoughFakepixel",
-    "updateUrl": "https://github.com/davidbelesp/NotEnoughFakepixel/releases",
+    "clientSideOnly": true,
+    "url": "https://github.com/im2pb/NotEnoughFakepixel",
     "authorList": [
       "2pb",
       "davidbelesp",
       "_Whispering/GinaFro",
       "Iru98X",
-      "RealMG"
+      "RealMG",
+      "ii8we"
     ],
-    "credits": "",
-    "logoFile": "src/main/resources/assets/notenoughfakepixel/logo.png",
+    "credits": "NotEnoughFakepixel contributors: 2pb, davidbelesp, _Whispering/GinaFro, Iru98X, RealMG and ii8we. Main project license: LGPL-3.0-or-later. Third-party dependencies retain their own licenses; see NOTICE.md and LICENSES/.",
+    "logoFile": "assets/notenoughfakepixel/logo.png",
     "screenshots": [],
     "dependencies": []
   }

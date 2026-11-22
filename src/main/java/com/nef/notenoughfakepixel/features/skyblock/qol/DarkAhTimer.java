@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.features.skyblock.overlays.Timer;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.TimeUtils;
@@ -18,7 +21,7 @@ public class DarkAhTimer extends Timer {
 
     @Override
     public boolean shouldShow() {
-        return Config.feature.qol.darkAuctionSettings.qolDAtimer && SkyblockData.getCurrentGamemode().isSkyblock();
+        return Config.feature.qol.qolDAtimer && SkyblockData.getCurrentGamemode().isSkyblock();
     }
 
     @Override
@@ -47,9 +50,9 @@ public class DarkAhTimer extends Timer {
         return 0xFFffaa00;
     }
 
-    @Override public int getX() { return Config.feature.qol.darkAuctionTimerSettings.darkAhTimerPos.getAbsX(new ScaledResolution(Minecraft.getMinecraft()), getObjectWidth()) - getObjectWidth()/2; }
-    @Override public int getY() { return Config.feature.qol.darkAuctionTimerSettings.darkAhTimerPos.getAbsY(new ScaledResolution(Minecraft.getMinecraft()), getObjectHeight()) - getObjectHeight()/2; }
-    @Override public float getScale() { return Config.feature.qol.darkAuctionTimerSettings.darkAHTimerScale; }
+    @Override public int getX() { return Config.feature.qol.darkAhTimerPos.getAbsX(new ScaledResolution(Minecraft.getMinecraft()), getObjectWidth()) - getObjectWidth()/2; }
+    @Override public int getY() { return Config.feature.qol.darkAhTimerPos.getAbsY(new ScaledResolution(Minecraft.getMinecraft()), getObjectHeight()) - getObjectHeight()/2; }
+    @Override public float getScale() { return Config.feature.qol.darkAHTimerScale; }
     @Override public boolean getTextShadow() { return true; }
     @Override public long getGoalEpochMs() { return goal; }
     public static void setGoalEpochMs(long goal) {
@@ -57,9 +60,8 @@ public class DarkAhTimer extends Timer {
     }
 
     private static void notifyDA() {
-        if (!Config.feature.qol.darkAuctionSettings.qolDarkAhNotifier) return;
-        Minecraft.getMinecraft().ingameGUI.displayTitle(EnumChatFormatting.GOLD + "Dark Auction is about to start!", "", 2, 70, 2);
+        if (!Config.feature.qol.qolDarkAhNotifier) return;
+        Minecraft.getMinecraft().ingameGUI.displayTitle(EnumChatFormatting.GOLD + "Mining Ability Ready", "", 2, 70, 2);
     }
 
 }
-

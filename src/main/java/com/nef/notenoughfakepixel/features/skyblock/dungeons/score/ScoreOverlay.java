@@ -1,18 +1,19 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.dungeons.score;
 
 import com.nef.notenoughfakepixel.Configuration;
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.features.skyblock.dungeons.DungeonManager;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.ChatUtils;
 import com.nef.notenoughfakepixel.variables.DungeonFloor;
-import com.nef.notenoughfakepixel.variables.Mayor;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.EnumChatFormatting;
+import com.nef.notenoughfakepixel.features.skyblock.dungeons.score.render.ScoreOverlayRenderer;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -26,26 +27,9 @@ import java.util.List;
 public class ScoreOverlay {
 
     private static final int chatDisplaySeconds = 40;
-    private static final String[] SIMPLE_EXAMPLE_LINES = {
-            "\u00a77Total score: \u00a7a300\u00a76 (S+)",
-            "",
-            "\u00a77Secrets: \u00a7a100% \u00a7a/ 80% \u00a7a/ 100%"
-    };
-    private static final String[] FULL_EXAMPLE_LINES = {
-            "\u00a77Total score: \u00a7a300\u00a76 (S+)",
-            "",
-            "\u00a77Skill: \u00a7a100",
-            "\u00a77Exploration: \u00a7a100",
-            "\u00a77Speed: \u00a7a100",
-            "\u00a77Bonus: \u00a7a5",
-            "",
-            "\u00a77Secrets: \u00a7a100% \u00a7a/ 80% \u00a7a/ 100%"
-    };
     private long readyTime = Long.MAX_VALUE;
     private final Minecraft mc = Minecraft.getMinecraft();
-    private final List<String> lineBuffer = new ArrayList<>(8);
-    private String cachedBackgroundConfig;
-    private int cachedBackgroundColor;
+    private final ScoreOverlayRenderer renderer = new ScoreOverlayRenderer(mc);
 
     @SubscribeEvent
     public void onRender(RenderGameOverlayEvent.Post event) {
@@ -53,74 +37,69 @@ public class ScoreOverlay {
         if (!shouldShow()) return;
 
         ScaledResolution sr = new ScaledResolution(mc);
-        int overlayWidth = getWidth(1.0f); // Base width, scaled later
-        int overlayHeight = getHeight(1.0f); // Base height, scaled later
-        float x = Config.feature.dungeons.scoreSecrets.scoreOverlayPos.getAbsX(sr, overlayWidth);
-        float y = Config.feature.dungeons.scoreSecrets.scoreOverlayPos.getAbsY(sr, overlayHeight);
-        draw(x, y, Config.feature.dungeons.scoreSecrets.scoreOverlayScale, false);
+        int overlayWidth = getWidth(1.0f); 
+        int overlayHeight = getHeight(1.0f); 
+        float x = Config.feature.dungeons.scoreOverlayPos.getAbsX(sr, overlayWidth);
+        float y = Config.feature.dungeons.scoreOverlayPos.getAbsY(sr, overlayHeight);
+        draw(x, y, Config.feature.dungeons.scoreOverlayScale, false);
     }
 
     private boolean shouldShow() {
         if (!DungeonManager.checkEssentials()) return false;
-        return Config.feature.dungeons.scoreSecrets.dungeonsScoreOverlay;
+        return Config.feature.dungeons.dungeonsScoreOverlay;
     }
 
     private void draw(float x, float y, float scale, boolean example) {
-        GlStateManager.pushMatrix();
-        GlStateManager.translate(x, y, 0);
-        GlStateManager.scale(scale, scale, scale);
+        List<String> lines = new ArrayList<String>();
+        getLines(lines, example);
+        renderer.render(x, y, scale, parseBackgroundColor(Config.feature.dungeons.scoreOverlayBackgroundColor), lines);
+    }
 
-        lineBuffer.clear();
-        getLines(lineBuffer, example);
-        int bgColor = getBackgroundColor();
-
-        // Calculate text dimensions (unscaled)
-        int textWidth = 0;
-        for (String line : lineBuffer) {
-            int lineWidth = mc.fontRendererObj.getStringWidth(line);
-            if (lineWidth > textWidth) textWidth = lineWidth;
-        }
-        textWidth += 4; // 2px padding on each side
-        int textHeight = lineBuffer.size() * 11; // 11px per line (8px font + 3px spacing)
-
-        // Draw background matching text dimensions
-        Gui.drawRect(0, 0, textWidth, textHeight, bgColor);
-
-        // Draw text
-        for (int i = 0; i < lineBuffer.size(); i++) {
-            mc.fontRendererObj.drawString(lineBuffer.get(i), 2, i * 11, -1); // 2px left padding
-        }
-
-        GlStateManager.color(1.0f,1.0f,1.0f,1.0f);
-        GlStateManager.popMatrix();
+    private int parseBackgroundColor(String option) {
+        String[] colorParts = option.split(":");
+        int alpha = Integer.parseInt(colorParts[1]);
+        int red = Integer.parseInt(colorParts[2]);
+        int green = Integer.parseInt(colorParts[3]);
+        int blue = Integer.parseInt(colorParts[4]);
+        return (alpha << 24) | (red << 16) | (green << 8) | blue;
     }
 
     public void renderDummy() {
         ScaledResolution sr = new ScaledResolution(mc);
         int overlayWidth = getWidth(1.0f);
         int overlayHeight = getHeight(1.0f);
-        float x = Config.feature.dungeons.scoreSecrets.scoreOverlayPos.getAbsX(sr, overlayWidth);
-        float y = Config.feature.dungeons.scoreSecrets.scoreOverlayPos.getAbsY(sr, overlayHeight);
-        draw(x, y, Config.feature.dungeons.scoreSecrets.scoreOverlayScale, true);
+        float x = Config.feature.dungeons.scoreOverlayPos.getAbsX(sr, overlayWidth);
+        float y = Config.feature.dungeons.scoreOverlayPos.getAbsY(sr, overlayHeight);
+        draw(x, y, Config.feature.dungeons.scoreOverlayScale, true);
     }
 
     public int getWidth(float scale) {
-        int baseWidth = mc.fontRendererObj.getStringWidth("Total score: 300 (S+)") + 4; // Base estimate
+        int baseWidth = mc.fontRendererObj.getStringWidth("Total score: 300 (S+)") + 4; 
         return (int) (baseWidth * scale);
     }
 
     public int getHeight(float scale) {
-        return (int) (110 * scale); // 10 lines × 11px
+        return (int) (110 * scale); 
     }
 
     private void getLines(List<String> lines, boolean example) {
         if (example) {
-            String[] source = Config.feature.dungeons.scoreSecrets.dungeonsScoreSimple ? SIMPLE_EXAMPLE_LINES : FULL_EXAMPLE_LINES;
-            for (String line : source) {
-                lines.add(line);
+            if (Config.feature.dungeons.dungeonsScoreSimple) {
+                lines.add("\u00a77Total score: \u00a7a300\u00a76 (S+)");
+                lines.add("");
+                lines.add("\u00a77Secrets: \u00a7a100% \u00a7a/ 80% \u00a7a/ 100%");
+            } else {
+                lines.add("\u00a77Total score: \u00a7a300\u00a76 (S+)");
+                lines.add("");
+                lines.add("\u00a77Skill: \u00a7a100");
+                lines.add("\u00a77Exploration: \u00a7a100");
+                lines.add("\u00a77Speed: \u00a7a100");
+                lines.add("\u00a77Bonus: \u00a7a5");
+                lines.add("");
+                lines.add("\u00a77Secrets: \u00a7a100% \u00a7a/ 80% \u00a7a/ 100%");
             }
         } else {
-            if (Config.feature.dungeons.scoreSecrets.dungeonsScoreSimple) {
+            if (Config.feature.dungeons.dungeonsScoreSimple) {
                 lines.add(getRankingDisplay());
                 lines.add("");
                 lines.add(getSecretDisplay());
@@ -135,23 +114,6 @@ public class ScoreOverlay {
                 lines.add(getSecretDisplay());
             }
         }
-    }
-
-    private int getBackgroundColor() {
-        String backgroundConfig = Config.feature.dungeons.scoreSecrets.scoreOverlayBackgroundColor;
-        if (backgroundConfig.equals(cachedBackgroundConfig)) {
-            return cachedBackgroundColor;
-        }
-
-        String[] colorParts = backgroundConfig.split(":");
-        int alpha = Integer.parseInt(colorParts[1]);
-        int red = Integer.parseInt(colorParts[2]);
-        int green = Integer.parseInt(colorParts[3]);
-        int blue = Integer.parseInt(colorParts[4]);
-
-        cachedBackgroundConfig = backgroundConfig;
-        cachedBackgroundColor = (alpha << 24) | (red << 16) | (green << 8) | blue;
-        return cachedBackgroundColor;
     }
 
     private String getRankingDisplay() {
@@ -203,7 +165,7 @@ public class ScoreOverlay {
     }
 
     private String getBonusDisplay() {
-        int threshold = SkyblockData.isMayor(Mayor.PAUL) ? 15 : 5;
+        int threshold = Config.feature.dungeons.dungeonsIsPaul ? 15 : 5;
         EnumChatFormatting enumChatFormatting;
         int bonusScore = ScoreManager.getBonusScore();
         if (bonusScore >= threshold) enumChatFormatting = EnumChatFormatting.GREEN;
@@ -217,7 +179,8 @@ public class ScoreOverlay {
         StringBuilder returnString = new StringBuilder("\u00a77Secrets: ");
         int secretPercentage = ScoreManager.getSecretPercentage();
         int requiredSecretNeeded = ScoreManager.getRequiredSecretNeeded();
-        int secretRequirement = DungeonFloor.getFloor(SkyblockData.getCurrentFloor().name()).getSecretPercentage();
+        DungeonFloor floor = SkyblockData.getCurrentFloor();
+        int secretRequirement = floor == null || floor == DungeonFloor.NONE ? 0 : floor.getSecretPercentage();
 
         returnString.append(secretPercentage == 0 ? "\u00a7c0% \u00a77/ " :
                 (secretPercentage >= requiredSecretNeeded && requiredSecretNeeded != -1 ? "\u00a7a" : "\u00a7c") + secretPercentage + "% \u00a77/ ");

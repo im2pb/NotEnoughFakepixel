@@ -1,99 +1,65 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiChat;
-import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.inventory.Slot;
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.client.event.GuiOpenEvent;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import net.minecraftforge.client.event.GuiScreenEvent;
-import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import org.lwjgl.input.Keyboard;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Mouse;
 
-import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 @RegisterEvents
 public class ScrollableTooltips {
+    static List<String> lastRenderedTooltip = null;
+    static int scrollOffset = 0;
+    public static boolean didRenderTooltip = false;
 
-    public static int scrollOffset = 0;
-    private static ItemStack lastStack = null;
+    public static List<String> handleTextLineRendering(List<String> tooltip) {
+        didRenderTooltip = true;
+        if (!Objects.equals(tooltip, lastRenderedTooltip)) {
+            lastRenderedTooltip = new ArrayList<>(tooltip);
+            scrollOffset = 0;
+            return tooltip;
+        }
+        lastRenderedTooltip = new ArrayList<>(tooltip);
+        List<String> modifiableTooltip = new ArrayList<>(tooltip);
+        for (int i = 0; i < scrollOffset && modifiableTooltip.size() > 1; i++) {
+            modifiableTooltip.remove(0);
+        }
+        for (int i = 0; i < -scrollOffset && modifiableTooltip.size() > 1; i++) {
+            modifiableTooltip.remove(modifiableTooltip.size() - 1);
+        }
+        return modifiableTooltip;
+    }
 
     @SubscribeEvent
     public void onMouse(GuiScreenEvent.MouseInputEvent.Pre event) {
         if (!Config.feature.misc.qolScrollableTooltips) return;
-        if (Minecraft.getMinecraft().currentScreen instanceof GuiChat) return;
-
-        int dWheel = Mouse.getEventDWheel();
-        if (dWheel == 0) return;
-
-        if (!isHoveringItem()) return;
-
-        int scrollSpeed = 10;
-        if (dWheel > 0) {
-            scrollOffset -= scrollSpeed;
-        } else {
-            scrollOffset += scrollSpeed;
-        }
-
-        event.setCanceled(true);
-    }
-
-    private static boolean isHoveringItem() {
-        if (!(Minecraft.getMinecraft().currentScreen instanceof GuiContainer)) return false;
-        GuiContainer container = (GuiContainer) Minecraft.getMinecraft().currentScreen;
-        try {
-            Field theSlotField;
-            try {
-                theSlotField = GuiContainer.class.getDeclaredField("theSlot");
-            } catch (NoSuchFieldException e) {
-                theSlotField = GuiContainer.class.getDeclaredField("field_147006_u");
-            }
-            theSlotField.setAccessible(true);
-            Slot slot = (Slot) theSlotField.get(container);
-            return slot != null && slot.getHasStack();
-        } catch (Exception e) {
-            return false;
+        if (Mouse.getEventDWheel() < 0) {
+            scrollOffset = Math.max(
+                    lastRenderedTooltip == null ? 0 : -Math.max(lastRenderedTooltip.size() - 1, 0)
+                    , scrollOffset - 1
+            );
+        } else if (Mouse.getEventDWheel() > 0) {
+            scrollOffset = Math.min(
+                    lastRenderedTooltip == null ? 0 : Math.max(lastRenderedTooltip.size() - 1, 0),
+                    scrollOffset + 1
+            );
         }
     }
 
     @SubscribeEvent
-    public void onKeyboardInput(GuiScreenEvent.KeyboardInputEvent.Pre event) {
-        if (!Config.feature.misc.qolScrollableTooltips) return;
-
-        int key = Keyboard.getEventKey();
-
-        if (Keyboard.getEventKeyState()) {
-            int scrollSpeed = 5;
-
-            if (key == Keyboard.KEY_UP) {
-                scrollOffset += scrollSpeed;
-            }
-            else if (key == Keyboard.KEY_DOWN) {
-                scrollOffset -= scrollSpeed;
-            }
+    public void onTick(TickEvent.RenderTickEvent event) {
+        if (event.phase == TickEvent.Phase.START) {
+            didRenderTooltip = false;
+        } else if (!didRenderTooltip) {
+            lastRenderedTooltip = null;
         }
     }
-
-    public static void resetScroll() {
-        scrollOffset = 0;
-    }
-
-    @SubscribeEvent
-    public void onTooltipRender(ItemTooltipEvent event) {
-        if (event.itemStack != lastStack) {
-            scrollOffset = 0;
-            lastStack = event.itemStack;
-        }
-    }
-
-    @SubscribeEvent
-    public void onGuiOpen(GuiOpenEvent event) {
-        ScrollableTooltips.resetScroll();
-    }
-
-
 }

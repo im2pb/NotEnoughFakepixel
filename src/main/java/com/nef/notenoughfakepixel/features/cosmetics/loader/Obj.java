@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.cosmetics.loader;
 
 import org.lwjgl.opengl.GL11;

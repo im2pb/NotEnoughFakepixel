@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.utils;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
@@ -20,18 +23,23 @@ public class SoundUtils {
     }
 
     public static void playGlobalSound(String sound, float volume, float pitch) {
-        if (!Config.feature.misc.enableSounds) return;
+        if (!Config.feature.misc.enableSounds || sound == null || sound.trim().isEmpty()) return;
+
+        final ResourceLocation resource;
+        try {
+            resource = new ResourceLocation(sound.trim());
+        } catch (IllegalArgumentException ignored) {
+            return;
+        }
 
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.theWorld == null || mc.thePlayer == null) return;
 
         mc.addScheduledTask(() -> {
+            if (mc.theWorld == null || mc.thePlayer == null) return;
             mc.theWorld.playSound(
                     mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ,
-                    new ResourceLocation(sound).toString(),
-                    volume,
-                    pitch,
-                    false
+                    resource.toString(), volume, pitch, false
             );
         });
     }

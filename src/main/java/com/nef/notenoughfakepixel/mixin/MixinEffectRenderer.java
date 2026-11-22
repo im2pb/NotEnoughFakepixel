@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.mixin;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
@@ -13,9 +16,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(EffectRenderer.class)
 public abstract class MixinEffectRenderer {
 
-    /**
-     * Cancels block-breaking particles if qolHideBlockBreakingParticles is enabled.
-     */
     @Inject(method = "addBlockDestroyEffects", at = @At("HEAD"), cancellable = true)
     public void onAddBlockDestroyEffects(BlockPos pos, IBlockState state, CallbackInfo ci) {
         if (Config.feature.qol.qolHideBlockBreakingParticles) {
@@ -23,9 +23,6 @@ public abstract class MixinEffectRenderer {
         }
     }
 
-    /**
-     * Cancels block-hit particles if qolHideBlockBreakingParticles is enabled.
-     */
     @Inject(method = "addBlockHitEffects", at = @At("HEAD"), cancellable = true)
     public void onAddBlockHitEffects(BlockPos pos, EnumFacing side, CallbackInfo ci) {
         if (Config.feature.qol.qolHideBlockBreakingParticles) {

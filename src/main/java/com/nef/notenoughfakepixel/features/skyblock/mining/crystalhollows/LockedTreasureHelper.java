@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.events.ParticlePacketEvent;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import net.minecraft.client.Minecraft;
@@ -59,7 +62,7 @@ public class LockedTreasureHelper {
         if (e.phase != TickEvent.Phase.END) return;
         if (MC.theWorld == null || MC.thePlayer == null) return;
         if (!SkyblockData.getCurrentGamemode().isSkyblock()) return;
-        if (!Config.feature.mining.crystalHollows.lockedTreasureChest) return;
+        if (!Config.feature.mining.lockedTreasureChest) return;
 
         tickCounter++;
         if (tickCounter % 10 == 0) {
@@ -76,7 +79,8 @@ public class LockedTreasureHelper {
 
         List<AxisAlignedBB> tempBoxes = new ArrayList<>();
 
-        for (TileEntity te : MC.theWorld.loadedTileEntityList) {
+        List<TileEntity> loadedTiles = new ArrayList<>(MC.theWorld.loadedTileEntityList);
+        for (TileEntity te : loadedTiles) {
             if (!(te instanceof TileEntityChest)) continue;
 
             BlockPos bp = te.getPos();
@@ -92,7 +96,6 @@ public class LockedTreasureHelper {
             ));
         }
 
-        // Swap the list safely
         chestBoxes.clear();
         chestBoxes.addAll(tempBoxes);
     }
@@ -100,7 +103,7 @@ public class LockedTreasureHelper {
     @SubscribeEvent
     public void onParticlePacket(ParticlePacketEvent e) {
         if (!SkyblockData.getCurrentGamemode().isSkyblock()) return;
-        if (!Config.feature.mining.crystalHollows.lockedTreasureChest) return;
+        if (!Config.feature.mining.lockedTreasureChest) return;
 
         final S2APacketParticles p = e.getPacket();
         if (p.getParticleType() != EnumParticleTypes.CRIT) return;
@@ -127,7 +130,7 @@ public class LockedTreasureHelper {
     @SubscribeEvent
     public void onRenderWorld(RenderWorldLastEvent evt) {
         if (!SkyblockData.getCurrentGamemode().isSkyblock()) return;
-        if (!Config.feature.mining.crystalHollows.lockedTreasureChest) return;
+        if (!Config.feature.mining.lockedTreasureChest) return;
         if (MC.theWorld == null || MC.thePlayer == null) return;
 
         final long now = System.currentTimeMillis();
@@ -161,7 +164,7 @@ public class LockedTreasureHelper {
 
         Tessellator tess = Tessellator.getInstance();
         WorldRenderer wr = tess.getWorldRenderer();
-        wr.begin(7, DefaultVertexFormats.POSITION); // GL_QUADS
+        wr.begin(7, DefaultVertexFormats.POSITION); 
 
         synchronized (markers) {
             for (Marker m : markers) {
@@ -174,7 +177,6 @@ public class LockedTreasureHelper {
                 double cy = m.y - camY;
                 double cz = m.z - camZ;
 
-                // 1) horizontal vector
                 double vx = cx;
                 double vz = cz;
                 double vLen = Math.sqrt(vx * vx + vz * vz);
@@ -186,11 +188,9 @@ public class LockedTreasureHelper {
                 vx /= vLen;
                 vz /= vLen;
 
-                // 2) up = (0,1,0); right = up × viewHoriz = (vz, 0, -vx)
                 double rdx = vz * half;
                 double rdz = -vx * half;
 
-                // 3) up * half
                 double udx = 0.0;
                 double udy = half;
                 double udz = 0.0;
@@ -212,8 +212,6 @@ public class LockedTreasureHelper {
         GlStateManager.popMatrix();
     }
 
-    // ===== Helpers =====
-
     private static boolean pointWithinExpandedAABB(double x, double y, double z, AxisAlignedBB box, double expand) {
         return x >= box.minX - expand && x <= box.maxX + expand
                 && y >= box.minY - expand && y <= box.maxY + expand
@@ -221,4 +219,3 @@ public class LockedTreasureHelper {
     }
 
 }
-

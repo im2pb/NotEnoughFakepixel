@@ -1,11 +1,12 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.overlays.storage.config;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-// Saving Data
-// Types: echest,backpack
 public class StorageData {
     public HashMap<String, List<StorageContainer>> containers = new HashMap<>();
 

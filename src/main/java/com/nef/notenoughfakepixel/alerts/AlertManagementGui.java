@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.alerts;
 
 import net.minecraft.client.gui.GuiButton;
@@ -46,7 +49,6 @@ public class AlertManagementGui extends GuiScreen {
             int rectTop = y;
             int rectBottom = y + 30;
 
-            // Draw white outline
             int white = 0xFFFFFFFF;
             drawRect(rectLeft, rectTop, rectRight, rectTop + 1, white);
             drawRect(rectLeft, rectBottom - 1, rectRight, rectBottom, white);
@@ -68,10 +70,10 @@ public class AlertManagementGui extends GuiScreen {
             int index = (button.id - 1) / 2;
             if (index >= 0 && index < Alerts.alerts.size()) {
                 Alerts.Alert alert = Alerts.alerts.get(index);
-                if (button.id % 2 == 1) { // Toggle
+                if (button.id % 2 == 1) { 
                     alert.toggle();
                     Alerts.save();
-                } else { // Remove
+                } else { 
                     Alerts.alerts.remove(index);
                     Alerts.save();
                     initGui();

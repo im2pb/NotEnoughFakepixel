@@ -1,9 +1,12 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.config.features;
 
 import com.google.gson.annotations.Expose;
-import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorBoolean;
-import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorKeybind;
-import io.github.notenoughupdates.moulconfig.annotations.ConfigOption;
+import com.nef.notenoughfakepixel.config.gui.core.config.annotations.ConfigEditorBoolean;
+import com.nef.notenoughfakepixel.config.gui.core.config.annotations.ConfigEditorKeybind;
+import com.nef.notenoughfakepixel.config.gui.core.config.annotations.ConfigOption;
 import org.lwjgl.input.Keyboard;
 
 public class Accessories {
@@ -12,11 +15,6 @@ public class Accessories {
     @ConfigOption(name = "Enable Missing Accessories", desc = "Enable/Disable Missing accessories GUI")
     @ConfigEditorBoolean
     public boolean enable = true;
-
-    @Expose
-    @ConfigOption(name = "Show MP Estimation", desc = "Shows MP estimation in accessories GUI")
-    @ConfigEditorBoolean
-    public boolean showMpEstimation = true;
 
     @Expose
     @ConfigOption(name = "Show Missing Accessories List", desc = "Shows a list of missing accessories in accessories GUI")
@@ -34,4 +32,3 @@ public class Accessories {
     public int accessoriesDataScrollDownKey = Keyboard.KEY_DOWN;
 
 }
-

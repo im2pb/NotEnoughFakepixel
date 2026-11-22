@@ -1,10 +1,14 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.dungeons;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.ItemUtils;
 import com.nef.notenoughfakepixel.utils.RenderUtils;
+import com.nef.notenoughfakepixel.utils.SkyblockGate;
 import com.nef.notenoughfakepixel.variables.DungeonFloor;
 import com.nef.notenoughfakepixel.variables.Skins;
 import net.minecraft.client.Minecraft;
@@ -15,6 +19,7 @@ import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.awt.*;
 import java.util.HashMap;
@@ -34,6 +39,8 @@ public class M7RelicWaypoints {
 
     public static boolean isFinalPhase = false;
     private final Set<RelicColor> pickedRelics = new HashSet<>();
+    private final Set<RelicColor> carriedRelics = new HashSet<>();
+    private int inventoryRefreshTicks;
 
     static {
         relicPositions.put(RelicColor.PURPLE, new BlockPos(64, 8, 140));
@@ -50,10 +57,33 @@ public class M7RelicWaypoints {
     }
 
     @SubscribeEvent
+    public void onTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+        if (Minecraft.getMinecraft().thePlayer == null || !Config.feature.dungeons.m7Relics
+                || !SkyblockGate.isFakepixelDungeon() || SkyblockData.getCurrentFloor() != DungeonFloor.M7 || !isFinalPhase) {
+            carriedRelics.clear();
+            inventoryRefreshTicks = 0;
+            return;
+        }
+        if (++inventoryRefreshTicks >= 5) {
+            inventoryRefreshTicks = 0;
+            refreshCarriedRelics();
+        }
+    }
+
+    private void refreshCarriedRelics() {
+        carriedRelics.clear();
+        for (RelicColor color : RelicColor.values()) {
+            Skins skin = getSkinForColor(color);
+            if (skin != null && hasRelicInInventory(skin)) carriedRelics.add(color);
+        }
+    }
+
+    @SubscribeEvent
     public void onRenderWorldLast(RenderWorldLastEvent event) {
-        if (SkyblockData.getCurrentFloor() != DungeonFloor.M7) return;
+        if (!SkyblockGate.isFakepixelDungeon() || SkyblockData.getCurrentFloor() != DungeonFloor.M7) return;
         if (!isFinalPhase) return;
-        if (!Config.feature.dungeons.masterMode7.m7Relics) return;
+        if (!Config.feature.dungeons.m7Relics) return;
         float partialTicks = event.partialTicks;
 
         for (RelicColor color : RelicColor.values()) {
@@ -65,7 +95,7 @@ public class M7RelicWaypoints {
                 RenderUtils.renderBeaconBeam(pos, rgb, 1.0f, partialTicks);
             }
             else {
-                if (hasRelicInInventory(color)) {
+                if (carriedRelics.contains(color)) {
                     BlockPos cauldronPos = cauldronPositions.get(color);
                     int rgb = getColorRGB(color);
                     RenderUtils.renderBoundingBox(cauldronPos, rgb, partialTicks);
@@ -76,7 +106,8 @@ public class M7RelicWaypoints {
 
     @SubscribeEvent
     public void onChatReceived(ClientChatReceivedEvent event) {
-        String message = event.message.getUnformattedText().toLowerCase();
+        if (event == null || event.message == null || !SkyblockGate.isFakepixelDungeon()) return;
+        String message = event.message.getUnformattedText().toLowerCase(java.util.Locale.ROOT);
 
        if (message.contains("picked the corrupted")) {
             for (RelicColor color : RelicColor.values()) {
@@ -97,6 +128,8 @@ public class M7RelicWaypoints {
     public void onWorldUnload(WorldEvent.Unload event) {
         isFinalPhase = false;
         pickedRelics.clear();
+        carriedRelics.clear();
+        inventoryRefreshTicks = 0;
     }
 
     private int getColorRGB(RelicColor color) {
@@ -110,10 +143,8 @@ public class M7RelicWaypoints {
         }
     }
 
-    private boolean hasRelicInInventory(RelicColor color) {
-        Skins skin = getSkinForColor(color);
-        if (skin == null) return false;
-
+    private boolean hasRelicInInventory(Skins skin) {
+        if (Minecraft.getMinecraft().thePlayer == null || skin == null) return false;
         for (int i = 0; i < 36; i++) {
             ItemStack stack = Minecraft.getMinecraft().thePlayer.inventory.getStackInSlot(i);
             if (isRelicSkull(stack, skin)) {

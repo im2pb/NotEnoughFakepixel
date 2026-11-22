@@ -1,19 +1,22 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol.shortcuts;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 
 @RegisterEvents
 public class EquipmentShortcut extends KeyShortcut{
 
     @Override
     public boolean getConfigOption() {
-        return Config.feature.qol.shortcuts.qolShortcutEq;
+        return Config.feature.qol.qolShortcutEq;
     }
 
     @Override
     public int getKeyBind() {
-        return Config.feature.qol.shortcuts.qolEqKey;
+        return Config.feature.qol.qolEqKey;
     }
 
     @Override
@@ -26,4 +29,3 @@ public class EquipmentShortcut extends KeyShortcut{
         return "Your Equipment";
     }
 }
-

@@ -1,8 +1,11 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.dungeons.puzzles;
 
 import com.google.common.collect.Lists;
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import net.minecraft.block.BlockHopper;
 import net.minecraft.client.Minecraft;
@@ -51,15 +54,14 @@ public class SilverFishSolver {
         if (event.phase != TickEvent.Phase.START || !SkyblockData.getCurrentLocation().isDungeon() || mc.thePlayer == null || mc.theWorld == null)
             return;
 
-        if (!Config.feature.dungeons.puzzles.dungeonsSilverfishSolver) return;
+        if (!Config.feature.dungeons.dungeonsSilverfishSolver) return;
 
         List<EntitySilverfish> silverfishes = mc.theWorld.getEntities(EntitySilverfish.class, s -> mc.thePlayer.getDistanceToEntity(s) < 20);
         if (!silverfishes.isEmpty()) {
             SilverFishSolver.silverfish = silverfishes.get(0);
             if (silverfishChestPos == null || roomFacing == null) {
                 if (ticks % 20 == 0) {
-                    new Thread(() -> {
-                        prevInSilverfishRoom = inSilverfishRoom;
+                                            prevInSilverfishRoom = inSilverfishRoom;
                         double x = mc.thePlayer.posX;
                         double z = mc.thePlayer.posZ;
                         AxisAlignedBB entityScan = new AxisAlignedBB(x - 25, 67, z - 25, x + 25, 68, z + 25);
@@ -83,8 +85,8 @@ public class SilverFishSolver {
                                             if (!prevInSilverfishRoom) {
                                                 silverfishChestPos = blockPos.add(0, 1, 0);
                                                 TileEntity hopper = mc.theWorld.getTileEntity(blockPos.add(0, 3, 0));
+                                                if (hopper == null) continue;
                                                 roomFacing = BlockHopper.getFacing(hopper.getBlockMetadata());
-                                                System.out.printf("Silverfish chest is at %s and is facing %s%n", silverfishChestPos, roomFacing);
                                             }
                                             break;
                                         }
@@ -92,7 +94,7 @@ public class SilverFishSolver {
                                 }
                             }
                         }
-                    }, "Ice-Path-Detection").start();
+                    
                     ticks = 0;
                 }
             } else if (grid == null) {
@@ -121,9 +123,10 @@ public class SilverFishSolver {
 
     @SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
-        if (!Config.feature.dungeons.puzzles.dungeonsSilverfishSolver) return;
+        if (!Config.feature.dungeons.dungeonsSilverfishSolver) return;
 
-        if (silverfishChestPos != null && roomFacing != null && grid != null && SilverFishSolver.silverfish.isEntityAlive()) {
+        if (silverfishChestPos != null && roomFacing != null && grid != null &&
+                SilverFishSolver.silverfish != null && SilverFishSolver.silverfish.isEntityAlive()) {
             for (int i = 0; i < steps.size() - 1; i++) {
                 Point point = steps.get(i);
                 Point point2 = steps.get(i + 1);
@@ -234,7 +237,7 @@ public class SilverFishSolver {
 
         while (!queue.isEmpty()) {
             Point currPos = queue.pollFirst();
-            // traverse adjacent nodes while sliding on the ice
+            
             for (EnumFacing dir : EnumFacing.HORIZONTALS) {
                 Point nextPos = move(iceCave, iceCaveColors, currPos, dir);
                 if (nextPos != null) {
@@ -242,8 +245,8 @@ public class SilverFishSolver {
                     iceCaveColors[(int) nextPos.getY()][(int) nextPos.getX()] = new Point((int) currPos.getX(), (int) currPos.getY());
                     if (nextPos.getY() == endY && nextPos.getX() == endX) {
                         ArrayList<Point> steps = new ArrayList<>();
-                        // we found the end point
-                        Point tmp = currPos;  // if we start from nextPos we will count one too many edges
+                        
+                        Point tmp = currPos;  
                         int count = 0;
                         steps.add(nextPos);
                         steps.add(currPos);
@@ -252,7 +255,7 @@ public class SilverFishSolver {
                             tmp = iceCaveColors[(int) tmp.getY()][(int) tmp.getX()];
                             steps.add(tmp);
                         }
-                        //System.out.println("Silverfish solved in " + count + " moves.");
+                        
                         return steps;
                     }
                 }
@@ -260,7 +263,6 @@ public class SilverFishSolver {
         }
         return Lists.newArrayList();
     }
-
 
     private Point move(int[][] iceCave, Point[][] iceCaveColors, Point currPos, EnumFacing dir) {
         int x = (int) currPos.getX();
@@ -278,15 +280,13 @@ public class SilverFishSolver {
             i++;
         }
 
-        i--;  // reverse the last step
+        i--;  
 
         if (iceCaveColors[y + i * diffY][x + i * diffX] != null) {
-            // we've already seen this point
+            
             return null;
         }
 
         return new Point(x + i * diffX, y + i * diffY);
     }
 }
-
-

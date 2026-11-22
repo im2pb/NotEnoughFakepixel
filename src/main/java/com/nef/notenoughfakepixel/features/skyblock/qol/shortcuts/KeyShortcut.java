@@ -1,6 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.qol.shortcuts;
 
-import com.nef.notenoughfakepixel.utils.KeybindHelper;
+import com.nef.notenoughfakepixel.config.gui.core.config.KeybindHelper;
+import com.nef.notenoughfakepixel.envcheck.registers.GatedListener;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiChest;
@@ -13,7 +17,7 @@ import net.minecraftforge.fml.common.gameevent.InputEvent;
 import java.util.HashSet;
 import java.util.Set;
 
-public abstract class KeyShortcut {
+public abstract class KeyShortcut implements GatedListener {
 
     private final Set<Integer> activeKeySet = new HashSet<>();
 
@@ -48,6 +52,16 @@ public abstract class KeyShortcut {
         }
     }
 
+    @Override
+    public boolean isListenerActive() {
+        return getConfigOption() && SkyblockData.getCurrentGamemode().isSkyblock();
+    }
+
+    @Override
+    public void onListenerDeactivated() {
+        activeKeySet.clear();
+    }
+
     public abstract boolean getConfigOption();
 
     public abstract int getKeyBind();
@@ -57,4 +71,3 @@ public abstract class KeyShortcut {
     public abstract String getMenuTitle();
 
 }
-

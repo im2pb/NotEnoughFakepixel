@@ -1,39 +1,38 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows.treasure;
 
-
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
 public final class TreasureTriangulator {
 
-    // ---------- Adjustable params ----------
-    private final double epsilon = 1.0; // metal detector reports to 1 decimal → true error ≤ 0.5 blocks
+    private final double epsilon = 4.0;
     private final int maxSamples = 24;
     private final int minSamples = 4;
-    private final double minPlayerDelta = 0.9; // blocks
-    private final long estimateCooldownMs = 250; // 4hz
+    private final double minPlayerDelta = 0.9; 
+    private final long estimateCooldownMs = 250; 
     private final double pruneK = 2.5;
 
     private final int maxVolume = 200_000;
 
-    // ---------- State ----------
     private final RingBuffer samples;
     private final ReentrantLock samplesLock = new ReentrantLock();
 
     private volatile GridTrilateration.Result lastResult;
-    private volatile long lastEstimateAt = 0L;
+    private final AtomicBoolean estimatePending = new AtomicBoolean(false);
+    private final AtomicLong resetGeneration = new AtomicLong();
 
     private double lastX = Double.NaN, lastY = Double.NaN, lastZ = Double.NaN, lastD = Double.NaN;
 
-    // ---------- Worker thread ----------
-    private final ScheduledExecutorService executor;
-    private ScheduledFuture<?> scheduledTask;
+    private final ScheduledThreadPoolExecutor executor;
+    private final AtomicBoolean workerScheduled = new AtomicBoolean(false);
 
-    // ---------- Singleton thread-safe ----------
     private static final TreasureTriangulator INSTANCE = new TreasureTriangulator();
 
     public static TreasureTriangulator getInstance() {
@@ -42,52 +41,61 @@ public final class TreasureTriangulator {
 
     private TreasureTriangulator() {
         this.samples = new RingBuffer(64);
-        this.executor = Executors.newSingleThreadScheduledExecutor(r -> {
+        this.executor = new ScheduledThreadPoolExecutor(1, r -> {
             Thread t = new Thread(r, "NEF-TreasureWorker");
             t.setDaemon(true);
             t.setPriority(Thread.NORM_PRIORITY - 1);
             return t;
         });
-        // background calculation (4 Hz)
-        startWorker();
+        this.executor.setKeepAliveTime(15L, TimeUnit.SECONDS);
+        this.executor.allowCoreThreadTimeOut(true);
+        this.executor.setRemoveOnCancelPolicy(true);
     }
 
-    private void startWorker() {
-        stopWorker();
-        long period = Math.max(estimateCooldownMs, 50L);
-        scheduledTask = executor.scheduleAtFixedRate(this::tryEstimateOnWorker, period, period, TimeUnit.MILLISECONDS);
-    }
-
-    // Call in unload/disable of module
     public void shutdown() {
-        stopWorker();
         executor.shutdownNow();
+        workerScheduled.set(false);
     }
 
-    private void stopWorker() {
-        if (scheduledTask != null) {
-            scheduledTask.cancel(false);
-            scheduledTask = null;
+    /** Schedule one delayed calculation only when new samples arrive; do not wake an idle worker forever. */
+    private void scheduleEstimate() {
+        if (!workerScheduled.compareAndSet(false, true)) return;
+        try {
+            executor.schedule(() -> {
+                try {
+                    tryEstimateOnWorker();
+                } finally {
+                    workerScheduled.set(false);
+                    // If samples arrived while the previous estimate was running, process one fresh snapshot.
+                    if (estimatePending.get() && !executor.isShutdown()) scheduleEstimate();
+                }
+            }, estimateCooldownMs, TimeUnit.MILLISECONDS);
+        } catch (java.util.concurrent.RejectedExecutionException ignored) {
+            workerScheduled.set(false);
         }
     }
 
-    // ---------- Data thread (game thread) ----------
     public void handleData(double playerX, double playerY, double playerZ, double distance) {
+        if (Double.isNaN(playerX) || Double.isNaN(playerY) || Double.isNaN(playerZ)
+                || Double.isInfinite(playerX) || Double.isInfinite(playerY) || Double.isInfinite(playerZ)
+                || Double.isNaN(distance) || Double.isInfinite(distance) || distance <= 0.0) return;
         if (!shouldAccept(playerX, playerY, playerZ, distance)) return;
 
         samplesLock.lock();
         try {
             samples.add(new GridTrilateration.Sample(playerX, playerY, playerZ, distance));
-            while (samples.size() > maxSamples) samples.poll(); // drop oldest
+            while (samples.size() > maxSamples) samples.poll();
         } finally {
             samplesLock.unlock();
         }
-        // Do not calculate here, do it in worker thread
+        estimatePending.set(true);
+        scheduleEstimate();
     }
 
-    // ---------- Worker: executes in thread ----------
     private void tryEstimateOnWorker() {
-        // fast snapshot for tests
+        // Consume one batch. New arrivals during this calculation set the flag again for one follow-up run.
+        if (!estimatePending.compareAndSet(true, false)) return;
+        final long generationAtStart = resetGeneration.get();
         GridTrilateration.Sample[] snap;
         samplesLock.lock();
         try {
@@ -98,11 +106,6 @@ public final class TreasureTriangulator {
             samplesLock.unlock();
         }
 
-        long now = System.currentTimeMillis();
-        if (now - lastEstimateAt < estimateCooldownMs) return;
-        lastEstimateAt = now;
-
-        // mutable List for pruning
         ArrayList<GridTrilateration.Sample> buf = new ArrayList<>(snap.length);
         Collections.addAll(buf, snap);
 
@@ -126,10 +129,16 @@ public final class TreasureTriangulator {
             }
         }
 
-        if (r != null) lastResult = r; // no lock
+        if (r != null) {
+            samplesLock.lock();
+            try {
+                if (generationAtStart == resetGeneration.get()) lastResult = r;
+            } finally {
+                samplesLock.unlock();
+            }
+        }
     }
 
-    // ---------- API to render/UI ----------
     public GridTrilateration.Int3 getBestGuess() {
         return (lastResult == null) ? null : lastResult.best;
     }
@@ -150,21 +159,23 @@ public final class TreasureTriangulator {
     public void reset() {
         samplesLock.lock();
         try {
+            // Advance the generation while holding the sample lock so an in-flight estimate
+            // based on pre-reset data can never publish after this reset completes.
+            resetGeneration.incrementAndGet();
+            estimatePending.set(false);
             samples.clear();
+            lastResult = null;
+            lastX = lastY = lastZ = lastD = Double.NaN;
         } finally {
             samplesLock.unlock();
         }
-        lastResult = null;
-        lastX = lastY = lastZ = lastD = Double.NaN;
-        lastEstimateAt = 0L;
     }
 
-    // ---------- Utils ----------
     private static GridTrilateration.Result safeEstimateWithCap(List<GridTrilateration.Sample> list, double eps, int cap) {
         try {
-            // For full overload
+            
             return GridTrilateration.estimate(list, eps, (int) Math.ceil(Math.max(2, eps)), cap);
-            // If you don't have it, use the normal one and lower epsilon/extraPad to narrow the AABB.
+            
         } catch (Throwable ignored) {
             return null;
         }
@@ -196,7 +207,6 @@ public final class TreasureTriangulator {
         return false;
     }
 
-    // ---------- RingBuffer simple (no allocs) ----------
     private static final class RingBuffer {
         private GridTrilateration.Sample[] a;
         private int head = 0, tail = 0, size = 0;
@@ -253,4 +263,3 @@ public final class TreasureTriangulator {
         }
     }
 }
-

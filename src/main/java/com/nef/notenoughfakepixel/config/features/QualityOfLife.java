@@ -1,26 +1,409 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.config.features;
 
 import com.google.gson.annotations.Expose;
-import com.nef.notenoughfakepixel.config.position.Position;
-import io.github.notenoughupdates.moulconfig.annotations.*;
+import com.nef.notenoughfakepixel.config.gui.core.config.Position;
+import com.nef.notenoughfakepixel.config.gui.core.config.annotations.*;
 import org.lwjgl.input.Keyboard;
 
 public class QualityOfLife {
 
     @Expose
     @ConfigOption(name = "NEF Alerts", desc = "Create custom alerts when a message is written in chat.")
-    @ConfigEditorButton(runnableId = 24, buttonText = "Edit")
+    @ConfigEditorButton(runnableId = "nefAlerts", buttonText = "Edit")
     public String nefAlerts = "";
 
     @Expose
     @ConfigOption(name = "NEF Aliases", desc = "Create custom aliases to run a command with an alias")
-    @ConfigEditorButton(runnableId = 25, buttonText = "Edit")
+    @ConfigEditorButton(runnableId = "nefAlias", buttonText = "Edit")
     public String nefAlias = "";
 
     @Expose
-    //@ConfigOption(name = "NEF Capes", desc = "Choose from a variety of capes provided by nef")
-    //@ConfigEditorButton(runnableId = "nefCapes", buttonText = "Choose")
+
     public String nefCapes = "";
+
+    @Expose
+    @ConfigOption(name = "Visual Tweaks", desc = "Settings for visual enhancements.")
+    @ConfigEditorAccordion(id = 1)
+    public boolean visualTweaksAccordion = false;
+
+    @Expose
+    @ConfigOption(name = "Fullbright", desc = "Enable fullbright.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 1)
+    public boolean qolFullbright = true;
+
+    @Expose
+    @ConfigOption(name = "Disable Rain", desc = "Disables rain and thunder completely (rendering, rain particles and sky darkening).")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 1)
+    public boolean qolDisableRain = true;
+
+    @Expose
+    @ConfigOption(name = "Item Rarity Display", desc = "Show visual circle indicating item rarity.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 1)
+    public boolean qolItemRarity = true;
+
+    @Expose
+    @ConfigOption(name = "Item Rarity Opacity", desc = "Adjust how visible item rarity background is.")
+    @ConfigEditorSlider(minValue = 0f, maxValue = 1.0f, minStep = 0.05f)
+    @ConfigAccordionId(id = 1)
+    public float qolItemRarityOpacity = 0.6f;
+
+    @Expose
+    @ConfigOption(name = "Golden enchants", desc = "Changes the color of the maxed enchants.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 1)
+    public boolean qolGoldenEnchants = true;
+
+    @Expose
+    @ConfigOption(name = "Hide falling blocks", desc = "Hide falling blocks.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 1)
+    public boolean qolHideFallingBlocks = false;
+
+    @Expose
+    @ConfigOption(name = "Hide Players", desc = "Hide real online players. NPCs and player-model mobs remain visible.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 1)
+    public boolean qolHidePlayers = false;
+
+    @Expose
+    @ConfigOption(name = "Hide Player Armor", desc = "Hide player armor.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 1)
+    public boolean qolHidePlayerArmor = false;
+
+    @Expose
+    @ConfigOption(name = "Hide Players near NPCS", desc = "Hide players near NPCS.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 1)
+    public boolean qolHidePlayerNearNpcs = false;
+
+    @Expose
+    @ConfigOption(name = "Etherwarp Settings", desc = "Settings for etherwarp features.")
+    @ConfigEditorAccordion(id = 3)
+    public boolean etherwarpAccordion = false;
+
+    @Expose
+    @ConfigOption(name = "Etherwarp Zoom", desc = "Zooms in when using etherwarp.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 3)
+    public boolean qolEtherwarpZoom = true;
+
+    @Expose
+    @ConfigOption(name = "Etherwarp Overlay", desc = "Show etherwarp overlay.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 3)
+    public boolean qolEtherwarpOverlay = true;
+
+    @Expose
+    @ConfigOption(name = "Etherwarp Text Helper", desc = "Shows text helper when etherwarping.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 3)
+    public boolean qolEtherwarpText = true;
+
+    @Expose
+    @ConfigOption(name = "Etherwarp Overlay Color", desc = "Color of the etherwarp overlay.")
+    @ConfigEditorColour
+    @ConfigAccordionId(id = 3)
+    public String qolEtherwarpOverlayColor = "0:100:0:255:0";
+
+    @Expose
+    @ConfigOption(name = "Etherwarp Overlay Failed Color", desc = "Color of the failed etherwarp overlay.")
+    @ConfigEditorColour
+    @ConfigAccordionId(id = 3)
+    public String qolEtherwarpFailedOverlayColor = "0:100:0:255:0";
+
+    @Expose
+    @ConfigOption(name = "AOTV Custom Sound", desc = "Sound played after a successful AOTV Etherwarp only.")
+    @ConfigEditorDropdown(values = {"Default", "mob.blaze.hit", "note.pling", "random.orb", "mob.enderdragon.hit", "mob.cat.meow"})
+    @ConfigAccordionId(id = 3)
+    public int qolEtherwarpSound = 0;
+
+    @Expose
+    @ConfigOption(name = "Shortcuts", desc = "Settings for shortcut keybinds.")
+    @ConfigEditorAccordion(id = 4)
+    public boolean shortcutsAccordion = false;
+
+    @Expose
+    @ConfigOption(name = "Wardrobe Shortcut", desc = "Enable wardrobe shortcut.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 4)
+    public boolean qolShortcutWardrobe = false;
+
+    @Expose
+    @ConfigOption(name = "Wardrobe Slots Shortcut", desc = "Enable wardrobe slots {1 - 9} shortcuts.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 4)
+    public boolean qolShortcutSlotsWardrobe = false;
+
+    @Expose
+    @ConfigOption(name = "Wardrobe Shortcut Key", desc = "Keybind for wardrobe shortcut.")
+    @ConfigEditorKeybind(defaultKey = Keyboard.KEY_R)
+    @ConfigAccordionId(id = 4)
+    public int qolWardrobeKey = Keyboard.KEY_R;
+
+    @Expose
+    @ConfigOption(name = "Wardrobe Slot 1 Key", desc = "Keybind for wardrobe slot 1.")
+    @ConfigEditorKeybind(defaultKey = Keyboard.KEY_1)
+    @ConfigAccordionId(id = 4)
+    public int qolWardrobeKey1 = Keyboard.KEY_1;
+    @Expose
+    @ConfigOption(name = "Wardrobe Slot 2 Key", desc = "Keybind for wardrobe slot 2.")
+    @ConfigEditorKeybind(defaultKey = Keyboard.KEY_2)
+    @ConfigAccordionId(id = 4)
+    public int qolWardrobeKey2 = Keyboard.KEY_2;
+    @Expose
+    @ConfigOption(name = "Wardrobe Slot 3 Key", desc = "Keybind for wardrobe slot 3.")
+    @ConfigEditorKeybind(defaultKey = Keyboard.KEY_3)
+    @ConfigAccordionId(id = 4)
+    public int qolWardrobeKey3 = Keyboard.KEY_3;
+    @Expose
+    @ConfigOption(name = "Wardrobe Slot 4 Key", desc = "Keybind for wardrobe slot 4.")
+    @ConfigEditorKeybind(defaultKey = Keyboard.KEY_4)
+    @ConfigAccordionId(id = 4)
+    public int qolWardrobeKey4 = Keyboard.KEY_4;
+    @Expose
+    @ConfigOption(name = "Wardrobe Slot 5 Key", desc = "Keybind for wardrobe slot 5.")
+    @ConfigEditorKeybind(defaultKey = Keyboard.KEY_5)
+    @ConfigAccordionId(id = 4)
+    public int qolWardrobeKey5 = Keyboard.KEY_5;
+    @Expose
+    @ConfigOption(name = "Wardrobe Slot 6 Key", desc = "Keybind for wardrobe slot 6.")
+    @ConfigEditorKeybind(defaultKey = Keyboard.KEY_6)
+    @ConfigAccordionId(id = 4)
+    public int qolWardrobeKey6 = Keyboard.KEY_6;
+    @Expose
+    @ConfigOption(name = "Wardrobe Slot 7 Key", desc = "Keybind for wardrobe slot 7.")
+    @ConfigEditorKeybind(defaultKey = Keyboard.KEY_7)
+    @ConfigAccordionId(id = 4)
+    public int qolWardrobeKey7 = Keyboard.KEY_7;
+    @Expose
+    @ConfigOption(name = "Wardrobe Slot 8 Key", desc = "Keybind for wardrobe slot 8.")
+    @ConfigEditorKeybind(defaultKey = Keyboard.KEY_8)
+    @ConfigAccordionId(id = 4)
+    public int qolWardrobeKey8 = Keyboard.KEY_8;
+    @Expose
+    @ConfigOption(name = "Wardrobe Slot 9 Key", desc = "Keybind for wardrobe slot 9.")
+    @ConfigEditorKeybind(defaultKey = Keyboard.KEY_9)
+    @ConfigAccordionId(id = 4)
+    public int qolWardrobeKey9 = Keyboard.KEY_9;
+
+    public void resetWardrobeSlotKeybinds() {
+        qolWardrobeKey = Keyboard.KEY_R;
+        qolWardrobeKey1 = Keyboard.KEY_1;
+        qolWardrobeKey2 = Keyboard.KEY_2;
+        qolWardrobeKey3 = Keyboard.KEY_3;
+        qolWardrobeKey4 = Keyboard.KEY_4;
+        qolWardrobeKey5 = Keyboard.KEY_5;
+        qolWardrobeKey6 = Keyboard.KEY_6;
+        qolWardrobeKey7 = Keyboard.KEY_7;
+        qolWardrobeKey8 = Keyboard.KEY_8;
+        qolWardrobeKey9 = Keyboard.KEY_9;
+    }
+
+    @Expose
+    @ConfigOption(name = "Pets Shortcut", desc = "Enable pets shortcut.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 4)
+    public boolean qolShortcutPets = false;
+
+    @Expose
+    @ConfigOption(name = "Pets Shortcut Key", desc = "Keybind for pets shortcut.")
+    @ConfigEditorKeybind(defaultKey = Keyboard.KEY_P)
+    @ConfigAccordionId(id = 4)
+    public int qolPetsKey = Keyboard.KEY_P;
+
+    @Expose
+    @ConfigOption(name = "Equipment Shortcut", desc = "Enable Equipment shortcut.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 4)
+    public boolean qolShortcutEq = false;
+
+    @Expose
+    @ConfigOption(name = "Equipment Shortcut Key", desc = "Keybind for Equipment shortcut.")
+    @ConfigEditorKeybind(defaultKey = Keyboard.KEY_P)
+    @ConfigAccordionId(id = 4)
+    public int qolEqKey = Keyboard.KEY_U;
+
+    @Expose
+    @ConfigOption(name = "Warps Shortcuts", desc = "Enable warps shortcuts.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 4)
+    public boolean qolShortcutWarps = false;
+
+    @Expose
+    @ConfigOption(name = "Warp Island Shortcut Key", desc = "Keybind for warp island.")
+    @ConfigEditorKeybind(defaultKey = Keyboard.KEY_F7)
+    @ConfigAccordionId(id = 4)
+    public int qolShortcutWarpIs = Keyboard.KEY_F7;
+
+    @Expose
+    @ConfigOption(name = "Warp Hub Shortcut Key", desc = "Keybind for warp hub.")
+    @ConfigEditorKeybind(defaultKey = Keyboard.KEY_F8)
+    @ConfigAccordionId(id = 4)
+    public int qolShortcutWarpHub = Keyboard.KEY_F8;
+
+    @Expose
+    @ConfigOption(name = "Warp Dungeon Hub Shortcut Key", desc = "Keybind for warp dungeon hub.")
+    @ConfigEditorKeybind(defaultKey = Keyboard.KEY_F9)
+    @ConfigAccordionId(id = 4)
+    public int qolShortcutWarpDh = Keyboard.KEY_F9;
+
+    @Expose
+    @ConfigOption(name = "Sound Tweaks", desc = "Settings for sound modifications.")
+    @ConfigEditorAccordion(id = 5)
+    public boolean soundTweaksAccordion = false;
+
+    @Expose
+    @ConfigOption(name = "Disable Jerry-chine Gun Sounds", desc = "Disable Jerry-chine gun sounds.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 5)
+    public boolean qolDisableJerryChineGunSounds = true;
+
+    @Expose
+    @ConfigOption(name = "Disable AOTE Teleport Sounds", desc = "Disable Aspect of the End teleport sounds.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 5)
+    public boolean qolDisableAoteSounds = false;
+
+    @Expose
+    @ConfigOption(name = "Disable Hyperion Explosion", desc = "Disable Hyperion explosion effects.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 5)
+    public boolean qolDisableHyperionExplosions = true;
+
+    @Expose
+    @ConfigOption(name = "Disable Thunderlord Bolt", desc = "Disable Thunderlord bolt effects.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 5)
+    public boolean qolDisableThunderlordBolt = true;
+
+    @Expose
+    @ConfigOption(name = "Minimum Midas Staff Animation and Sounds", desc = "Reduce Midas Staff animation and sounds.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 5)
+    public boolean qolDisableMidaStaffAnimation = false;
+
+    @Expose
+    @ConfigOption(name = "Item Animation", desc = "Settings for item animation adjustments.")
+    @ConfigEditorAccordion(id = 6)
+    public boolean itemAnimationAccordion = false;
+
+    @Expose
+    @ConfigOption(name = "Item Animation Toggle", desc = "Change the look of your held item.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 6)
+    public boolean customAnimations = false;
+
+    @Expose
+    @ConfigOption(name = "Item Animation Size", desc = "Scales the size of your currently held item. Default: 0")
+    @ConfigEditorSlider(minValue = -1.5f, maxValue = 1.5f, minStep = 0.05f)
+    @ConfigAccordionId(id = 6)
+    public float customSize = 0f;
+
+    @Expose
+    @ConfigOption(name = "Item Animation Scale Swing", desc = "Also scale the size of the swing animation.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 6)
+    public boolean doesScaleSwing = true;
+
+    @Expose
+    @ConfigOption(name = "Item Animation X", desc = "Moves the held item. Default: 0")
+    @ConfigEditorSlider(minValue = -1.5f, maxValue = 1.5f, minStep = 0.05f)
+    @ConfigAccordionId(id = 6)
+    public float customX = 0f;
+
+    @Expose
+    @ConfigOption(name = "Item Animation Y", desc = "Moves the held item. Default: 0")
+    @ConfigEditorSlider(minValue = -1.5f, maxValue = 1.5f, minStep = 0.05f)
+    @ConfigAccordionId(id = 6)
+    public float customY = 0f;
+
+    @Expose
+    @ConfigOption(name = "Item Animation Z", desc = "Moves the held item. Default: 0")
+    @ConfigEditorSlider(minValue = -1.5f, maxValue = 1.5f, minStep = 0.05f)
+    @ConfigAccordionId(id = 6)
+    public float customZ = 0f;
+
+    @Expose
+    @ConfigOption(name = "Item Animation Yaw", desc = "Rotates your held item. Default: 0")
+    @ConfigEditorSlider(minValue = -180f, maxValue = 180f, minStep = 1f)
+    @ConfigAccordionId(id = 6)
+    public float customYaw = 0f;
+
+    @Expose
+    @ConfigOption(name = "Item Animation Pitch", desc = "Rotates your held item. Default: 0")
+    @ConfigEditorSlider(minValue = -180f, maxValue = 180f, minStep = 1f)
+    @ConfigAccordionId(id = 6)
+    public float customPitch = 0f;
+
+    @Expose
+    @ConfigOption(name = "Item Animation Roll", desc = "Rotates your held item. Default: 0")
+    @ConfigEditorSlider(minValue = -180f, maxValue = 180f, minStep = 1f)
+    @ConfigAccordionId(id = 6)
+    public float customRoll = 0f;
+
+    @Expose
+    @ConfigOption(name = "Item Animation Speed", desc = "Speed of the swing animation.")
+    @ConfigEditorSlider(minValue = -2f, maxValue = 1f, minStep = 0.05f)
+    @ConfigAccordionId(id = 6)
+    public float customSpeed = 0f;
+
+    @Expose
+    @ConfigOption(name = "Item Animation Ignore Haste", desc = "Makes the chosen speed override haste modifiers.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 6)
+    public boolean ignoreHaste = true;
+
+    @Expose
+    @ConfigOption(name = "Item Animation Drinking Fix", desc = "Pick how to handle drinking animations.")
+    @ConfigEditorDropdown(values = {"No fix", "Rotationless", "Fixed"})
+    @ConfigAccordionId(id = 6)
+    public int drinkingSelector = 2;
+
+    @Expose
+    @ConfigOption(name = "Item Animation Reset Item Values", desc = "Vanilla Look! Closes Settings GUI.")
+    @ConfigEditorButton(runnableId = "resetItemValues", buttonText = "Reset!")
+    @ConfigAccordionId(id = 6)
+    public String resetItemValuesButton = "";
+
+    @Expose
+    @ConfigOption(name = "Item Salvaging", desc = "Settings for item salvaging.")
+    @ConfigEditorAccordion(id = 8)
+    public boolean itemSalvagingAccordion = false;
+
+    @Expose
+    @ConfigOption(name = "Mythic Prevention", desc = "Prevent salvaging MYTHIC items.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 8)
+    public boolean salvageMythicPrevention = true;
+
+    @Expose
+    @ConfigOption(name = "Legendary Prevention", desc = "Prevent salvaging LEGENDARY items.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 8)
+    public boolean salvageLegendaryPrevention = true;
+
+    @Expose
+    @ConfigOption(name = "Epic Prevention", desc = "Prevent salvaging EPIC items.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 8)
+    public boolean salvageEpicPrevention = false;
+
+    @Expose
+    @ConfigOption(name = "Player Size Settings", desc = "Settings for player size adjustments.")
+    @ConfigEditorAccordion(id = 7)
+    public boolean playerSizeAccordion = false;
+    @Expose
+    @ConfigOption(name = "Skytils's smolpeople", desc = "Enable smolpeople")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 7)
+    public boolean smolPeople = false;
 
     @Expose
     @ConfigOption(name = "1.12 Crops Height", desc = "Use 1.12 crops height.")
@@ -68,6 +451,16 @@ public class QualityOfLife {
     public boolean qolBlockPlacingItems = true;
 
     @Expose
+    @ConfigOption(name = "Show Pet Equipped", desc = "Show equipped pet.")
+    @ConfigEditorBoolean
+    public boolean qolShowPetEquipped = true;
+
+    @Expose
+    @ConfigOption(name = "Pet Equipped Color", desc = "Color of equipped pet indicator.")
+    @ConfigEditorColour
+    public String qolPetEquippedColor = "0:190:0:255:0";
+
+    @Expose
     @ConfigOption(name = "Show Unclaimed Contests", desc = "Show unclaimed Jacob rewards.")
     @ConfigEditorBoolean
     public boolean qolShowJacobRewards = true;
@@ -98,16 +491,6 @@ public class QualityOfLife {
     public boolean qolDisableSellingRanks = false;
 
     @Expose
-    @ConfigOption(name = "Disable Server Announcements", desc = "Disable Fakepixel announcement/promo spam messages (help, store, discord, report, social media, etc.).")
-    @ConfigEditorBoolean
-    public boolean qolDisableServerAnnouncements = true;
-
-    @Expose
-    @ConfigOption(name = "Disable Game Invite Spam", desc = "Disable server-wide game invitation messages (e.g. 'invites you to play BedWars Solo').")
-    @ConfigEditorBoolean
-    public boolean qolDisableGameInvites = true;
-
-    @Expose
     @ConfigOption(name = "No Hurt Camera", desc = "Disable hurt camera effect.")
     @ConfigEditorBoolean
     public boolean qolNoHurtCam = true;
@@ -133,437 +516,154 @@ public class QualityOfLife {
     public boolean qolReforgeHelper = true;
 
     @Expose
-    @ConfigOption(name = "Enable Smooth AOTE", desc = "Enables smooth AOTE teleport animation.")
+    @ConfigOption(name = "Name & Damage Tags", desc = "Hide the floating names and damage numbers over mobs.")
+    @ConfigEditorAccordion(id = 12)
+    public boolean entityTagsAccordion = false;
+
+    @Expose
+    @ConfigOption(name = "Hide Mob Name Tags", desc = "Hides the names and health bars floating over mobs. The mobs themselves stay visible.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 12)
+    public boolean qolHideNameTags = false;
+
+    @Expose
+    @ConfigOption(name = "Keep Player Name Tags", desc = "Never hide the names of players and NPCs.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 12)
+    public boolean qolKeepPlayerNameTags = true;
+
+    @Expose
+    @ConfigOption(name = "Hide Specific Names", desc = "Hides only the names in your list below, even if \"Hide Mob Name Tags\" is off.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 12)
+    public boolean qolHideListedNames = false;
+
+    @Expose
+    @ConfigOption(name = "Names List", desc = "Type the names you want hidden, separated by commas. \"zombie\" hides anything with zombie in its name. Put = before a name to match it exactly.")
+    @ConfigEditorText
+    @ConfigAccordionId(id = 12)
+    public String qolHiddenNamesList = "";
+
+    @Expose
+    @ConfigOption(name = "Hide Damage Numbers", desc = "Hides floating damage numbers. Use the Toggle Damage Tags key to show them again.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 12)
+    public boolean qolHideDamageTags = false;
+
+    @Expose
+    @ConfigOption(name = "Reset When Changing World", desc = "Goes back to the setting above every time you switch island, dungeon or lobby.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 12)
+    public boolean qolDamageTagsResetOnWorldChange = true;
+
+    @Expose
+    @ConfigOption(name = "Abiphone Vault", desc = "A chest-style list of your NPC contacts. Click one to call them, right-click to favorite it.")
+    @ConfigEditorAccordion(id = 13)
+    public boolean abiphoneAccordion = false;
+
+    @Expose
+    @ConfigOption(name = "Enable Abiphone Vault", desc = "Turns the vault on. Pick the key for it in Controls (\"Open Abiphone Vault\").")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 13)
+    public boolean qolAbiphone = true;
+
+    @Expose
+    @ConfigOption(name = "Contacts", desc = "The NPCs in your vault, separated by commas. Leave it empty to get the default list.")
+    @ConfigEditorText
+    @ConfigAccordionId(id = 13)
+    public String qolAbiphoneContacts = com.nef.notenoughfakepixel.features.skyblock.qol.abiphone.AbiphonePanel.DEFAULT_CONTACTS;
+
+    @Expose
+    @ConfigOption(name = "End Nodes Settings", desc = "Settings for end nodes highlighter.")
+    @ConfigEditorAccordion(id = 11)
+    public boolean endNodesSettingsAccordion = false;
+
+    @Expose
+    @ConfigOption(name = "End Node Highlighter", desc = "Highlight end nodes in the end.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 11)
+    public boolean qolEndNodeHighlighter = true;
+
+    @Expose
+    @ConfigOption(name = "End Node Color", desc = "Color of end node highlighter.")
+    @ConfigEditorColour
+    @ConfigAccordionId(id = 11)
+    public String endNodeColor = "0:100:0:255:0";
+
+    @Expose
+    @ConfigOption(name= "Dark Auction Settings", desc = "Settings for Dark Auction features.")
+    @ConfigEditorAccordion(id = 9)
+    public boolean darkAuctionSettingsAccordion = false;
+
+    @Expose
+    @ConfigOption(name = "Dark Auction Timer", desc = "Shows timer to the next Dark Auction.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 9)
+    public boolean qolDAtimer = true;
+
+    @Expose
+    @ConfigOption(name = "Dark Auction Reminder", desc = "Notifies you when there is 1 minute left for Dark Auction.")
+    @ConfigEditorBoolean
+    @ConfigAccordionId(id = 9)
+    public boolean qolDarkAhNotifier = false;
+
+    @Expose
+    @ConfigOption(name = "Dark AH Timer Settings", desc = "Dark Auction timer settings.")
+    @ConfigEditorAccordion(id = 10)
+    @ConfigAccordionId(id = 9)
+    public boolean darkAuctionAccordion = false;
+
+    @Expose
+    @ConfigOption(name = "Scale", desc = "Scale of the Dark AH Timer.")
+    @ConfigAccordionId(id = 10)
+    @ConfigEditorSlider(minValue = 0.5f, maxValue = 5.0f, minStep = 0.1f)
+    public float darkAHTimerScale = 1.0f;
+
+    @Expose
+    @ConfigOption(name = "Position", desc = "Position of the Dark AH Timer.")
+    @ConfigEditorButton(runnableId = "editDarkAHTimerPos", buttonText = "Edit")
+    @ConfigAccordionId(id = 10)
+    public String editDarkAHTimerPos = "";
+
+    @Expose
+    public Position darkAhTimerPos = new Position(0, 0, true, true);
+
+    public void resetItemValues() {
+        customSize = 0f;
+        customX = 0f;
+        customY = 0f;
+        customZ = 0f;
+        customRoll = 0f;
+        customPitch = 0f;
+        customYaw = 0f;
+        doesScaleSwing = true;
+        ignoreHaste = true;
+        customSpeed = 0f;
+    }
+
+    @Expose
+    @ConfigOption(name = "Smooth AOTE Teleport", desc = "Smooth the camera transition after AOTE, AOTV or Shadow Warp teleports.")
     @ConfigEditorBoolean
     public boolean enableSmoothAote = false;
 
     @Expose
-    @Category(name = "Visual Tweaks", desc = "Settings for visual enhancements.")
-    public VisualTweaks visualTweaks = new VisualTweaks();
+    @ConfigOption(name = "Show Admin Item Tag", desc = "Flag SkyBlock items with suspicious or administrative NBT metadata in their tooltip.")
+    @ConfigEditorBoolean
+    public boolean qolShowAdminTag = true;
 
     @Expose
-    @Category(name = "Pingless Cactus", desc = "Client-side cactus breaking prediction for Cactus Knives.")
-    public PinglessCactusSettings pinglessCactus = new PinglessCactusSettings();
+    @ConfigOption(name = "Show Stacking Enchant Counter", desc = "Show the current Cultivating, Compact, Expertise, Champion or Toxophilite counter and its next threshold.")
+    @ConfigEditorBoolean
+    public boolean qolShowStackingCounter = true;
 
     @Expose
-    @Category(name = "Etherwarp Settings", desc = "Settings for etherwarp features.")
-    public EtherwarpSettings etherwarpSettings = new EtherwarpSettings();
+    @ConfigOption(name = "Disable Server Announcements", desc = "Hide repetitive server promotion and announcement messages.")
+    @ConfigEditorBoolean
+    public boolean qolDisableServerAnnouncements = true;
 
     @Expose
-    @Category(name = "Shortcuts", desc = "Settings for shortcut keybinds.")
-    public Shortcuts shortcuts = new Shortcuts();
+    @ConfigOption(name = "Disable Game Invites", desc = "Hide unsolicited server-wide game invitation messages.")
+    @ConfigEditorBoolean
+    public boolean qolDisableGameInvites = true;
 
-    @Expose
-    @Category(name = "Sound Tweaks", desc = "Settings for sound modifications.")
-    public SoundTweaks soundTweaks = new SoundTweaks();
-
-    @Expose
-    @Category(name = "Item Animation", desc = "Settings for item animation adjustments.")
-    public ItemAnimation itemAnimation = new ItemAnimation();
-
-    @Expose
-    @Category(name = "Item Salvaging", desc = "Settings for item salvaging.")
-    public ItemSalvaging itemSalvaging = new ItemSalvaging();
-
-    @Expose
-    @Category(name = "Player Size Settings", desc = "Settings for player size adjustments.")
-    public PlayerSizeSettings playerSizeSettings = new PlayerSizeSettings();
-
-    @Expose
-    @Category(name = "Item Data", desc = "Adds up item data to item tooltips.")
-    public ItemTooltipSettings itemTooltipSettings = new ItemTooltipSettings();
-
-    @Expose
-    @Category(name = "End Nodes Settings", desc = "Settings for end nodes highlighter.")
-    public EndNodesSettings endNodesSettings = new EndNodesSettings();
-
-    @Expose
-    @Category(name = "Dark Auction Settings", desc = "Settings for Dark Auction features.")
-    public DarkAuctionSettings darkAuctionSettings = new DarkAuctionSettings();
-
-    public void resetWardrobeSlotKeybinds() {
-        shortcuts.qolWardrobeKey = Keyboard.KEY_R;
-        shortcuts.qolWardrobeKey1 = Keyboard.KEY_1;
-        shortcuts.qolWardrobeKey2 = Keyboard.KEY_2;
-        shortcuts.qolWardrobeKey3 = Keyboard.KEY_3;
-        shortcuts.qolWardrobeKey4 = Keyboard.KEY_4;
-        shortcuts.qolWardrobeKey5 = Keyboard.KEY_5;
-        shortcuts.qolWardrobeKey6 = Keyboard.KEY_6;
-        shortcuts.qolWardrobeKey7 = Keyboard.KEY_7;
-        shortcuts.qolWardrobeKey8 = Keyboard.KEY_8;
-        shortcuts.qolWardrobeKey9 = Keyboard.KEY_9;
-    }
-
-    public void resetItemValues() {
-        itemAnimation.customSize = 0f;
-        itemAnimation.customX = 0f;
-        itemAnimation.customY = 0f;
-        itemAnimation.customZ = 0f;
-        itemAnimation.customRoll = 0f;
-        itemAnimation.customPitch = 0f;
-        itemAnimation.customYaw = 0f;
-        itemAnimation.doesScaleSwing = true;
-        itemAnimation.ignoreHaste = true;
-        itemAnimation.customSpeed = 0f;
-    }
-
-    public static class PinglessCactusSettings {
-
-        @Expose
-        @ConfigOption(name = "Pingless Cactus", desc = "Remove cactus client-side immediately when using a Cactus Knife.")
-        @ConfigEditorBoolean
-        public boolean enabled = true;
-    }
-
-    public static class VisualTweaks {
-
-            @Expose
-            @ConfigOption(name = "Fullbright", desc = "Enable fullbright.")
-            @ConfigEditorBoolean
-            public boolean qolFullbright = true;
-
-            @Expose
-            @ConfigOption(name = "Disable Rain", desc = "Disables rain rendering.")
-            @ConfigEditorBoolean
-            public boolean qolDisableRain = true;
-
-            @Expose
-            @ConfigOption(name = "Item Rarity Display", desc = "Show visual circle indicating item rarity.")
-            @ConfigEditorBoolean
-            public boolean qolItemRarity = true;
-
-            @Expose
-            @ConfigOption(name = "Item Rarity Opacity", desc = "Adjust how visible item rarity background is.")
-            @ConfigEditorSlider(minValue = 0f, maxValue = 1.0f, minStep = 0.05f)
-            public float qolItemRarityOpacity = 0.6f;
-
-            @Expose
-            @ConfigOption(name = "Golden enchants", desc = "Changes the color of the maxed enchants.")
-            @ConfigEditorBoolean
-            public boolean qolGoldenEnchants = true;
-
-            @Expose
-            @ConfigOption(name = "Hide falling blocks", desc = "Hide falling blocks.")
-            @ConfigEditorBoolean
-            public boolean qolHideFallingBlocks = false;
-
-            @Expose
-            @ConfigOption(name = "Hide Player Armor", desc = "Hide player armor.")
-            @ConfigEditorBoolean
-            public boolean qolHidePlayerArmor = false;
-
-            @Expose
-            @ConfigOption(name = "Hide Players near NPCS", desc = "Hide players near NPCS.")
-            @ConfigEditorBoolean
-            public boolean qolHidePlayerNearNpcs = false;
-    }
-
-    public static class EtherwarpSettings {
-
-            @Expose
-            @ConfigOption(name = "Etherwarp Zoom", desc = "Zooms in when using etherwarp.")
-            @ConfigEditorBoolean
-            public boolean qolEtherwarpZoom = true;
-
-            @Expose
-            @ConfigOption(name = "Etherwarp Overlay", desc = "Show etherwarp overlay.")
-            @ConfigEditorBoolean
-            public boolean qolEtherwarpOverlay = true;
-
-            @Expose
-            @ConfigOption(name = "Etherwarp Text Helper", desc = "Shows text helper when etherwarping.")
-            @ConfigEditorBoolean
-            public boolean qolEtherwarpText = true;
-
-            @Expose
-            @ConfigOption(name = "Etherwarp Overlay Color", desc = "Color of the etherwarp overlay.")
-            @ConfigEditorColour
-            public String qolEtherwarpOverlayColor = "0:100:0:255:0";
-
-            @Expose
-            @ConfigOption(name = "Etherwarp Overlay Failed Color", desc = "Color of the failed etherwarp overlay.")
-            @ConfigEditorColour
-            public String qolEtherwarpFailedOverlayColor = "0:100:0:255:0";
-
-            @Expose
-            @ConfigOption(name = "Etherwarp Sound", desc = "Sound played on etherwarp.")
-            @ConfigEditorDropdown(values = {"Default", "mob.blaze.hit", "note.pling", "random.orb", "mob.enderdragon.hit", "mob.cat.meow"})
-            public int qolEtherwarpSound = 0;
-    }
-
-    public static class Shortcuts {
-
-            @Expose
-            @ConfigOption(name = "Wardrobe Shortcut", desc = "Enable wardrobe shortcut.")
-            @ConfigEditorBoolean
-            public boolean qolShortcutWardrobe = false;
-
-            @Expose
-            @ConfigOption(name = "Wardrobe Slots Shortcut", desc = "Enable wardrobe slots {1 - 9} shortcuts.")
-            @ConfigEditorBoolean
-            public boolean qolShortcutSlotsWardrobe = false;
-
-            @Expose
-            @ConfigOption(name = "Wardrobe Shortcut Key", desc = "Keybind for wardrobe shortcut.")
-            @ConfigEditorKeybind(defaultKey = Keyboard.KEY_R)
-            public int qolWardrobeKey = Keyboard.KEY_R;
-
-            @Expose
-            @ConfigOption(name = "Wardrobe Slot 1 Key", desc = "Keybind for wardrobe slot 1.")
-            @ConfigEditorKeybind(defaultKey = Keyboard.KEY_1)
-            public int qolWardrobeKey1 = Keyboard.KEY_1;
-
-            @Expose
-            @ConfigOption(name = "Wardrobe Slot 2 Key", desc = "Keybind for wardrobe slot 2.")
-            @ConfigEditorKeybind(defaultKey = Keyboard.KEY_2)
-            public int qolWardrobeKey2 = Keyboard.KEY_2;
-
-            @Expose
-            @ConfigOption(name = "Wardrobe Slot 3 Key", desc = "Keybind for wardrobe slot 3.")
-            @ConfigEditorKeybind(defaultKey = Keyboard.KEY_3)
-            public int qolWardrobeKey3 = Keyboard.KEY_3;
-
-            @Expose
-            @ConfigOption(name = "Wardrobe Slot 4 Key", desc = "Keybind for wardrobe slot 4.")
-            @ConfigEditorKeybind(defaultKey = Keyboard.KEY_4)
-            public int qolWardrobeKey4 = Keyboard.KEY_4;
-
-            @Expose
-            @ConfigOption(name = "Wardrobe Slot 5 Key", desc = "Keybind for wardrobe slot 5.")
-            @ConfigEditorKeybind(defaultKey = Keyboard.KEY_5)
-            public int qolWardrobeKey5 = Keyboard.KEY_5;
-
-            @Expose
-            @ConfigOption(name = "Wardrobe Slot 6 Key", desc = "Keybind for wardrobe slot 6.")
-            @ConfigEditorKeybind(defaultKey = Keyboard.KEY_6)
-            public int qolWardrobeKey6 = Keyboard.KEY_6;
-
-            @Expose
-            @ConfigOption(name = "Wardrobe Slot 7 Key", desc = "Keybind for wardrobe slot 7.")
-            @ConfigEditorKeybind(defaultKey = Keyboard.KEY_7)
-            public int qolWardrobeKey7 = Keyboard.KEY_7;
-
-            @Expose
-            @ConfigOption(name = "Wardrobe Slot 8 Key", desc = "Keybind for wardrobe slot 8.")
-            @ConfigEditorKeybind(defaultKey = Keyboard.KEY_8)
-            public int qolWardrobeKey8 = Keyboard.KEY_8;
-
-            @Expose
-            @ConfigOption(name = "Wardrobe Slot 9 Key", desc = "Keybind for wardrobe slot 9.")
-            @ConfigEditorKeybind(defaultKey = Keyboard.KEY_9)
-            public int qolWardrobeKey9 = Keyboard.KEY_9;
-
-            @Expose
-            @ConfigOption(name = "Equipment Shortcut", desc = "Enable Equipment shortcut.")
-            @ConfigEditorBoolean
-            public boolean qolShortcutEq = false;
-
-            @Expose
-            @ConfigOption(name = "Equipment Shortcut Key", desc = "Keybind for Equipment shortcut.")
-            @ConfigEditorKeybind(defaultKey = Keyboard.KEY_P)
-            public int qolEqKey = Keyboard.KEY_U;
-
-            @Expose
-            @ConfigOption(name = "Warps Shortcuts", desc = "Enable warps shortcuts.")
-            @ConfigEditorBoolean
-            public boolean qolShortcutWarps = false;
-
-            @Expose
-            @ConfigOption(name = "Warp Island Shortcut Key", desc = "Keybind for warp island.")
-            @ConfigEditorKeybind(defaultKey = Keyboard.KEY_F7)
-            public int qolShortcutWarpIs = Keyboard.KEY_F7;
-
-            @Expose
-            @ConfigOption(name = "Warp Hub Shortcut Key", desc = "Keybind for warp hub.")
-            @ConfigEditorKeybind(defaultKey = Keyboard.KEY_F8)
-            public int qolShortcutWarpHub = Keyboard.KEY_F8;
-
-            @Expose
-            @ConfigOption(name = "Warp Dungeon Hub Shortcut Key", desc = "Keybind for warp dungeon hub.")
-            @ConfigEditorKeybind(defaultKey = Keyboard.KEY_F9)
-            public int qolShortcutWarpDh = Keyboard.KEY_F9;
-    }
-
-    public static class SoundTweaks {
-
-            @Expose
-            @ConfigOption(name = "Disable Jerry-chine Gun Sounds", desc = "Disable Jerry-chine gun sounds.")
-            @ConfigEditorBoolean
-            public boolean qolDisableJerryChineGunSounds = true;
-
-            @Expose
-            @ConfigOption(name = "Disable AOTE Teleport Sounds", desc = "Disable Aspect of the End teleport sounds.")
-            @ConfigEditorBoolean
-            public boolean qolDisableAoteSounds = false;
-
-            @Expose
-            @ConfigOption(name = "Disable Hyperion Explosion", desc = "Disable Hyperion explosion effects.")
-            @ConfigEditorBoolean
-            public boolean qolDisableHyperionExplosions = true;
-
-            @Expose
-            @ConfigOption(name = "Disable Thunderlord Bolt", desc = "Disable Thunderlord bolt effects.")
-            @ConfigEditorBoolean
-            public boolean qolDisableThunderlordBolt = true;
-
-            @Expose
-            @ConfigOption(name = "Minimum Midas Staff Animation and Sounds", desc = "Reduce Midas Staff animation and sounds.")
-            @ConfigEditorBoolean
-            public boolean qolDisableMidaStaffAnimation = false;
-    }
-
-    public static class ItemAnimation {
-
-            @Expose
-            @ConfigOption(name = "Item Animation Toggle", desc = "Change the look of your held item.")
-            @ConfigEditorBoolean
-            public boolean customAnimations = false;
-
-            @Expose
-            @ConfigOption(name = "Item Animation Size", desc = "Scales the size of your currently held item. Default: 0")
-            @ConfigEditorSlider(minValue = -1.5f, maxValue = 1.5f, minStep = 0.05f)
-            public float customSize = 0f;
-
-            @Expose
-            @ConfigOption(name = "Item Animation Scale Swing", desc = "Also scale the size of the swing animation.")
-            @ConfigEditorBoolean
-            public boolean doesScaleSwing = true;
-
-            @Expose
-            @ConfigOption(name = "Item Animation X", desc = "Moves the held item. Default: 0")
-            @ConfigEditorSlider(minValue = -1.5f, maxValue = 1.5f, minStep = 0.05f)
-            public float customX = 0f;
-
-            @Expose
-            @ConfigOption(name = "Item Animation Y", desc = "Moves the held item. Default: 0")
-            @ConfigEditorSlider(minValue = -1.5f, maxValue = 1.5f, minStep = 0.05f)
-            public float customY = 0f;
-
-            @Expose
-            @ConfigOption(name = "Item Animation Z", desc = "Moves the held item. Default: 0")
-            @ConfigEditorSlider(minValue = -1.5f, maxValue = 1.5f, minStep = 0.05f)
-            public float customZ = 0f;
-
-            @Expose
-            @ConfigOption(name = "Item Animation Yaw", desc = "Rotates your held item. Default: 0")
-            @ConfigEditorSlider(minValue = -180f, maxValue = 180f, minStep = 1f)
-            public float customYaw = 0f;
-
-            @Expose
-            @ConfigOption(name = "Item Animation Pitch", desc = "Rotates your held item. Default: 0")
-            @ConfigEditorSlider(minValue = -180f, maxValue = 180f, minStep = 1f)
-            public float customPitch = 0f;
-
-            @Expose
-            @ConfigOption(name = "Item Animation Roll", desc = "Rotates your held item. Default: 0")
-            @ConfigEditorSlider(minValue = -180f, maxValue = 180f, minStep = 1f)
-            public float customRoll = 0f;
-
-            @Expose
-            @ConfigOption(name = "Item Animation Speed", desc = "Speed of the swing animation.")
-            @ConfigEditorSlider(minValue = -2f, maxValue = 1f, minStep = 0.05f)
-            public float customSpeed = 0f;
-
-            @Expose
-            @ConfigOption(name = "Item Animation Ignore Haste", desc = "Makes the chosen speed override haste modifiers.")
-            @ConfigEditorBoolean
-            public boolean ignoreHaste = true;
-
-            @Expose
-            @ConfigOption(name = "Item Animation Drinking Fix", desc = "Pick how to handle drinking animations.")
-            @ConfigEditorDropdown(values = {"No fix", "Rotationless", "Fixed"})
-            public int drinkingSelector = 2;
-
-            @Expose
-            @ConfigOption(name = "Item Animation Reset Item Values", desc = "Vanilla Look! Closes Settings GUI.")
-            @ConfigEditorButton(runnableId = 26, buttonText = "Reset!")
-            public String resetItemValuesButton = "";
-    }
-
-    public static class ItemSalvaging {
-
-            @Expose
-            @ConfigOption(name = "Mythic Prevention", desc = "Prevent salvaging MYTHIC items.")
-            @ConfigEditorBoolean
-            public boolean salvageMythicPrevention = true;
-
-            @Expose
-            @ConfigOption(name = "Legendary Prevention", desc = "Prevent salvaging LEGENDARY items.")
-            @ConfigEditorBoolean
-            public boolean salvageLegendaryPrevention = true;
-
-            @Expose
-            @ConfigOption(name = "Epic Prevention", desc = "Prevent salvaging EPIC items.")
-            @ConfigEditorBoolean
-            public boolean salvageEpicPrevention = false;
-    }
-
-    public static class PlayerSizeSettings {
-
-            @Expose
-            @ConfigOption(name = "Skytils's smolpeople", desc = "Enable smolpeople")
-            @ConfigEditorBoolean
-            public boolean smolPeople = false;
-    }
-
-    public static class ItemTooltipSettings {
-
-            @Expose
-            @ConfigOption(name = "Show Admin Tag on Admin Items", desc = "Shows §cADMIN §7tag on admin items description.")
-            @ConfigEditorBoolean
-            public boolean qolShowAdminTag = true;
-
-            @Expose
-            @ConfigOption(name = "Shows Stacking Counter", desc = "Shows stacking counter in the item description.")
-            @ConfigEditorBoolean
-            public boolean qolShowStackingCounter = true;
-    }
-
-    public static class EndNodesSettings {
-
-            @Expose
-            @ConfigOption(name = "End Node Highlighter", desc = "Highlight end nodes in the end.")
-            @ConfigEditorBoolean
-            public boolean qolEndNodeHighlighter = true;
-
-            @Expose
-            @ConfigOption(name = "End Node Color", desc = "Color of end node highlighter.")
-            @ConfigEditorColour
-            public String endNodeColor = "0:100:0:255:0";
-    }
-
-    public static class DarkAuctionSettings {
-
-            @Expose
-            @ConfigOption(name = "Dark Auction Timer", desc = "Shows timer to the next Dark Auction.")
-            @ConfigEditorBoolean
-            public boolean qolDAtimer = true;
-
-            @Expose
-            @ConfigOption(name = "Dark Auction Reminder", desc = "Notifies you when there is 1 minute left for Dark Auction.")
-            @ConfigEditorBoolean
-            public boolean qolDarkAhNotifier = false;
-
-    }
-
-    @Expose
-    @Category(name = "Dark AH Timer Settings", desc = "Dark Auction timer settings.")
-    public DarkAuctionTimerSettings darkAuctionTimerSettings = new DarkAuctionTimerSettings();
-
-    public static class DarkAuctionTimerSettings {
-
-            @Expose
-            @ConfigOption(name = "Scale", desc = "Scale of the Dark AH Timer.")
-            @ConfigEditorSlider(minValue = 0.5f, maxValue = 5.0f, minStep = 0.1f)
-            public float darkAHTimerScale = 1.0f;
-
-            @Expose
-            @ConfigOption(name = "Position", desc = "Position of the Dark AH Timer.")
-            @ConfigEditorButton(runnableId = 27, buttonText = "Edit")
-            public String editDarkAHTimerPos = "";
-
-            @Expose
-            public Position darkAhTimerPos = new Position(0, 0, false, false);
-    }
 }
-

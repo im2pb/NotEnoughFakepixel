@@ -1,7 +1,10 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
 package com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
-import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.envcheck.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.features.skyblock.overlays.Overlay;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.InventoryUtils;
@@ -14,6 +17,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @RegisterEvents
@@ -23,6 +27,7 @@ public class ScavengedToolsOverlay extends Overlay {
     private static boolean hasGoldh = false;
     private static boolean hasEmera = false;
     private static boolean hasDiamo = false;
+    private static List<String> cachedLines = buildLines();
 
     private int tickCounter = 0;
 
@@ -33,19 +38,21 @@ public class ScavengedToolsOverlay extends Overlay {
         if (Minecraft.getMinecraft().gameSettings.showDebugInfo) return false;
         if (Minecraft.getMinecraft().gameSettings.keyBindPlayerList.isKeyDown()) return false;
         if (Config.feature.mining.miningOverlayHideOnChat && mc.currentScreen instanceof GuiChat) return false;
-        return Config.feature.mining.crystalHollows.scavengedOverlay;
+        return Config.feature.mining.scavengedOverlay;
     }
 
     @Override
     public List<String> getLines() {
-        List<String> lines = new ArrayList<>();
+        return cachedLines;
+    }
 
+    private static List<String> buildLines() {
+        List<String> lines = new ArrayList<>(4);
         lines.add("\u00a73Scavenged \u00a79Lapis Sword \u00a77-       \u00a7" + (hasLapis? "a✔":"c✖"));
         lines.add("\u00a73Scavenged \u00a76Gold Hammer \u00a77-       \u00a7" + (hasGoldh? "a✔":"c✖"));
         lines.add("\u00a73Scavenged \u00a7aEmerald Hammer \u00a77-  \u00a7" + (hasEmera? "a✔":"c✖"));
         lines.add("\u00a73Scavenged \u00a7bDiamond Axe \u00a77-       \u00a7" + (hasDiamo? "a✔":"c✖"));
-
-        return lines;
+        return Collections.unmodifiableList(lines);
     }
 
     @SubscribeEvent
@@ -57,6 +64,7 @@ public class ScavengedToolsOverlay extends Overlay {
             hasGoldh = InventoryUtils.searchForItemInInventory("DWARVEN_GOLD_HAMMER");
             hasEmera = InventoryUtils.searchForItemInInventory("DWARVEN_EMERALD_HAMMER");
             hasDiamo = InventoryUtils.searchForItemInInventory("DWARVEN_DIAMOND_AXE");
+            cachedLines = buildLines();
             tickCounter = 0;
         }
     }
@@ -68,7 +76,7 @@ public class ScavengedToolsOverlay extends Overlay {
 
     @Override
     public float getHeight(float scale, List<String> lines) {
-        return LINE_HEIGHT * getLines().size();
+        return LINE_HEIGHT * lines.size();
     }
 
     @SubscribeEvent
@@ -77,19 +85,19 @@ public class ScavengedToolsOverlay extends Overlay {
         if (!shouldShow()) return;
 
         ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
-        int width = (int) getWidth(Config.feature.mining.scavengedOverlaySettings.scavengedOverlayScale, getLines());
-        int height = (int) getHeight(Config.feature.mining.scavengedOverlaySettings.scavengedOverlayScale, getLines());
-        int x = Config.feature.mining.scavengedOverlaySettings.scavengedOverlayPos.getAbsX(sr, width);
-        int y = Config.feature.mining.scavengedOverlaySettings.scavengedOverlayPos.getAbsY(sr, height);
+        List<String> lines = getLines();
+        int width = (int) getWidth(Config.feature.mining.scavengedOverlayScale, lines);
+        int height = (int) getHeight(Config.feature.mining.scavengedOverlayScale, lines);
+        int x = Config.feature.mining.scavengedOverlayPos.getAbsX(sr, width);
+        int y = Config.feature.mining.scavengedOverlayPos.getAbsY(sr, height);
 
         draw(
                 x - ((float) width /2),
                 y - ((float) height /2),
-                Config.feature.mining.scavengedOverlaySettings.scavengedOverlayScale,
-                Config.feature.mining.miningOverlaySettings.miningOverlayBackgroundColor
+                Config.feature.mining.scavengedOverlayScale,
+                Config.feature.mining.miningOverlayBackgroundColor,
+                lines
         );
     }
 
-
 }
-
