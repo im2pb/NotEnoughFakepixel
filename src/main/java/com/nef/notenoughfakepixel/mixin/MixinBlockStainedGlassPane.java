@@ -1,0 +1,29 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
+package com.nef.notenoughfakepixel.mixin;
+
+import com.nef.notenoughfakepixel.config.gui.Config;
+import net.minecraft.block.BlockPane;
+import net.minecraft.block.BlockStainedGlassPane;
+import net.minecraft.block.material.Material;
+import net.minecraft.util.BlockPos;
+import net.minecraft.world.IBlockAccess;
+import org.spongepowered.asm.mixin.Mixin;
+
+@Mixin({BlockStainedGlassPane.class})
+public abstract class MixinBlockStainedGlassPane extends BlockPane {
+
+    protected MixinBlockStainedGlassPane(Material materialIn, boolean canDrop) {
+        super(materialIn, canDrop);
+    }
+
+    public void setBlockBoundsBasedOnState(IBlockAccess worldIn, BlockPos pos) {
+        if (Config.feature.mining.crystalFullBlockPane) {
+            this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
+        } else {
+            super.setBlockBoundsBasedOnState(worldIn, pos);
+        }
+    }
+
+}

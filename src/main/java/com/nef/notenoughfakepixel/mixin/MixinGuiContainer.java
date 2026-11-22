@@ -1,0 +1,213 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
+package com.nef.notenoughfakepixel.mixin;
+
+import com.nef.notenoughfakepixel.NotEnoughFakepixel;
+import com.nef.notenoughfakepixel.config.gui.Config;
+import com.nef.notenoughfakepixel.events.GuiContainerBackgroundDrawnEvent;
+import com.nef.notenoughfakepixel.events.SlotClickEvent;
+import com.nef.notenoughfakepixel.features.skyblock.enchanting.EnchantingSolvers;
+import com.nef.notenoughfakepixel.features.inventory.search.SearchBar;
+import com.nef.notenoughfakepixel.features.protection.ItemProtection;
+import com.nef.notenoughfakepixel.features.skyblock.slotlocking.SlotLocking;
+import com.nef.notenoughfakepixel.utils.ReforgePair;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.inventory.Slot;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
+import org.lwjgl.opengl.GL11;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+
+import java.awt.*;
+
+@Mixin(value = GuiContainer.class, priority = 500)
+public class MixinGuiContainer extends GuiScreen {
+
+    @Inject(method = "drawScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;color(FFFF)V", ordinal = 1))
+    private void drawBackground(int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
+        new GuiContainerBackgroundDrawnEvent(((GuiContainer) (Object) this), partialTicks).post();
+    }
+
+    @Inject(method = "drawSlot", at = @At("RETURN"))
+    public void drawSlotRet(Slot slotIn, CallbackInfo ci) {
+        GuiContainer container = (GuiContainer) (Object) this;
+        // Search is highlight-only; normal slot overlays and interactions remain untouched.
+        SlotLocking.getInstance().drawSlot(slotIn);
+        ItemProtection.renderIndicator(container, slotIn, guiLeft, guiTop);
+        SearchBar.renderSlotHighlight(container, slotIn, guiLeft, guiTop);
+    }
+
+    // Preserve the existing EnchantingSolvers display override. Search never replaces or hides
+    // the stack returned by a server-backed Slot.
+    @Redirect(method = "drawSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/inventory/Slot;getStack()Lnet/minecraft/item/ItemStack;"))
+    public ItemStack drawSlot_getStack(Slot slot) {
+        ItemStack stack = slot.getStack();
+        if (stack != null) {
+            ItemStack replacement = EnchantingSolvers.overrideStack(slot.inventory, slot.getSlotIndex(), stack);
+            if (replacement != null) return replacement;
+        }
+        return stack;
+    }
+
+    @Inject(method = "drawSlot", at = @At("HEAD"), cancellable = true)
+    public void drawSlot(Slot slot, CallbackInfo ci) {
+        if (slot == null) return;
+
+        ItemStack stack = slot.getStack();
+
+        if (stack != null) {
+            if (EnchantingSolvers.onStackRender(
+                    stack,
+                    slot.inventory,
+                    slot.getSlotIndex(),
+                    slot.xDisplayPosition,
+                    slot.yDisplayPosition
+            )) {
+                ci.cancel();
+                return;
+            }
+        }
+
+    }
+
+    @Redirect(method = "drawScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/inventory/Slot;getStack()Lnet/minecraft/item/ItemStack;"))
+    public ItemStack drawScreen_getStack(Slot slot) {
+        // Keep vanilla tooltip/hover behavior for every item. Search is cosmetic only.
+        if (theSlot != null && theSlot == slot && theSlot.getStack() != null) {
+            ItemStack newStack = EnchantingSolvers.overrideStack(
+                    theSlot.inventory,
+                    theSlot.getSlotIndex(),
+                    theSlot.getStack()
+            );
+            if (newStack != null) {
+                return newStack;
+            }
+        }
+        return slot.getStack();
+    }
+
+    @Shadow
+    private Slot theSlot;
+
+    @Shadow
+    protected int guiLeft;
+
+    @Shadow
+    protected int guiTop;
+
+    @Redirect(method = "drawScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/inventory/GuiContainer;drawGradientRect(IIIIII)V"))
+    public void drawScreen_drawGradientRect(
+            GuiContainer container,
+            int left,
+            int top,
+            int right,
+            int bottom,
+            int startColor,
+            int endColor
+    ) {
+        if (startColor == 0x80ffffff && endColor == 0x80ffffff &&
+                theSlot != null && SlotLocking.getInstance().isSlotLocked(theSlot)) {
+            int col = 0x80ff8080;
+            drawGradientRect(left, top, right, bottom, col, col);
+        } else {
+            drawGradientRect(left, top, right, bottom, startColor, endColor);
+        }
+    }
+
+    @Inject(method = "drawScreen", at = @At("RETURN"))
+    public void drawScreen(CallbackInfo ci) {
+        if (theSlot != null && SlotLocking.getInstance().isSlotLocked(theSlot)) {
+            SlotLocking.getInstance().setRealSlot(theSlot);
+            theSlot = null;
+        } else if (theSlot == null) {
+            SlotLocking.getInstance().setRealSlot(null);
+        }
+    }
+
+    @Inject(method = "checkHotbarKeys", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/inventory/GuiContainer;handleMouseClick(Lnet/minecraft/inventory/Slot;III)V"), locals = LocalCapture.CAPTURE_FAILSOFT, cancellable = true)
+    public void checkHotbarKeys_Slotlock(int keyCode, CallbackInfoReturnable<Boolean> cir, int i) {
+        if (SlotLocking.getInstance().isSlotIndexLocked(i)) {
+            cir.setReturnValue(false);
+        }
+    }
+
+    @Inject(method = "handleMouseClick", at = @At(value = "HEAD"), cancellable = true)
+    public void handleMouseClick(Slot slotIn, int slotId, int clickedButton, int clickType, CallbackInfo ci) {
+        GuiContainer $this = (GuiContainer) (Object) this;
+        SlotClickEvent event = new SlotClickEvent($this, slotIn, slotId, clickedButton, clickType);
+        event.post();
+        if (event.isCanceled()) {
+            ci.cancel();
+            return;
+        }
+        if (event.usePickblockInstead && $this.mc.thePlayer != null) {
+            $this.mc.playerController.windowClick(
+                    $this.inventorySlots.windowId,
+                    slotId, 2, 3, $this.mc.thePlayer
+            );
+            ci.cancel();
+        }
+    }
+
+    private ReforgePair reforgeToRender;
+
+    @Inject(method = "drawSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/RenderItem;renderItemOverlayIntoGUI(Lnet/minecraft/client/gui/FontRenderer;Lnet/minecraft/item/ItemStack;IILjava/lang/String;)V",
+            ordinal = 0), locals = LocalCapture.CAPTURE_FAILSOFT)
+    private void drawSlot(Slot slotIn, CallbackInfo ci, int x, int y, ItemStack item, boolean flag, boolean flag1,
+                          ItemStack itemstack1, String s) {
+        if (!Config.feature.qol.qolReforgeHelper) return;
+
+        if (slotIn.inventory.getDisplayName().getUnformattedText().equals("Reforge Item") && slotIn.slotNumber == 13) {
+            if (item != null && item.hasDisplayName()) {
+                String[] nameParts = item.getDisplayName().split(" ");
+                if (nameParts.length > 2) {
+                    String reforge = NotEnoughFakepixel.instance.getUtils().stripColor(nameParts[0]);
+                    String displayReforge;
+                    String lockedReforge = NotEnoughFakepixel.instance.getUtils().getLockedEnchantment();
+                    if (lockedReforge.length() > 0 && reforge.toLowerCase().contains(lockedReforge.toLowerCase())) {
+                        displayReforge = EnumChatFormatting.RED + reforge;
+                    } else {
+                        displayReforge = EnumChatFormatting.YELLOW + reforge;
+                    }
+                    x -= 28;
+                    y += 22;
+                    FontRenderer fr = Minecraft.getMinecraft().fontRendererObj;
+                    float halfStringWidth = fr.getStringWidth(displayReforge) / 2;
+                    reforgeToRender = new ReforgePair(x - halfStringWidth, y, displayReforge);
+                }
+            }
+        }
+        if (slotIn.slotNumber == 53 && reforgeToRender != null) {
+            GL11.glPushAttrib(
+                    GL11.GL_ENABLE_BIT
+                            | GL11.GL_COLOR_BUFFER_BIT
+                            | GL11.GL_DEPTH_BUFFER_BIT
+                            | GL11.GL_TEXTURE_BIT);
+            GL11.glPushMatrix();
+            try {
+                GL11.glDisable(GL11.GL_LIGHTING);
+                GL11.glDisable(GL11.GL_DEPTH_TEST);
+                GL11.glDisable(GL11.GL_BLEND);
+                GL11.glColor4f(1F, 1F, 1F, 1F);
+                FontRenderer fr = Minecraft.getMinecraft().fontRendererObj;
+                fr.drawStringWithShadow(reforgeToRender.getEnchant(), reforgeToRender.getX(), reforgeToRender.getY(), 0xFFFFFFFF);
+            } finally {
+                reforgeToRender = null;
+                GL11.glPopMatrix();
+                GL11.glPopAttrib();
+            }
+        }
+    }
+}

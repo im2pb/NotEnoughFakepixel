@@ -1,0 +1,43 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ */
+package com.nef.notenoughfakepixel.mixin;
+
+import com.nef.notenoughfakepixel.config.gui.Config;
+import net.minecraft.block.BlockButton;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.world.IBlockAccess;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+@Mixin(BlockButton.class)
+public abstract class MixinBlockButton {
+
+    @Inject(method = "setBlockBoundsBasedOnState", at = @At("HEAD"), cancellable = true)
+    private void modifyButtonBoundingBox(IBlockAccess worldIn, BlockPos pos, CallbackInfo ci) {
+        if (Config.feature.qol.qolFullBlockButton) {
+            BlockButton button = (BlockButton) (Object) this;
+            IBlockState state = worldIn.getBlockState(pos);
+            EnumFacing facing = state.getValue(BlockButton.FACING);
+
+            if (facing == EnumFacing.DOWN) {
+                button.setBlockBounds(0.0F, 0.75F, 0.0F, 1.0F, 1.0F, 1.0F); 
+            } else if (facing == EnumFacing.UP) {
+                button.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 0.25F, 1.0F); 
+            } else if (facing == EnumFacing.NORTH) {
+                button.setBlockBounds(0.0F, 0.0F, 0.75F, 1.0F, 1.0F, 1.0F); 
+            } else if (facing == EnumFacing.SOUTH) {
+                button.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 0.25F); 
+            } else if (facing == EnumFacing.WEST) {
+                button.setBlockBounds(0.75F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F); 
+            } else if (facing == EnumFacing.EAST) {
+                button.setBlockBounds(0.0F, 0.0F, 0.0F, 0.25F, 1.0F, 1.0F); 
+            }
+            ci.cancel();
+        }
+    }
+}
