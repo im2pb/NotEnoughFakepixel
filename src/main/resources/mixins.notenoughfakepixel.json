@@ -1,7 +1,0 @@
-{
-  "package": "com.nef.notenoughfakepixel.mixin",
-  "plugin": "com.nef.notenoughfakepixel.env.AutoDiscoveryMixinPlugin",
-  "refmap": "mixins.${modid}.refmap.json",
-  "minVersion": "0.7",
-  "compatibilityLevel": "JAVA_8"
-}
