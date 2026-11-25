@@ -1,3 +1,4 @@
+import net.fabricmc.loom.configuration.ide.RunConfig
 import org.apache.commons.lang3.SystemUtils
 
 plugins {
@@ -108,6 +109,24 @@ dependencies {
 }
 
 // Tasks:
+
+// Loom 0.10's RunGameTask uses a main-class property that Gradle 8 rejects.
+tasks.register<JavaExec>("runForgeClient") {
+    group = "loom"
+    description = "Starts the Minecraft 1.8.9 Forge development client."
+
+    val client = RunConfig.runConfig(project, loom.runConfigs.getByName("client"))
+    dependsOn(tasks.named("downloadAssets"))
+    javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+    mainClass.set(client.mainClass)
+    classpath = client.sourceSet.runtimeClasspath
+    args(client.programArgs)
+    jvmArgs(client.vmArgs)
+    systemProperty("devauth.enabled", providers.gradleProperty("devAuth").getOrElse("false"))
+    environment(client.envVariables)
+    workingDir = project.file(client.runDir)
+    doFirst { workingDir.mkdirs() }
+}
 
 tasks.withType(JavaCompile::class) {
     options.encoding = "UTF-8"
