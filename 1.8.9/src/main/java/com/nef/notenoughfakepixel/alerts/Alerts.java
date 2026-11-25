@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 @RegisterEvents
 public class Alerts {
@@ -39,15 +40,16 @@ public class Alerts {
 
     @SubscribeEvent
     public void onChat(ClientChatReceivedEvent event) {
-        if (event.type == 2) return;
+        if (event == null || event.type == 2) return;
+        if (event.message == null || mc.thePlayer == null) return;
 
         String message = StringUtils.stripControlCodes(event.message.getUnformattedText());
 
         for (Alert alert : alerts) {
-            if (!alert.toggled) continue;
+            if (alert == null || !alert.toggled) continue;
 
             boolean location;
-            switch (alert.location) {
+            switch (alert.location == null ? "" : alert.location) {
                 case "Skyblock":
                     location = SkyblockData.getCurrentGamemode().isSkyblock();
                     break;
@@ -59,10 +61,13 @@ public class Alerts {
             }
             if (!location) continue;
 
-            String alertText = alert.alert;
+            String alertText = alert.alert == null ? "" : alert.alert;
 
             if (alert.mode.equals("Regex")) {
-                Matcher matcher = patterns.get(alert).matcher(message);
+                Pattern pattern = patterns.get(alert);
+                if (pattern == null) continue;
+                Matcher matcher = pattern.matcher(message);
+
                 if (matcher.matches()) {
                     matcher.reset();
 
@@ -142,10 +147,14 @@ public class Alerts {
     }
 
     public static void save() {
+        patterns.clear();
+
         for (Alert alert : alerts) {
-            if (alert.mode.equals("Regex")) {
-                Pattern pattern = Pattern.compile(alert.getMessage());
-                patterns.put(alert, pattern);
+            if (alert == null || !"Regex".equals(alert.mode)) continue;
+            try {
+                patterns.put(alert, Pattern.compile(alert.getMessage() == null ? "" : alert.getMessage()));
+            } catch (PatternSyntaxException ex) {
+                System.out.println("Invalid alert regex for alert message: " + alert.message);
             }
         }
 
@@ -169,11 +178,14 @@ public class Alerts {
                 if (loadedAlerts != null) {
                     alerts.clear(); // Clear existing alerts
                     alerts.addAll(loadedAlerts); // Load new ones
+                    patterns.clear();
                     // Rebuild patterns for Regex alerts
                     for (Alert alert : alerts) {
-                        if (alert.mode.equals("Regex")) {
-                            Pattern pattern = Pattern.compile(alert.getMessage());
-                            patterns.put(alert, pattern);
+                        if (alert == null || !"Regex".equals(alert.mode)) continue;
+                        try {
+                            patterns.put(alert, Pattern.compile(alert.getMessage() == null ? "" : alert.getMessage()));
+                        } catch (PatternSyntaxException ex) {
+                            System.out.println("Invalid alert regex for alert message: " + alert.message);
                         }
                     }
                 }

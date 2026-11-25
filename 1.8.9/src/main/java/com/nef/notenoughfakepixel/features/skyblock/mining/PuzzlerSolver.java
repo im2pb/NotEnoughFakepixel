@@ -71,10 +71,17 @@ public class PuzzlerSolver {
 
     @SubscribeEvent
     public void renderWorldLast(RenderWorldLastEvent event) {
+        if (!Config.feature.mining.dwarvenMines.miningPuzzlerSolver) {
+            overlayLoc = null;
+            return;
+        }
+
         if (SkyblockData.getCurrentLocation() != Location.DWARVEN) return;
         if (overlayLoc == null) return;
 
         Entity viewer = Minecraft.getMinecraft().getRenderViewEntity();
+        if (viewer == null) return;
+
         double viewerX = viewer.lastTickPosX + (viewer.posX - viewer.lastTickPosX) * event.partialTicks;
         double viewerY = viewer.lastTickPosY + (viewer.posY - viewer.lastTickPosY) * event.partialTicks;
         double viewerZ = viewer.lastTickPosZ + (viewer.posZ - viewer.lastTickPosZ) * event.partialTicks;

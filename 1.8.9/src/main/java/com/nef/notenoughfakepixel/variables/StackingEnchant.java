@@ -6,8 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public enum StackingEnchant {
-    NONE("", new Integer[]{}),
-    CULTIVATING("CULTIVATING", new Integer[]{
+    NONE("", new int[]{}),
+    CULTIVATING("CULTIVATING", new int[]{
         1000,
         4000,
         20000,
@@ -18,7 +18,7 @@ public enum StackingEnchant {
         15000000,
         80000000
     }),
-    COMPACT("COMPACT", new Integer[]{
+    COMPACT("COMPACT", new int[]{
         100,
         400,
         1000,
@@ -29,7 +29,7 @@ public enum StackingEnchant {
         350000,
         500000
     }),
-    EXPERTISE("EXPERTISE", new Integer[]{
+    EXPERTISE("EXPERTISE", new int[]{
         50,
         50,
         150,
@@ -40,7 +40,7 @@ public enum StackingEnchant {
         4500,
         5000
     }),
-    CHAMPION("CHAMPION", new Integer[]{
+    CHAMPION("CHAMPION", new int[]{
         50000,
         50000,
         150000,
@@ -51,7 +51,7 @@ public enum StackingEnchant {
         500000,
         500000
     }),
-    TOXOPHILITE("TOXOPHILITE", new Integer[]{
+    TOXOPHILITE("TOXOPHILITE", new int[]{
         50000,
         50000,
         150000,
@@ -63,27 +63,25 @@ public enum StackingEnchant {
         500000
     });
 
-    private final String name;
-    private final List<Integer> levelTable;
+    private final String displayName;
+    private final int[] thresholds;
 
-    StackingEnchant(String name, Integer[] levelTable) {
-        this.name = name;
-        this.levelTable = ListUtils.of(levelTable);
+    StackingEnchant(String displayName, int[] thresholds) {
+        this.displayName = displayName;
+        this.thresholds = thresholds;
     }
 
-    public static Integer getNextLevel(int currentCounter, StackingEnchant enchant) {
-        for (Integer level : enchant.levelTable) {
-            if (currentCounter < level) {
-                return level;
-            }
-        }
-        return 0;
+    public Integer getNextLevel(int current) {
+        for (int threshold : thresholds) if (current < threshold) return threshold;
+        return null;
+    }
+
+    public static Integer getNextLevel(int current, StackingEnchant enchant) {
+        return enchant == null ? null : enchant.getNextLevel(current);
     }
 
     public static StackingEnchant fromString(String name) {
-        return Arrays.stream(StackingEnchant.values())
-                .filter(enchant -> enchant.name.equalsIgnoreCase(name))
-                .findFirst()
-                .orElse(NONE);
+        if (name == null) return NONE;
+        return Arrays.stream(values()).filter(e -> e.displayName.equalsIgnoreCase(name.trim())).findFirst().orElse(NONE);
     }
 }
