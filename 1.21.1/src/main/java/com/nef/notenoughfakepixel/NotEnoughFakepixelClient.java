@@ -1,6 +1,6 @@
 package com.nef.notenoughfakepixel;
 
-import com.nef.notenoughfakepixel.config.ClientConfig;
+import com.nef.notenoughfakepixel.env.registers.ModEventRegistrar;
 import net.fabricmc.api.ClientModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +10,7 @@ public final class NotEnoughFakepixelClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        new ClientConfig();
+        ModEventRegistrar.registerAll();
         LOGGER.info("NotEnoughFakepixel client initialized");
     }
 }
