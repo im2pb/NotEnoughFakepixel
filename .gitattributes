@@ -1,4 +1,5 @@
-gradlew* linguist-vendored
-gradle/wrapper/* linguist-vendored
+gradlew text eol=lf linguist-vendored
+gradlew.bat linguist-vendored
+**/gradle/wrapper/* linguist-vendored
 *.bat text eol=crlf
 

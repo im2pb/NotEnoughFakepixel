@@ -5,7 +5,18 @@ on:
 
 jobs:
   gradle:
+    name: Build Minecraft ${{ matrix.minecraft }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - minecraft: '1.8.9'
+            java: '17'
+            artifact: mod-jar
+          - minecraft: '1.21.1'
+            java: '21'
+            artifact: mod-jar-1.21.1
     steps:
       - name: Checkout source
         uses: actions/checkout@v4.1.1
@@ -14,16 +25,17 @@ jobs:
         uses: actions/setup-java@v4.0.0
         with:
           distribution: temurin
-          java-version: 17
+          java-version: ${{ matrix.java }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
       - name: Execute Gradle build
-        run: ./gradlew build
+        working-directory: ${{ matrix.minecraft }}
+        run: bash ./gradlew build
 
       - name: Upload built mod JAR
         uses: actions/upload-artifact@v4.3.0
         with:
-          name: mod-jar
-          path: build/libs/*.jar
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.minecraft }}/build/libs/*.jar

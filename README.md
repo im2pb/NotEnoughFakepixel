@@ -1,6 +1,6 @@
 # NotEnoughFakepixel
 
-![NEF](https://raw.githubusercontent.com/davidbelesp/NotEnoughFakepixel/daee8f12b5f60e4f9f4eaf6096a41c9df20d7552/src/main/resources/assets/notenoughfakepixel/logo.png)
+![NEF](1.8.9/src/main/resources/assets/notenoughfakepixel/logo.png)
 
 This is a remaster of NotEnoughFakepixel mod from GinaFro.
 
@@ -19,11 +19,20 @@ This is a remaster of NotEnoughFakepixel mod from GinaFro.
 
 <div align="left">
 
+## Minecraft versions
+
+| Project | Mod loader | Build requirements | Status |
+| --- | --- | --- | --- |
+| [`1.8.9/`](1.8.9/) | Forge | JDK 17 for Gradle and a Java 8 toolchain | Existing mod with the features listed below |
+| [`1.21.1/`](1.21.1/) | Fabric | JDK 21 | Client-side starter project. The existing features still need to be ported. |
+
+Open either folder as a Gradle project. From that folder, run `.\gradlew.bat build` on Windows or `bash ./gradlew build` on macOS or Linux. The JAR is written to that project's `build/libs/` directory. Use the `runClient` task in the Fabric project to start a development client.
+
 ## License
 This project is licensed under the GNU Lesser General Public License v3.0 or later (LGPL-3.0-or-later).
 See the [LICENSE](LICENSE) file for details.
 
-# Features
+# 1.8.9 Features
 
 ### Quality of life
 - General
