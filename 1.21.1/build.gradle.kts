@@ -8,6 +8,7 @@ val yarnVersion: String by project
 val loaderVersion: String by project
 val fabricApiVersion: String by project
 val modVersion: String by project
+val lombok = "org.projectlombok:lombok:1.18.48"
 val devAuthEnabled = providers.gradleProperty("devAuth").map(String::toBoolean).getOrElse(false)
 
 group = "com.nef.notenoughfakepixel"
@@ -18,6 +19,7 @@ base {
 }
 
 repositories {
+    mavenCentral()
     maven("https://maven.notenoughupdates.org/releases/") {
         content {
             includeGroup("org.notenoughupdates.moulconfig")
@@ -39,12 +41,17 @@ val shadowLibrary by configurations.creating {
 }
 
 dependencies {
+    compileOnly(lombok)
+    annotationProcessor(lombok)
+
     minecraft("com.mojang:minecraft:$minecraftVersion")
     mappings("net.fabricmc:yarn:$yarnVersion:v2")
     modImplementation("net.fabricmc:fabric-loader:$loaderVersion")
     modImplementation(fabricApi.module("fabric-command-api-v2", fabricApiVersion))
     modImplementation(fabricApi.module("fabric-key-binding-api-v1", fabricApiVersion))
     modImplementation(fabricApi.module("fabric-lifecycle-events-v1", fabricApiVersion))
+    modImplementation(fabricApi.module("fabric-message-api-v1", fabricApiVersion))
+    modImplementation(fabricApi.module("fabric-networking-api-v1", fabricApiVersion))
     modImplementation(fabricApi.module("fabric-resource-loader-v0", fabricApiVersion))
     modImplementation(fabricApi.module("fabric-screen-api-v1", fabricApiVersion))
     // This release targets 1.21, before Modern artifacts were named per Minecraft version.
