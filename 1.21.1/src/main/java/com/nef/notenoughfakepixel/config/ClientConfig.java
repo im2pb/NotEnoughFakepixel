@@ -34,7 +34,7 @@ public final class ClientConfig implements ClientModInitializer, ClientCommandRe
             "key.notenoughfakepixel.open_config", InputUtil.Type.KEYSYM,
             GLFW.GLFW_KEY_P, "key.categories.notenoughfakepixel");
 
-    private ManagedConfig<Configuration> config;
+    private static ManagedConfig<Configuration> config;
     private String pendingSearch;
 
     @Override
@@ -48,7 +48,7 @@ public final class ClientConfig implements ClientModInitializer, ClientCommandRe
             if (pendingSearch == null || client.player == null) {
                 return;
             }
-            var editor = getConfig().getEditor();
+            var editor = managedConfig().getEditor();
             if (!pendingSearch.isBlank()) {
                 editor.search(pendingSearch.trim());
             }
@@ -76,7 +76,11 @@ public final class ClientConfig implements ClientModInitializer, ClientCommandRe
                 .redirect(command));
     }
 
-    private ManagedConfig<Configuration> getConfig() {
+    public static Configuration configuration() {
+        return managedConfig().getInstance();
+    }
+
+    private static ManagedConfig<Configuration> managedConfig() {
         if (config == null) {
             var file = FabricLoader.getInstance().getConfigDir().resolve("notenoughfakepixel.json").toFile();
             var builder = new ManagedConfigBuilder<>(file, Configuration.class);

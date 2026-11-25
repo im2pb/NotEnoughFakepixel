@@ -67,6 +67,12 @@ dependencies {
 loom {
     accessWidenerPath.set(file("src/main/resources/notenoughfakepixel.accesswidener"))
 
+    mods {
+        create("notenoughfakepixel") {
+            sourceSet(sourceSets.main.get())
+        }
+    }
+
     runs.named("client") {
         property("devauth.enabled", devAuthEnabled.toString())
     }
