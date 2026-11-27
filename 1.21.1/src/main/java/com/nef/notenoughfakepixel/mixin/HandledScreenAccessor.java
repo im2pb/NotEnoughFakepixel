@@ -16,4 +16,10 @@ public interface HandledScreenAccessor {
 
     @Accessor("y")
     int nef$top();
+
+    @Accessor("backgroundWidth")
+    int nef$backgroundWidth();
+
+    @Accessor("backgroundHeight")
+    int nef$backgroundHeight();
 }

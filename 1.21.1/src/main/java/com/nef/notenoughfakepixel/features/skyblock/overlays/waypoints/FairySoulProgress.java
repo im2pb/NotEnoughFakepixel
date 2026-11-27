@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+import com.nef.notenoughfakepixel.utils.AtomicFiles;
 import com.nef.notenoughfakepixel.variables.Location;
 import net.minecraft.util.math.BlockPos;
 
@@ -85,7 +86,7 @@ final class FairySoulProgress {
                 .toList()));
         int count = locations.values().stream().mapToInt(List::size).sum();
         var data = new SavedSouls("Locally recorded Fairy Souls", count, locations);
-        FairySoulFiles.writeAtomically(file, GSON.toJson(data) + "\n");
+        AtomicFiles.writeString(file, GSON.toJson(data) + "\n");
         found = updated;
     }
 

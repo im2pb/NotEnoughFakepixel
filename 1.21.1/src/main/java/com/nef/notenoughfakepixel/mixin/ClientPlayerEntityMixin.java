@@ -2,16 +2,23 @@ package com.nef.notenoughfakepixel.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.nef.notenoughfakepixel.config.ClientConfig;
+import com.nef.notenoughfakepixel.features.skyblock.accessories.MissingAccessories;
 import com.nef.notenoughfakepixel.features.skyblock.slotlocking.SlotLocking;
 import com.nef.notenoughfakepixel.utils.Logger;
 import net.minecraft.client.network.ClientPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientPlayerEntity.class)
 abstract class ClientPlayerEntityMixin {
+    @Inject(method = "closeHandledScreen", at = @At("HEAD"))
+    private void nef$closeAccessoryBag(CallbackInfo callback) {
+        MissingAccessories.INSTANCE.closeBag();
+    }
+
     @Inject(method = "dropSelectedItem", at = @At("HEAD"), cancellable = true)
     private void nef$protectItemDrop(boolean entireStack, CallbackInfoReturnable<Boolean> callback) {
         var player = (ClientPlayerEntity) (Object) this;

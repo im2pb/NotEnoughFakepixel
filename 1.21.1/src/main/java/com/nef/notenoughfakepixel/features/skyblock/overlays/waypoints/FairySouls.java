@@ -2,13 +2,13 @@ package com.nef.notenoughfakepixel.features.skyblock.overlays.waypoints;
 
 import com.nef.notenoughfakepixel.env.registers.RegisterInstance;
 import com.nef.notenoughfakepixel.features.skyblock.overlays.waypoints.IslandWaypoints.Waypoint;
+import com.nef.notenoughfakepixel.nefrepo.NefRepo;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.ConfigColor;
 import com.nef.notenoughfakepixel.utils.Logger;
 import com.nef.notenoughfakepixel.variables.Location;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
@@ -21,22 +21,18 @@ import net.minecraft.util.math.BlockPos;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
 public final class FairySouls implements ClientModInitializer {
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger("notenoughfakepixel.fairy_souls");
-    private static final URI CATALOG_URL = URI.create(
-            "https://raw.githubusercontent.com/davidbelesp/NotEnoughFakepixel-REPO/refs/heads/main/data/fairysouls.json");
     private static final String FOUND = "SOUL! You found a Fairy Soul!";
     private static final String ALREADY_FOUND = "You already found that Fairy Soul!";
     @RegisterInstance
     private static final FairySouls INSTANCE = new FairySouls(
-            FabricLoader.getInstance().getConfigDir().resolve("Notenoughfakepixel"), CATALOG_URL);
+            FabricLoader.getInstance().getConfigDir().resolve("Notenoughfakepixel"));
 
-    private final FairySoulCatalog catalog;
     private final FairySoulProgress progress;
     private final WaypointRenderer renderer = new WaypointRenderer();
     private final ConfigColor color = new ConfigColor();
@@ -44,8 +40,7 @@ public final class FairySouls implements ClientModInitializer {
     private Set<BlockPos> lastFound = Set.of();
     private List<Waypoint> markers = List.of();
 
-    private FairySouls(Path directory, URI source) {
-        catalog = new FairySoulCatalog(directory.resolve("fairysouls-cache.json"), source);
+    private FairySouls(Path directory) {
         progress = new FairySoulProgress(directory.resolve("gainedsouls.json"));
     }
 
@@ -57,10 +52,6 @@ public final class FairySouls implements ClientModInitializer {
             } catch (IOException exception) {
                 LOGGER.warn("Could not read Fairy Soul progress.", exception);
             }
-            catalog.refreshIfDue();
-        });
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (SkyblockData.isSkyblock()) catalog.refreshIfDue();
         });
         ClientLifecycleEvents.CLIENT_STOPPING.register(client -> renderer.close());
         ClientReceiveMessageEvents.GAME.register(this::onGameMessage);
@@ -73,7 +64,7 @@ public final class FairySouls implements ClientModInitializer {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.world == null || client.player == null) return;
         Location island = SkyblockData.currentLocation();
-        BlockPos nearest = nearestSoul(catalog.coordinates(island), client.player.getBlockPos());
+        BlockPos nearest = nearestSoul(coordinates(island), client.player.getBlockPos());
         if (nearest == null) return;
 
         try {
@@ -119,7 +110,7 @@ public final class FairySouls implements ClientModInitializer {
     }
 
     private List<Waypoint> markers(Location island) {
-        List<BlockPos> coordinates = catalog.coordinates(island);
+        List<BlockPos> coordinates = coordinates(island);
         Set<BlockPos> found = progress.found(island);
         if (coordinates != lastCoordinates || found != lastFound) {
             lastCoordinates = coordinates;
@@ -130,6 +121,11 @@ public final class FairySouls implements ClientModInitializer {
                     .toList();
         }
         return markers;
+    }
+
+    private static List<BlockPos> coordinates(Location island) {
+        var catalog = NefRepo.fairySouls().snapshot().data();
+        return catalog == null ? List.of() : catalog.getOrDefault(island, List.of());
     }
 
     public static void confirmReset() {

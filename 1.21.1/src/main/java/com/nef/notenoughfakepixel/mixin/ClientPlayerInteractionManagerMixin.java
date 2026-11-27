@@ -2,6 +2,7 @@ package com.nef.notenoughfakepixel.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.nef.notenoughfakepixel.features.skyblock.accessories.MissingAccessories;
 import com.nef.notenoughfakepixel.features.skyblock.overlays.waypoints.GiftWaypoints;
 import com.nef.notenoughfakepixel.features.skyblock.slotlocking.SlotLocking;
 import net.minecraft.client.MinecraftClient;
@@ -25,7 +26,10 @@ abstract class ClientPlayerInteractionManagerMixin {
     private void nef$protectLockedSlots(int syncId, int slotId, int button, SlotActionType action,
                                          PlayerEntity player, Operation<Void> original) {
         var click = SlotLocking.INSTANCE.checkClick(syncId, slotId, button, action, player);
-        if (click != null) original.call(syncId, click.slotId(), click.button(), click.action(), player);
+        if (click != null) {
+            original.call(syncId, click.slotId(), click.button(), click.action(), player);
+            MissingAccessories.INSTANCE.clickedSlot(MinecraftClient.getInstance(), syncId, click.slotId());
+        }
     }
 
     @Inject(method = "pickFromInventory", at = @At("HEAD"), cancellable = true)

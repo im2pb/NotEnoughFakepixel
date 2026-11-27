@@ -57,7 +57,7 @@ See the [LICENSE](LICENSE) file for details.
 
 <!-- port-progress:start -->
 
-![1.21 port progress (24.6%)](https://progress-bar.xyz/24/?scale=100&width=350&progress_color=338b33) `52/211 features`
+![1.21 port progress (25.0%)](https://progress-bar.xyz/25/?scale=100&width=350&progress_color=338b33) `54/216 features`
 
 <!-- port-progress:end -->
 
@@ -326,7 +326,7 @@ See the [LICENSE](LICENSE) file for details.
 
 | Feature | 1.8.9 | 1.21 |
 | --- | --- | --- |
-| Missing Accessories GUI | X |  |
+| Missing Accessories GUI | X | X |
 
 ### Pets
 
@@ -345,6 +345,13 @@ See the [LICENSE](LICENSE) file for details.
 | Scrollable tooltips | X | X |
 | Terminal simulator (`/termsim`) | X |  |
 | Mod sounds toggle | X |  |
+
+### 1.21 Specific features
+
+| Feature  | 1.21 |
+| --- | --- |
+| Hide Shield |  |
+
 
 ### Debug
 
@@ -366,6 +373,16 @@ See the [LICENSE](LICENSE) file for details.
 | Loggers | Log tab list | X | X |
 | Loggers | Copy loaded SkyBlock data | X | X |
 | Loggers | Log client environment | — |  |
+
+### Dev-related
+
+| Subcategory | Feature | 1.8.9 | 1.21 |
+| --- | --- | --- | --- |
+| N/A | Version management | X |  |
+| N/A | Update notifier | X |  |
+| N/A | Optifine/Sodium | X |  |
+| N/A | Message alerts | X |  |
+| N/A | Repository Handler | X | X |
 
 
 </div>
