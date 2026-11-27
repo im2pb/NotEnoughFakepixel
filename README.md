@@ -36,7 +36,7 @@ For servers that require a signed-in account, select **Forge 1.8.9 Client (Micro
 
 If DevAuth reports `No account specified` on first setup, uncomment `defaultAccount = "main"` in its `config.toml` and run the configuration again. On Windows that file is in `%USERPROFILE%\.devauth`.
 
-In the 1.21.1 Fabric client, install **Fabric API** and open the configuration GUI with **P**, `/nef`, or `/notenoughfakepixel`. To open with a search, use a command such as `/nef Dungeons`. Settings are saved to `config/notenoughfakepixel.json` when the screen closes. The menu includes the legacy categories and editable settings. Gameplay features and their action buttons still need to be ported.
+In the 1.21.1 Fabric client, install **Fabric API** and open the configuration GUI with **P**, `/nef`, or `/notenoughfakepixel`. To open with a search, use a command such as `/nef Dungeons`. Settings are saved to `config/notenoughfakepixel.json` when the screen closes. The menu includes the legacy categories and editable settings. Use `/nef Debug` to find the debug loggers.
 
 ### Registering Fabric features
 
@@ -55,7 +55,7 @@ See the [LICENSE](LICENSE) file for details.
 
 ## Features
 
-Use **X** for present features. Other statuses include **Pending**, **Needs rework**, and **Needs fixes**.
+Use **X** for present features. Other statuses include **Pending**, **Needs rework**, and **Needs fixes**. An em dash means the feature is absent in that version.
 
 ### Quality of life
 
@@ -64,12 +64,9 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 | General | Alerts | X |  |
 | General | Aliases | X |  |
 | General | Disable block breaking particles | X |  |
-| General | Always sprint | X |  |
-| General | Copy chat message | X |  |
 | General | Full block lever | X |  |
 | General | Block placing items | X |  |
 | General | Show unclaimed Jacob rewards | X |  |
-| General | Fairy soul waypoints | X |  |
 | General | Spider's den relic waypoints | X |  |
 | General | Etherwarp overlay | X |  |
 | General | Etherwarp sounds | X |  |
@@ -86,28 +83,54 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 | General | Golden enchants | X |  |
 | General | Fullbright | X |  |
 | General | Disable Potion Effects in inventory | X |  |
-| General | Show current pet in pet menu | X |  |
-| General | Storage overlay | X |  |
-| General | Equipment overlay | X |  |
-| General | Slot locking & binding | X |  |
 | General | Middle click on Menus | X |  |
-| General | Scrollable tooltips | X |  |
 | General | Disable sounds from Jerry-chine gun and AOTE | X |  |
 | General | Midas Staff minimal animation and sounds | X |  |
 | General | Wardrobe key shortcut | X |  |
 | General | Equipment key shortcut | X |  |
-| General | Hide players close to NPCs  | X |  |
-| General | Missing Accessories GUI  | X |  |
-| General | Show Ender Nodes  | X |  |
+| General | Hide players close to NPCs | X |  |
+| General | Show Ender Nodes | X |  |
+| General | Visual item cooldowns | X |  |
+| General | Disable Enderman teleporting | X |  |
+| General | Full block buttons | X |  |
+| General | Highlight active wardrobe slot | X |  |
+| General | Smooth AOTE teleport | X |  |
+| General | Pingless cactus | X |  |
+| General | Disable rain | X |  |
+| General | Item rarity backgrounds | X |  |
+| General | Etherwarp zoom | X |  |
+| General | Etherwarp text helper | X |  |
+| General | Wardrobe slot shortcuts | X |  |
+| General | Island, Hub, and Dungeon Hub warp shortcuts | X |  |
+| General | Drinking animation fixes | X |  |
+| General | Salvage protection by item rarity | X |  |
+| General | Admin item tooltip tags | X |  |
+| General | Stacking enchantment counters | X |  |
+| General | Dark Auction timer | X |  |
+| General | Dark Auction reminder | X |  |
 | Chat | Disable Friend > joined messages | X |  |
 | Chat | Disable Info & Watchdog messages | X |  |
 | Chat | Disable selling ranks messages | X |  |
+| Chat | Disable zombie rare drop messages | X |  |
+| Chat | Disable server announcements | X |  |
+| Chat | Disable game invite spam | X |  |
 
 ### Farming
 
 | Feature | 1.8.9 | 1.21 |
 | --- | --- | --- |
 | 1.12 Crop height | X |  |
+
+### Garden
+
+| Feature | 1.8.9 | 1.21 |
+| --- | --- | --- |
+| Pests overlay | X |  |
+| Visitors overlay | X |  |
+| Crop milestone overlay | X |  |
+| Pest plot grid | X |  |
+| Pest finder with boxes and tracers | X |  |
+| Vacuum pests bag count | X |  |
 
 ### Fishing
 
@@ -116,6 +139,8 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 | Fishing countdown | X |  |
 | Fishing notifier for Legendary Sea Creatures | X |  |
 | Notifier for Trophy Fishing | X |  |
+| Incoming bite alert | X |  |
+| Slug mode | X |  |
 
 ### Dungeons
 
@@ -139,14 +164,34 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 | General | S+ reminder | X |  |
 | General | Score overlay | X |  |
 | General | Secret overlay | X |  |
+| General | Wither and Blood key tracers | X |  |
+| General | Mute irrelevant dungeon messages | X |  |
+| General | Dungeon salvage protection | X |  |
+| General | Correct Livid finder | X |  |
+| General | Highlight opened Croesus chests | X |  |
+| General | Spirit Leap announcements | X |  |
+| General | Dungeon map rotation | X |  |
+| General | S notifier | X |  |
+| General | Simple score overlay | X |  |
+| General | Paul-aware score calculation | X |  |
+| General | Item secret and Wither Essence highlights | X |  |
 | Starred mobs | Starred mob display | X |  |
 | Starred mobs | Fel position display | X |  |
 | Starred mobs | Bat position display | X |  |
+| Starred mobs | Starred mob ESP | X |  |
 | Floor 7 | Terminal solvers | X |  |
 | Floor 7 | Terminal tracker | X |  |
 | Floor 7 | Box withers | X |  |
+| Floor 7 | Hide incorrect terminal slots | X |  |
+| Floor 7 | Prevent terminal misclicks | X |  |
+| Floor 7 | Hide terminal tooltips | X |  |
+| Floor 7 | First Device Solver | X |  |
+| Floor 7 | Third Device Solver | X |  |
 | Master Mode 7 | M7 dragon highlight | X |  |
 | Master Mode 7 | M7 relic waypoints | X |  |
+| Master Mode 7 | Dragon statue distance boxes | X |  |
+| Puzzle Solvers | Creeper Solver | X |  |
+| Puzzle Solvers | Water Solver | X |  |
 
 ### Mining
 
@@ -154,21 +199,28 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 | --- | --- | --- | --- |
 | General | Drill Animation Reset FIX | X |  |
 | General | Mining Ability ready notifier | X |  |
-| General | Dwarven waypoints | X |  |
+| General | Dwarven waypoints | X | X |
 | Mining Overlay | Drill Fuel Overlay | X |  |
 | Mining Overlay | Mining Ability cooldown Overlay | X |  |
 | Mining Overlay | Commissions Overlay | X |  |
 | Mining Overlay | Mithril Powder Overlay | X |  |
 | Mining Overlay | Puzzler NPC Solver | X |  |
-| Crystal Hollows  | Crystal Hollows Map  | X |  |
-| Crystal Hollows  | Crystal Hollows Waypoints  | X |  |
-| Crystal Hollows  | FullBlock glass panes  | X |  |
-| Crystal Hollows  | Treasure Found notifier  | X |  |
-| Crystal Hollows  | Precursor City Overlay  | X |  |
-| Crystal Hollows  | Automaton Overlay  | X |  |
-| Crystal Hollows  | Metal Detector Guesser  | X |  |
-| Crystal Hollows  | Worm Notifier  | X |  |
-| Crystal Hollows  | Mines of Divan Overlay  | X |  |
+| Mining Overlay | Gemstone Powder Overlay | X |  |
+| Crystal Hollows | Crystal Hollows Map | X |  |
+| Crystal Hollows | Crystal Hollows Waypoints | X |  |
+| Crystal Hollows | FullBlock glass panes | X |  |
+| Crystal Hollows | Treasure Found notifier | X |  |
+| Crystal Hollows | Precursor City Overlay | X |  |
+| Crystal Hollows | Automaton Overlay | X |  |
+| Crystal Hollows | Metal Detector Guesser | X |  |
+| Crystal Hollows | Worm Notifier | X |  |
+| Crystal Hollows | Mines of Divan Overlay | X |  |
+| Crystal Hollows | Treasure chest particle helper | X |  |
+| Crystal Hollows | Worm spawn timer | X |  |
+| Crystal Hollows | Heat notifier | X |  |
+| Crystal Hollows | Chest tracker | X |  |
+| Dwarven Mines | Reveal invisible Ghosts | X |  |
+| Dwarven Mines | Suppress Don Espresso messages | X |  |
 
 ### Experimentation Table
 
@@ -177,15 +229,17 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 | Chronomatron solver | X |  |
 | Ultrasequencer solver | X |  |
 | Prevent missclicks | X |  |
+| Superpairs solver | X |  |
+| Hide Experimentation tooltips | X |  |
 
 ### Chocolate Factory
 
 | Feature | 1.8.9 | 1.21 |
 | --- | --- | --- |
-| Show best rabbit in Chocolate Factory | X |  |
+| Highlight the best Chocolate Factory upgrade | X |  |
 | Hoppity's hunt eggs waypoints | X |  |
-| New Egg notifier  | X |  |
-| New Egg timer  | X |  |
+| New Egg notifier | X |  |
+| New Egg timer | X |  |
 
 ### Crimson Isle
 
@@ -193,6 +247,11 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 | --- | --- | --- |
 | Bosses notifier | X |  |
 | Ashfang helper & overlay | X |  |
+| Crimson Isle Waypoints | X | X |
+| Ashfang and Gravity Orb waypoints | X |  |
+| Ashfang minion hitboxes | X |  |
+| Ashfang chat and sound filters | X |  |
+| Ashfang hit sound | X |  |
 
 ### Diana
 
@@ -202,10 +261,15 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 | Warp keybind | X |  |
 | Burrow waypoints | X |  |
 | Gaia construct helper | X |  |
-| Syamese Lynx helper | X |  |
+| Siamese Lynx helper | X |  |
 | Minos Inquisitor party chat & waypoint | X |  |
 | Inquisitor Outline | X |  |
-| Some QOL features | X |  |
+| Burrow guess tracer | X |  |
+| Burrow waypoint labels and tracers | X |  |
+| Warp helper | X |  |
+| Diana waypoint sounds | X |  |
+| Mute Diana explosion sounds | X |  |
+| Hide Ancestral Spade cooldown messages | X |  |
 
 ### Slayers
 
@@ -217,6 +281,87 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 | Slayer boss time | X |  |
 | Blaze pillar title | X |  |
 | Blaze attunements | X |  |
+| Faster Maddox calling | X |  |
+| Slayer progress overlay | X |  |
+| Slayer miniboss hitboxes | X |  |
+| Slayer boss hitboxes and outlines | X |  |
+| Voidgloom beacon tracer | X |  |
+| Voidgloom beacon notifier | X |  |
+| Hellion Shield chat filter | X |  |
+
+### Waypoints
+
+| Feature | 1.8.9 | 1.21 |
+| --- | --- | --- |
+| Fairy soul waypoints | X |  |
+| Global waypoint toggle | X |  |
+| Fairy soul progress reset | X |  |
+| Jerry Island gift waypoints | X |  |
+| St. Jerry waypoint | X |  |
+
+### Slot Locking
+
+| Feature | 1.8.9 | 1.21 |
+| --- | --- | --- |
+| Slot locking & binding | X |  |
+| Bound-slot drop protection | X |  |
+| Slot locking storage exception | X |  |
+| Item swap drop delay | X |  |
+| Slot lock sounds | X |  |
+
+### Overlays
+
+| Feature | 1.8.9 | 1.21 |
+| --- | --- | --- |
+| Equipment overlay | X |  |
+| Storage overlay | X |  |
+| Custom health, mana, XP, speed, and defense bars | X |  |
+| Hide the vanilla action bar and HUD icons | X |  |
+
+### Accessories
+
+| Feature | 1.8.9 | 1.21 |
+| --- | --- | --- |
+| Missing Accessories GUI | X |  |
+
+### Pets
+
+| Feature | 1.8.9 | 1.21 |
+| --- | --- | --- |
+| Show current pet in pet menu | X |  |
+| Pet tracker | X |  |
+| Pets menu shortcut | X |  |
+
+### Misc
+
+| Feature | 1.8.9 | 1.21 |
+| --- | --- | --- |
+| Always sprint | X |  |
+| Copy chat message | X |  |
+| Scrollable tooltips | X |  |
+| Terminal simulator (`/termsim`) | X |  |
+| Mod sounds toggle | X |  |
+
+### Debug
+
+| Subcategory | Feature | 1.8.9 | 1.21 |
+| --- | --- | --- | --- |
+| General | Chat and console debug logs | X |  |
+| General | Force Pojav | X |  |
+| General | Copy hovered item NBT | X |  |
+| General | SkyBlock change tracing | — |  |
+| General | Sound debug logging | — |  |
+| General | Trace outside SkyBlock | — |  |
+| Loggers | Log location | X |  |
+| Loggers | Log gamemode and SkyBlock status | X |  |
+| Loggers | Log scoreboard | X |  |
+| Loggers | Show held item SkyBlock ID | X |  |
+| Loggers | Log loaded SkyBlock data | X |  |
+| Loggers | Copy Fairy Souls API data | X |  |
+| Loggers | Trigger the worm spawn timer | X |  |
+| Loggers | Log tab list | — |  |
+| Loggers | Copy loaded SkyBlock data | — |  |
+| Loggers | Log client environment | — |  |
 
 
 </div>
