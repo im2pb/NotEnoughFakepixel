@@ -8,6 +8,7 @@ import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorSlider;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorText;
 import io.github.notenoughupdates.moulconfig.common.IMinecraft;
 import io.github.notenoughupdates.moulconfig.gui.GuiComponent;
+import io.github.notenoughupdates.moulconfig.gui.GuiContext;
 import io.github.notenoughupdates.moulconfig.gui.GuiOptionEditor;
 import io.github.notenoughupdates.moulconfig.gui.component.ButtonComponent;
 import io.github.notenoughupdates.moulconfig.gui.component.ColumnComponent;
@@ -83,6 +84,15 @@ final class MoulConfigEditors {
             @Override
             public GuiComponent getDelegate() {
                 return delegate;
+            }
+
+            @Override
+            public void setGuiContext(GuiContext context) {
+                // MoulConfig's ComponentEditor only sets the context on the outer panel.
+                delegate.foldRecursive(context, (component, guiContext) -> {
+                    component.setContext(guiContext);
+                    return guiContext;
+                });
             }
         };
     }

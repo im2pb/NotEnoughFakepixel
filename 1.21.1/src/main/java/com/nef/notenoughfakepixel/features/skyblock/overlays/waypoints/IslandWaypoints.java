@@ -32,6 +32,14 @@ public abstract class IslandWaypoints implements ClientModInitializer {
 
     protected abstract String beaconColor(Waypoints settings);
 
+    protected double labelHeight() {
+        return 3.5;
+    }
+
+    protected boolean showDistance() {
+        return true;
+    }
+
     private void render(WorldRenderContext context) {
         if (!SkyblockData.isSkyblock() || SkyblockData.currentLocation() != island()
                 || context.matrixStack() == null || context.world() == null) return;
@@ -40,7 +48,8 @@ public abstract class IslandWaypoints implements ClientModInitializer {
         if (!settings.generalWaypointToggle || !enabled(settings)) return;
 
         boolean beacons = beaconsEnabled(settings);
-        renderer.render(context, waypoints(), beacons, beacons ? color.resolve(beaconColor(settings)) : 0);
+        renderer.render(context, waypoints(), beacons, beacons ? color.resolve(beaconColor(settings)) : 0,
+                labelHeight(), showDistance());
     }
 
     /** The coordinates give the exact center of the beam base. A null RGB override uses the island setting. */

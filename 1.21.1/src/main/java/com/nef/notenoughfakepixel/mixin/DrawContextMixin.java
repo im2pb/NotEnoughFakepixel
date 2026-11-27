@@ -3,12 +3,15 @@ package com.nef.notenoughfakepixel.mixin;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalIntRef;
 import com.nef.notenoughfakepixel.features.skyblock.garden.VacuumPestsBag;
+import com.nef.notenoughfakepixel.features.skyblock.qol.ScrollableTooltips;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.tooltip.TooltipPositioner;
 import net.minecraft.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -29,5 +32,13 @@ abstract class DrawContextMixin {
     private void nef$drawVacuumCount(TextRenderer font, ItemStack stack, int x, int y, String countOverride,
                                      CallbackInfo ci, @Share("nefVacuumCount") LocalIntRef count) {
         if (count.get() >= 0) VacuumPestsBag.drawCount((DrawContext) (Object) this, font, x, y, count.get());
+    }
+
+    @ModifyArg(method = "drawTooltip(Lnet/minecraft/client/font/TextRenderer;Ljava/util/List;Ljava/util/Optional;II)V",
+            at = @At(value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/DrawContext;drawTooltip(Lnet/minecraft/client/font/TextRenderer;Ljava/util/List;IILnet/minecraft/client/gui/tooltip/TooltipPositioner;)V"),
+            index = 4)
+    private TooltipPositioner nef$scrollItemTooltip(TooltipPositioner vanilla) {
+        return ScrollableTooltips.positioner(vanilla);
     }
 }

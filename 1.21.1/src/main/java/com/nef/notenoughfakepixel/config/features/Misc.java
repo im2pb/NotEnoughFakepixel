@@ -8,16 +8,14 @@ import io.github.notenoughupdates.moulconfig.annotations.ConfigOption;
 public class Misc {
 
     @Expose
-    @ConfigOption(name = "Scrollable Tooltips", desc = "Enable scrollable tooltips")
+    @ConfigOption(name = "Scrollable Tooltips", desc = "Scroll tall item tooltips with the mouse wheel or arrow keys")
     @ConfigEditorBoolean
     public boolean qolScrollableTooltips = true;
 
     @Expose
-    @ConfigOption(name = "Copy Chat Message", desc = "Enable copying chat messages")
+    @ConfigOption(name = "Copy Chat Message", desc = "Add a clipboard button to chat messages")
     @ConfigEditorBoolean
     public boolean qolCopyChatMsg = true;
-
-    final String copyEmoji = Character.toString((char) Integer.parseInt("270D", 16));
 
     @Expose
     @ConfigOption(name = "Copy Chat Button", desc = "Button to copy chat")
@@ -29,7 +27,7 @@ public class Misc {
 
 
     @Expose
-    @ConfigOption(name = "Always Sprint", desc = "Always sprint")
+    @ConfigOption(name = "Always Sprint", desc = "Sprint automatically whenever normal movement allows it")
     @ConfigEditorBoolean
     public boolean qolAlwaysSprint = true;
 

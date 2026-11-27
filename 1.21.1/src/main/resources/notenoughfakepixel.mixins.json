@@ -3,9 +3,12 @@
     "package": "com.nef.notenoughfakepixel.mixin",
     "compatibilityLevel": "JAVA_21",
     "client": [
+        "ChatHudMixin",
+        "ClientPlayerEntityMixin",
         "CropOutlineMixin",
         "DrawContextMixin",
         "GenericContainerScreenMixin",
+        "HandledScreenAccessor",
         "ParticleManagerMixin"
     ],
     "injectors": {

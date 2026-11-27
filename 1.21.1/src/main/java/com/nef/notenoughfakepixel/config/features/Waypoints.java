@@ -53,7 +53,7 @@ public class Waypoints {
             public String giftWaypointsColor = "0:255:0:255:255";
 
             @Expose
-            @ConfigOption(name = "Show St. Jerry", desc = "Shows St. Jerry location")
+            @ConfigOption(name = "Show St. Jerry", desc = "Show a beacon and label for St. Jerry on Jerry's Island")
             @ConfigEditorBoolean
             public boolean stJerryLocation = false;
     }

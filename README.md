@@ -55,7 +55,11 @@ See the [LICENSE](LICENSE) file for details.
 
 ## Features
 
-Use **X** for present features. Other statuses include **Pending**, **Needs rework**, and **Needs fixes**. An em dash means the feature is absent in that version.
+<!-- port-progress:start -->
+
+![1.21 port progress (12.7%)](https://progress-bar.xyz/12/?scale=100&width=350&progress_color=338b33) `27/212 features`
+
+<!-- port-progress:end -->
 
 ### Quality of life
 
@@ -63,7 +67,7 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 | --- | --- | --- | --- |
 | General | Alerts | X |  |
 | General | Aliases | X |  |
-| General | Disable block breaking particles | X |  |
+| General | Disable block breaking particles | X | X |
 | General | Full block lever | X |  |
 | General | Block placing items | X |  |
 | General | Show unclaimed Jacob rewards | X | X |
@@ -106,7 +110,7 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 | General | Salvage protection by item rarity | X |  |
 | General | Admin item tooltip tags | X |  |
 | General | Stacking enchantment counters | X |  |
-| General | Dark Auction timer | X |  |
+| General | Dark Auction timer | X | X |
 | General | Dark Auction reminder | X |  |
 | Chat | Disable Friend > joined messages | X |  |
 | Chat | Disable Info & Watchdog messages | X |  |
@@ -119,7 +123,7 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 
 | Feature | 1.8.9 | 1.21 |
 | --- | --- | --- |
-| 1.12 Crop height | X |  |
+| 1.12 Crop height | X | X |
 
 ### Garden
 
@@ -216,7 +220,7 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 | Crystal Hollows | Worm Notifier | X |  |
 | Crystal Hollows | Mines of Divan Overlay | X |  |
 | Crystal Hollows | Treasure chest particle helper | X |  |
-| Crystal Hollows | Worm spawn timer | X |  |
+| Crystal Hollows | Worm spawn timer | X | X |
 | Crystal Hollows | Heat notifier | X |  |
 | Crystal Hollows | Chest tracker | X |  |
 | Dwarven Mines | Reveal invisible Ghosts | X |  |
@@ -239,7 +243,7 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 | Highlight the best Chocolate Factory upgrade | X |  |
 | Hoppity's hunt eggs waypoints | X |  |
 | New Egg notifier | X |  |
-| New Egg timer | X |  |
+| New Egg timer | X | X |
 
 ### Crimson Isle
 
@@ -297,7 +301,7 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 | Global waypoint toggle | X |  |
 | Fairy soul progress reset | X |  |
 | Jerry Island gift waypoints | X |  |
-| St. Jerry waypoint | X |  |
+| St. Jerry waypoint | X | X |
 
 ### Slot Locking
 
@@ -336,9 +340,9 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 
 | Feature | 1.8.9 | 1.21 |
 | --- | --- | --- |
-| Always sprint | X |  |
-| Copy chat message | X |  |
-| Scrollable tooltips | X |  |
+| Always sprint | X | X |
+| Copy chat message | X | X |
+| Scrollable tooltips | X | X |
 | Terminal simulator (`/termsim`) | X |  |
 | Mod sounds toggle | X |  |
 

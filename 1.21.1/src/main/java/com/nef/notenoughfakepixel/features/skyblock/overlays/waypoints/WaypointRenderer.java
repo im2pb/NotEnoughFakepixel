@@ -34,7 +34,8 @@ final class WaypointRenderer implements AutoCloseable {
     private VertexConsumerProvider.Immediate consumers;
     private VertexConsumerProvider throughWallConsumers;
 
-    void render(WorldRenderContext context, List<Waypoint> waypoints, boolean beacons, int islandColor) {
+    void render(WorldRenderContext context, List<Waypoint> waypoints, boolean beacons, int islandColor,
+                double labelHeight, boolean showDistance) {
         if (waypoints.isEmpty()) return;
 
         prepareBuffers();
@@ -51,8 +52,8 @@ final class WaypointRenderer implements AutoCloseable {
 
             TextRenderer font = MinecraftClient.getInstance().textRenderer;
             // See-through layers sort quads by distance. Flush shadows before submitting the lettering.
-            renderLabels(matrices, camera, cameraPos, font, waypoints, true);
-            renderLabels(matrices, camera, cameraPos, font, waypoints, false);
+            renderLabels(matrices, camera, cameraPos, font, waypoints, labelHeight, showDistance, true);
+            renderLabels(matrices, camera, cameraPos, font, waypoints, labelHeight, showDistance, false);
         } finally {
             if (depthTestWasEnabled) RenderSystem.enableDepthTest();
             else RenderSystem.disableDepthTest();
@@ -84,20 +85,19 @@ final class WaypointRenderer implements AutoCloseable {
     }
 
     private void renderLabels(MatrixStack matrices, Camera camera, Vec3d cameraPos, TextRenderer font,
-                              List<Waypoint> waypoints, boolean shadow) {
+                              List<Waypoint> waypoints, double labelHeight, boolean showDistance, boolean shadow) {
         for (Waypoint waypoint : waypoints) {
-            renderLabel(matrices, camera, cameraPos, font, waypoint, shadow);
+            renderLabel(matrices, camera, cameraPos, font, waypoint, labelHeight, showDistance, shadow);
         }
         consumers.draw();
     }
 
     private void renderLabel(MatrixStack matrices, Camera camera, Vec3d cameraPos, TextRenderer font,
-                             Waypoint waypoint, boolean shadow) {
+                             Waypoint waypoint, double labelHeight, boolean showDistance, boolean shadow) {
         double x = waypoint.x() - cameraPos.x;
         double y = waypoint.y() - cameraPos.y;
         double z = waypoint.z() - cameraPos.z;
-        String distance = Math.round(Math.sqrt(x * x + y * y + z * z)) + "m";
-        double labelY = y + 3.5;
+        double labelY = y + labelHeight;
         double labelDistance = Math.sqrt(x * x + labelY * labelY + z * z);
         double clamped = labelDistance > LABEL_RENDER_DISTANCE ? LABEL_RENDER_DISTANCE / labelDistance : 1.0;
 
@@ -107,7 +107,10 @@ final class WaypointRenderer implements AutoCloseable {
             matrices.multiply(camera.getRotation());
             matrices.scale(0.05F, -0.05F, 0.05F);
             drawText(matrices, font, waypoint.name(), 0, WHITE, shadow);
-            drawText(matrices, font, distance, font.fontHeight + 1, YELLOW, shadow);
+            if (showDistance) {
+                String distance = Math.round(Math.sqrt(x * x + y * y + z * z)) + "m";
+                drawText(matrices, font, distance, font.fontHeight + 1, YELLOW, shadow);
+            }
         } finally {
             matrices.pop();
         }
