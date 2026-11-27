@@ -7,6 +7,7 @@
     "license": "LGPL-3.0-or-later",
     "environment": "client",
     "accessWidener": "notenoughfakepixel.accesswidener",
+    "mixins": ["notenoughfakepixel.mixins.json"],
     "entrypoints": {
         "client": [
             "com.nef.notenoughfakepixel.NotEnoughFakepixelClient"

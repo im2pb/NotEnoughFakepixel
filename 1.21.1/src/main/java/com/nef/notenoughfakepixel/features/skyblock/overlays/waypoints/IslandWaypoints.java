@@ -3,21 +3,18 @@ package com.nef.notenoughfakepixel.features.skyblock.overlays.waypoints;
 import com.nef.notenoughfakepixel.config.ClientConfig;
 import com.nef.notenoughfakepixel.config.features.Waypoints;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
+import com.nef.notenoughfakepixel.utils.ConfigColor;
 import com.nef.notenoughfakepixel.variables.Location;
-import io.github.notenoughupdates.moulconfig.ChromaColour;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 
 import java.util.List;
-import java.util.Objects;
 
 public abstract class IslandWaypoints implements ClientModInitializer {
     private final WaypointRenderer renderer = new WaypointRenderer();
-    private String colorSetting;
-    private int staticColor = 0xFFFFFF;
-    private ChromaColour animatedColor;
+    private final ConfigColor color = new ConfigColor();
 
     @Override
     public final void onInitializeClient() {
@@ -43,35 +40,7 @@ public abstract class IslandWaypoints implements ClientModInitializer {
         if (!settings.generalWaypointToggle || !enabled(settings)) return;
 
         boolean beacons = beaconsEnabled(settings);
-        renderer.render(context, waypoints(), beacons, beacons ? resolveColor(beaconColor(settings)) : 0);
-    }
-
-    private int resolveColor(String value) {
-        if (!Objects.equals(colorSetting, value)) {
-            colorSetting = value;
-            ChromaColour parsed = parseColor(value);
-            staticColor = parsed == null ? 0xFFFFFF : parsed.getEffectiveColour().getRGB();
-            animatedColor = parsed != null && parsed.getTimeForFullRotationInMillis() > 0 ? parsed : null;
-        }
-        return animatedColor == null ? staticColor : animatedColor.getEffectiveColour().getRGB();
-    }
-
-    @SuppressWarnings("deprecation") // MoulConfig's color editor saves this setting in the legacy string format.
-    private static ChromaColour parseColor(String value) {
-        if (value == null) return null;
-
-        String[] components = value.split(":", -1);
-        if (components.length != 5) return null;
-
-        try {
-            for (String component : components) {
-                int channel = Integer.parseInt(component);
-                if (channel < 0 || channel > 255) return null;
-            }
-        } catch (NumberFormatException error) {
-            return null;
-        }
-        return ChromaColour.forLegacyString(value);
+        renderer.render(context, waypoints(), beacons, beacons ? color.resolve(beaconColor(settings)) : 0);
     }
 
     /** The coordinates give the exact center of the beam base. A null RGB override uses the island setting. */

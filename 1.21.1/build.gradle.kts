@@ -52,6 +52,7 @@ dependencies {
     modImplementation(fabricApi.module("fabric-lifecycle-events-v1", fabricApiVersion))
     modImplementation(fabricApi.module("fabric-message-api-v1", fabricApiVersion))
     modImplementation(fabricApi.module("fabric-networking-api-v1", fabricApiVersion))
+    modImplementation(fabricApi.module("fabric-rendering-v1", fabricApiVersion))
     modImplementation(fabricApi.module("fabric-resource-loader-v0", fabricApiVersion))
     modImplementation(fabricApi.module("fabric-screen-api-v1", fabricApiVersion))
     // This release targets 1.21, before Modern artifacts were named per Minecraft version.
