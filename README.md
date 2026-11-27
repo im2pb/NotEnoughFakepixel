@@ -57,7 +57,7 @@ See the [LICENSE](LICENSE) file for details.
 
 <!-- port-progress:start -->
 
-![1.21 port progress (25.0%)](https://progress-bar.xyz/25/?scale=100&width=350&progress_color=338b33) `54/216 features`
+![1.21 port progress (28.7%)](https://progress-bar.xyz/28/?scale=100&width=350&progress_color=338b33) `62/216 features`
 
 <!-- port-progress:end -->
 
@@ -162,9 +162,8 @@ See the [LICENSE](LICENSE) file for details.
 | General | Spirit bow tracer | X |  |
 | General | Dungeon Map | X | X |
 | General | Three Weirdos Solver | X | X |
-| General | Auto Ready | - | -|
 | General | Auto close secret chests | X |  |
-| General | "Unable to locate sign" hidden | X |  |
+| General | "Unable to locate sign" hidden | X | X |
 | General | S+ reminder | X |  |
 | General | Score overlay | X |  |
 | General | Secret overlay | X |  |
@@ -309,7 +308,6 @@ See the [LICENSE](LICENSE) file for details.
 | --- | --- | --- |
 | Slot locking & binding | X | X |
 | Bound-slot drop protection | X | X |
-| Slot locking storage exception | X |  |
 | Item swap drop delay | X |  |
 | Slot lock sounds | X | X |
 
@@ -333,7 +331,7 @@ See the [LICENSE](LICENSE) file for details.
 | Feature | 1.8.9 | 1.21 |
 | --- | --- | --- |
 | Show current pet in pet menu | X | X |
-| Pet tracker | X |  |
+| Pet tracker | X | X |
 | Pets menu shortcut | X |  |
 
 ### Misc
@@ -359,14 +357,14 @@ See the [LICENSE](LICENSE) file for details.
 | --- | --- | --- | --- |
 | General | Chat and console debug logs | X | X |
 | General | Force Pojav | X |  |
-| General | Copy hovered item NBT | X |  |
+| General | Copy hovered item NBT | X | X |
 | General | SkyBlock change tracing | — |  |
-| General | Sound debug logging | — |  |
+| General | Sound debug logging | X | X |
 | General | Trace outside SkyBlock | — |  |
 | Loggers | Log location | X | X |
 | Loggers | Log gamemode and SkyBlock status | X | X |
 | Loggers | Log scoreboard | X | X |
-| Loggers | Show held item SkyBlock ID | X |  |
+| Loggers | Show held item SkyBlock ID | X | X |
 | Loggers | Log loaded SkyBlock data | X |  |
 | Loggers | Copy Fairy Souls API data | X |  |
 | Loggers | Trigger the worm spawn timer | X |  |
@@ -378,10 +376,10 @@ See the [LICENSE](LICENSE) file for details.
 
 | Subcategory | Feature | 1.8.9 | 1.21 |
 | --- | --- | --- | --- |
-| N/A | Version management | X |  |
-| N/A | Update notifier | X |  |
+| N/A | Version management | X | X |
+| N/A | Update notifier | X | X |
 | N/A | Optifine/Sodium | X |  |
-| N/A | Message alerts | X |  |
+| N/A | Message alerts | X | X |
 | N/A | Repository Handler | X | X |
 
 
