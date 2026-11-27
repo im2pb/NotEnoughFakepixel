@@ -67,15 +67,19 @@ public abstract class HightlightSlot implements ClientModInitializer {
         }
     }
 
-    private void renderSlots(DrawContext context, GenericContainerScreenHandler handler, int x, int y, int color) {
+    protected void renderSlots(DrawContext context, GenericContainerScreenHandler handler, int x, int y, int color) {
         for (Slot slot : handler.slots) {
             if (slot.inventory != handler.getInventory() || !slot.isEnabled() || !matches(slot.getStack())) continue;
 
-            int slotX = x + slot.x;
-            int slotY = y + slot.y;
-            context.fill(slotX, slotY, slotX + SLOT_SIZE, slotY + SLOT_SIZE, color);
+            drawSlot(context, slot, x, y, color);
             if (highlightOnlyFirst()) return;
         }
+    }
+
+    protected static void drawSlot(DrawContext context, Slot slot, int x, int y, int color) {
+        int slotX = x + slot.x;
+        int slotY = y + slot.y;
+        context.fill(slotX, slotY, slotX + SLOT_SIZE, slotY + SLOT_SIZE, color);
     }
 
     private boolean matches(ItemStack stack) {
@@ -91,7 +95,7 @@ public abstract class HightlightSlot implements ClientModInitializer {
         return false;
     }
 
-    private static String plain(Text text) {
+    protected static String plain(Text text) {
         return Formatting.strip(text.getString());
     }
 }

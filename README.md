@@ -57,7 +57,7 @@ See the [LICENSE](LICENSE) file for details.
 
 <!-- port-progress:start -->
 
-![1.21 port progress (21.8%)](https://progress-bar.xyz/21/?scale=100&width=350&progress_color=338b33) `46/211 features`
+![1.21 port progress (24.6%)](https://progress-bar.xyz/24/?scale=100&width=350&progress_color=338b33) `52/211 features`
 
 <!-- port-progress:end -->
 
@@ -210,9 +210,9 @@ See the [LICENSE](LICENSE) file for details.
 | Mining Overlay | Mithril Powder Overlay | X | X |
 | Mining Overlay | Puzzler NPC Solver | X | X |
 | Mining Overlay | Gemstone Powder Overlay | X | X |
-| Crystal Hollows | Crystal Hollows Map | X |  |
+| Crystal Hollows | Crystal Hollows Map | X | X |
 | Crystal Hollows | Crystal Hollows Waypoints | X |  |
-| Crystal Hollows | FullBlock glass panes | X |  |
+| Crystal Hollows | FullBlock glass panes | X | X |
 | Crystal Hollows | Treasure Found notifier | X |  |
 | Crystal Hollows | Precursor City Overlay | X |  |
 | Crystal Hollows | Automaton Overlay | X |  |
@@ -221,10 +221,10 @@ See the [LICENSE](LICENSE) file for details.
 | Crystal Hollows | Mines of Divan Overlay | X |  |
 | Crystal Hollows | Treasure chest particle helper | X |  |
 | Crystal Hollows | Worm spawn timer | X | X |
-| Crystal Hollows | Heat notifier | X |  |
+| Crystal Hollows | Heat notifier | X | X |
 | Crystal Hollows | Chest tracker | X |  |
-| Dwarven Mines | Reveal invisible Ghosts | X |  |
-| Dwarven Mines | Suppress Don Espresso messages | X |  |
+| Dwarven Mines | Reveal invisible Ghosts | X | X |
+| Dwarven Mines | Suppress Don Espresso messages | X | X |
 
 ### Experimentation Table
 
@@ -240,7 +240,7 @@ See the [LICENSE](LICENSE) file for details.
 
 | Feature | 1.8.9 | 1.21 |
 | --- | --- | --- |
-| Highlight the best Chocolate Factory upgrade | X |  |
+| Highlight the best Chocolate Factory upgrade | X | X |
 | Hoppity's hunt eggs waypoints | X |  |
 | New Egg notifier | X |  |
 | New Egg timer | X | X |

@@ -49,12 +49,12 @@ public class Mining {
             public boolean miningPuzzlerSolver = true;
 
             @Expose
-            @ConfigOption(name = "Remove Ghosts Invisibility", desc = "Remove invisibility from ghosts")
+            @ConfigOption(name = "Reveal Invisible Ghosts", desc = "Show invisible Ghosts in the Dwarven Mines")
             @ConfigEditorBoolean
             public boolean miningShowGhosts = true;
 
             @Expose
-            @ConfigOption(name = "Disable Don Espresso Messages", desc = "Disable Don Espresso event messages")
+            @ConfigOption(name = "Suppress Don Espresso Messages", desc = "Hide Don Espresso's NPC dialogue in the Dwarven Mines")
             @ConfigEditorBoolean
             public boolean miningDisableDonEspresso = true;
     }
@@ -125,7 +125,7 @@ public class Mining {
             public boolean crystalMetalDetector = true;
 
             @Expose
-            @ConfigOption(name = "Full block Crystal Panes", desc = "Modifies the crystal pane hitbox to be a full block instead of a thin pane")
+            @ConfigOption(name = "Full block Crystal Panes", desc = "Use a full-block targeting hitbox for stained glass panes")
             @ConfigEditorBoolean
             public boolean crystalFullBlockPane = true;
 
@@ -160,7 +160,7 @@ public class Mining {
             public boolean wormTimerCooldown = true;
 
             @Expose
-            @ConfigOption(name = "Heat Notifier", desc = "Notifies you when you are over given heat")
+            @ConfigOption(name = "Heat Notifier", desc = "Warn when your heat reaches the configured level")
             @ConfigEditorBoolean
             public boolean crystalHeatNotifier = true;
 
@@ -228,6 +228,13 @@ public class Mining {
             @ConfigOption(name = "Crystal Hollows Map Width", desc = "Width of the Crystal Hollows map in pixels")
             @ConfigEditorSlider(minValue = 32.0f, maxValue = 160.0f, minStep = 1.0f)
             public int miningCrystalMapWidth = 64;
+
+            @ConfigOption(name = "Edit Position", desc = "Move the Crystal Hollows map on the HUD")
+            @ConfigEditorButton(buttonText = "Edit")
+            public transient Runnable editCrystalHollowsMapPosition = () ->
+                    com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows.CrystalHollowsMap.editPosition(
+                            this.crystalMapPos, this.miningCrystalMapWidth, this.miningCrystalMapType,
+                            position -> this.crystalMapPos = position);
 
             @Expose
             public Position crystalMapPos = new Position(10, 10, false, false);

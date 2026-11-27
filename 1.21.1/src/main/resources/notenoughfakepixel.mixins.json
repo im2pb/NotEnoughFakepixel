@@ -12,9 +12,11 @@
         "GenericContainerScreenMixin",
         "HandledScreenAccessor",
         "HandledScreenMixin",
+        "LivingEntityRendererMixin",
         "MinecraftClientMixin",
         "ParticleManagerMixin",
         "PlayerInventoryMixin",
+        "StainedGlassPaneOutlineMixin",
         "WorldRendererMixin"
     ],
     "injectors": {
