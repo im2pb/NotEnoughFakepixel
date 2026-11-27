@@ -32,7 +32,7 @@ public class Fishing {
         public boolean biteEta = true;
 
         @Expose
-        @ConfigOption(name = "Enable Slug Mode", desc = "Suppresses all alerts for 20s after the bobber enters lava, matching the Slug fish catch requirement")
+        @ConfigOption(name = "Enable Slug Mode", desc = "Mute bite alerts and the countdown for the first 20 seconds the bobber spends in lava")
         @ConfigEditorBoolean
         public boolean slugMode = false;
     }

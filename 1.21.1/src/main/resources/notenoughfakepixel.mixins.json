@@ -9,6 +9,7 @@
         "ClientPlayerInteractionManagerMixin",
         "CropOutlineMixin",
         "DrawContextMixin",
+        "FishingBobberAccessor",
         "GenericContainerScreenMixin",
         "HandledScreenAccessor",
         "HandledScreenMixin",

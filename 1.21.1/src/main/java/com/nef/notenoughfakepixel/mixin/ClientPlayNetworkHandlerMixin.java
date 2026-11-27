@@ -2,6 +2,7 @@ package com.nef.notenoughfakepixel.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.nef.notenoughfakepixel.features.skyblock.fishing.FishingAlert;
 import com.nef.notenoughfakepixel.features.skyblock.inventory.PagedMenuTracker;
 import com.nef.notenoughfakepixel.features.skyblock.mining.DrillFix;
 import net.minecraft.client.MinecraftClient;
@@ -9,6 +10,7 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.s2c.play.InventoryS2CPacket;
+import net.minecraft.network.packet.s2c.play.ParticleS2CPacket;
 import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
@@ -21,6 +23,11 @@ import java.util.List;
 
 @Mixin(ClientPlayNetworkHandler.class)
 abstract class ClientPlayNetworkHandlerMixin {
+    @Inject(method = "onParticle", at = @At("RETURN"))
+    private void nef$observeFishingParticle(ParticleS2CPacket packet, CallbackInfo callback) {
+        FishingAlert.INSTANCE.observeParticle(MinecraftClient.getInstance(), packet);
+    }
+
     @Inject(method = "onInventory", at = @At("RETURN"))
     private void nef$readMenuContents(InventoryS2CPacket packet, CallbackInfo callback) {
         PagedMenuTracker.contentsReceived(MinecraftClient.getInstance(), packet.getSyncId(), packet.getContents());

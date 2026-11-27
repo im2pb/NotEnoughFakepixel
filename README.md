@@ -57,7 +57,7 @@ See the [LICENSE](LICENSE) file for details.
 
 <!-- port-progress:start -->
 
-![1.21 port progress (28.7%)](https://progress-bar.xyz/28/?scale=100&width=350&progress_color=338b33) `62/216 features`
+![1.21 port progress (31.0%)](https://progress-bar.xyz/31/?scale=100&width=350&progress_color=338b33) `67/216 features`
 
 <!-- port-progress:end -->
 
@@ -140,11 +140,11 @@ See the [LICENSE](LICENSE) file for details.
 
 | Feature | 1.8.9 | 1.21 |
 | --- | --- | --- |
-| Fishing countdown | X |  |
-| Fishing notifier for Legendary Sea Creatures | X |  |
-| Notifier for Trophy Fishing | X |  |
-| Incoming bite alert | X |  |
-| Slug mode | X |  |
+| Fishing countdown | X | X |
+| Fishing notifier for Legendary Sea Creatures | X | X |
+| Notifier for Trophy Fishing | X | X |
+| Incoming bite alert | X | X |
+| Slug mode | X | X |
 
 ### Dungeons
 
