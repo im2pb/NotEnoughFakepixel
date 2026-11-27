@@ -2,6 +2,7 @@ package com.nef.notenoughfakepixel.config.features;
 
 import com.google.gson.annotations.Expose;
 import com.nef.notenoughfakepixel.config.position.Position;
+import com.nef.notenoughfakepixel.features.skyblock.qol.DarkAhTimer;
 import io.github.notenoughupdates.moulconfig.annotations.*;
 import org.lwjgl.glfw.GLFW;
 
@@ -13,7 +14,7 @@ public class QualityOfLife {
     public String nefCapes = "";
 
     @Expose
-    @ConfigOption(name = "1.12 Crops Height", desc = "Use 1.12 crops height")
+    @ConfigOption(name = "1.12 Crop Height", desc = "Use 1.12 targeting heights for wheat, carrots, potatoes, and nether wart")
     @ConfigEditorBoolean
     public boolean qolCropsHeight = false;
 
@@ -516,6 +517,11 @@ public class QualityOfLife {
             @ConfigOption(name = "Scale", desc = "Scale of the Dark AH Timer")
             @ConfigEditorSlider(minValue = 0.5f, maxValue = 5.0f, minStep = 0.1f)
             public float darkAHTimerScale = 1.0f;
+
+            @ConfigOption(name = "Edit Position", desc = "Move the Dark Auction Timer on the HUD")
+            @ConfigEditorButton(buttonText = "Edit")
+            public transient Runnable editDarkAHTimerPos = () ->
+                    DarkAhTimer.editPosition(this.darkAhTimerPos, this.darkAHTimerScale, position -> this.darkAhTimerPos = position);
 
             @Expose
             public Position darkAhTimerPos = new Position(0, 0, false, false);

@@ -3,8 +3,10 @@
     "package": "com.nef.notenoughfakepixel.mixin",
     "compatibilityLevel": "JAVA_21",
     "client": [
+        "CropOutlineMixin",
         "DrawContextMixin",
-        "GenericContainerScreenMixin"
+        "GenericContainerScreenMixin",
+        "ParticleManagerMixin"
     ],
     "injectors": {
         "defaultRequire": 1

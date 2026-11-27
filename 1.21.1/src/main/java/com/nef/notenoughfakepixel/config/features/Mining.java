@@ -2,6 +2,7 @@ package com.nef.notenoughfakepixel.config.features;
 
 import com.google.gson.annotations.Expose;
 import com.nef.notenoughfakepixel.config.position.Position;
+import com.nef.notenoughfakepixel.features.skyblock.mining.crystalhollows.WormSpawnTimer;
 import io.github.notenoughupdates.moulconfig.annotations.*;
 import org.lwjgl.glfw.GLFW;
 
@@ -291,6 +292,11 @@ public class Mining {
             @ConfigOption(name = "Scale", desc = "Scale of the Worm Timer")
             @ConfigEditorSlider(minValue = 0.5f, maxValue = 5.0f, minStep = 0.1f)
             public float wormTimerScale = 1.0f;
+
+            @ConfigOption(name = "Edit Position", desc = "Move the Worm Timer on the HUD")
+            @ConfigEditorButton(buttonText = "Edit")
+            public transient Runnable editWormTimerPos = () ->
+                    WormSpawnTimer.editPosition(this.wormTimerPos, this.wormTimerScale, position -> this.wormTimerPos = position);
 
             @Expose
             public Position wormTimerPos = new Position(0, 0, true, true);

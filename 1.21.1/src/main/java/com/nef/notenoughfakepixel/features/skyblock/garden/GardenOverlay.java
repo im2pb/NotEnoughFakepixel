@@ -2,6 +2,9 @@ package com.nef.notenoughfakepixel.features.skyblock.garden;
 
 import com.nef.notenoughfakepixel.config.ClientConfig;
 import com.nef.notenoughfakepixel.config.features.Garden;
+import com.nef.notenoughfakepixel.config.position.OverlayLayout;
+import com.nef.notenoughfakepixel.config.position.OverlayLayout.Bounds;
+import com.nef.notenoughfakepixel.config.position.OverlayPositionEditor;
 import com.nef.notenoughfakepixel.config.position.Position;
 import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
@@ -91,40 +94,33 @@ public final class GardenOverlay implements ClientModInitializer {
 
     public static void editPosition(Panel panel, Position position, float scale, String background,
                                     Consumer<Position> updatePosition) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        client.setScreen(new GardenPositionEditor(client.currentScreen, panel, position, scale, background, updatePosition));
+        TextRenderer font = MinecraftClient.getInstance().textRenderer;
+        OverlayLayout layout = layout(font, panel.preview, scale);
+        OverlayPositionEditor.open(panel.title, position, layout,
+                (context, bounds) -> drawPanel(context, font, panel.preview, layout, bounds, panel.background.resolve(background)),
+                updatePosition);
     }
 
     private static void drawHudPanel(DrawContext context, TextRenderer font, Panel panel, Position position, float scale,
                                      String background, List<String> lines) {
-        Layout layout = layout(font, lines, position, scale, context.getScaledWindowWidth(), context.getScaledWindowHeight());
-        drawPanel(context, font, lines, layout, panel.background.resolve(background));
+        OverlayLayout layout = layout(font, lines, scale);
+        Bounds bounds = layout.bounds(position, context.getScaledWindowWidth(), context.getScaledWindowHeight());
+        drawPanel(context, font, lines, layout, bounds, panel.background.resolve(background));
     }
 
-    static Layout layout(TextRenderer font, List<String> lines, Position position, float scale,
-                         int viewportWidth, int viewportHeight) {
+    private static OverlayLayout layout(TextRenderer font, List<String> lines, float scale) {
         int width = PADDING * 2;
         for (String line : lines) width = Math.max(width, font.getWidth(line) + PADDING * 2);
         int height = PADDING * 2 + lines.size() * (font.fontHeight + 1) - 1;
-        float safeScale = Float.isFinite(scale) ? Math.clamp(scale, 0.5F, 5.0F) : 1.0F;
-        int scaledWidth = (int) Math.ceil(width * safeScale);
-        int scaledHeight = (int) Math.ceil(height * safeScale);
-        int x = axisStart(position.x(), position.centerX(), viewportWidth, scaledWidth);
-        int y = axisStart(position.y(), position.centerY(), viewportHeight, scaledHeight);
-        return new Layout(x, y, width, height, scaledWidth, scaledHeight, safeScale);
+        return new OverlayLayout(width, height, scale, false);
     }
 
-    static int axisStart(int offset, boolean centered, int viewport, int panelSize) {
-        int end = viewport - panelSize;
-        long start = centered ? viewport / 2L + offset : offset < 0 ? (long) end + offset : offset;
-        return (int) Math.clamp(start, 0, Math.max(0, end));
-    }
-
-    static void drawPanel(DrawContext context, TextRenderer font, List<String> lines, Layout layout, int color) {
+    private static void drawPanel(DrawContext context, TextRenderer font, List<String> lines, OverlayLayout layout,
+                                  Bounds bounds, int color) {
         var matrices = context.getMatrices();
         matrices.push();
         try {
-            matrices.translate(layout.x(), layout.y(), 0);
+            matrices.translate(bounds.x(), bounds.y(), 0);
             matrices.scale(layout.scale(), layout.scale(), 1);
             if ((color >>> 24) != 0) context.fill(0, 0, layout.width(), layout.height(), color);
             int y = PADDING;
@@ -137,6 +133,4 @@ public final class GardenOverlay implements ClientModInitializer {
         }
     }
 
-    record Layout(int x, int y, int width, int height, int scaledWidth, int scaledHeight, float scale) {
-    }
 }
