@@ -1,12 +1,13 @@
 package com.nef.notenoughfakepixel.config.features;
 
 import com.google.gson.annotations.Expose;
+import com.nef.notenoughfakepixel.features.skyblock.overlays.waypoints.FairySouls;
 import io.github.notenoughupdates.moulconfig.annotations.*;
 
 public class Waypoints {
 
     @Expose
-    @ConfigOption(name = "Enable Waypoints", desc = "Enable/Disable Waypoints")
+    @ConfigOption(name = "Enable Waypoints", desc = "Show or hide all NotEnoughFakepixel waypoint markers")
     @ConfigEditorBoolean
     public boolean generalWaypointToggle = true;
 
@@ -38,12 +39,16 @@ public class Waypoints {
             @ConfigEditorColour
             public String fairySoulWaypointsColor = "0:100:255:255:255";
 
+            @ConfigOption(name = "Reset Fairy Soul Progress", desc = "Clear locally recorded Fairy Souls for all SkyBlock profiles")
+            @ConfigEditorButton(buttonText = "Reset")
+            public transient Runnable fairySoulsReset = FairySouls::confirmReset;
+
     }
 
     public static class GiftWaypointsSettings {
 
             @Expose
-            @ConfigOption(name = "Enable Gift Waypoints", desc = "Enable gift waypoints in Jerry Island")
+            @ConfigOption(name = "Enable Gift Waypoints", desc = "Show uncollected gift markers on Jerry's Island")
             @ConfigEditorBoolean
             public boolean giftWaypoints = false;
 

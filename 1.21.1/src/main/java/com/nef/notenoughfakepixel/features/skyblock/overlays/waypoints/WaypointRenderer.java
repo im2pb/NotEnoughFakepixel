@@ -1,7 +1,10 @@
 package com.nef.notenoughfakepixel.features.skyblock.overlays.waypoints;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.nef.notenoughfakepixel.config.ClientConfig;
+import com.nef.notenoughfakepixel.config.features.Waypoints;
 import com.nef.notenoughfakepixel.features.skyblock.overlays.waypoints.IslandWaypoints.Waypoint;
+import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -12,12 +15,14 @@ import net.minecraft.client.render.RenderPhase;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.block.entity.BeaconBlockEntityRenderer;
 import net.minecraft.client.util.BufferAllocator;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Vec3d;
 import org.lwjgl.opengl.GL11;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.SequencedMap;
@@ -34,6 +39,13 @@ final class WaypointRenderer implements AutoCloseable {
     private VertexConsumerProvider.Immediate consumers;
     private VertexConsumerProvider throughWallConsumers;
 
+    static Waypoints visibleSettings(WorldRenderContext context) {
+        if (!SkyblockData.isSkyblock() || context.matrixStack() == null || context.world() == null) return null;
+
+        Waypoints settings = ClientConfig.configuration().waypoints;
+        return settings.generalWaypointToggle ? settings : null;
+    }
+
     void render(WorldRenderContext context, List<Waypoint> waypoints, boolean beacons, int islandColor,
                 double labelHeight, boolean showDistance) {
         if (waypoints.isEmpty()) return;
@@ -44,11 +56,11 @@ final class WaypointRenderer implements AutoCloseable {
         Vec3d cameraPos = camera.getPos();
         boolean depthTestWasEnabled = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
         try {
-            if (beacons) renderBeams(context, matrices, cameraPos, waypoints, islandColor, false);
+            if (beacons) renderBeams(context, matrices, cameraPos, waypoints, islandColor, BeamVisibility.NEAR);
 
             // Vanilla's see-through layers expect depth testing to be off before they draw.
             RenderSystem.disableDepthTest();
-            if (beacons) renderBeams(context, matrices, cameraPos, waypoints, islandColor, true);
+            if (beacons) renderBeams(context, matrices, cameraPos, waypoints, islandColor, BeamVisibility.FAR);
 
             TextRenderer font = MinecraftClient.getInstance().textRenderer;
             // See-through layers sort quads by distance. Flush shadows before submitting the lettering.
@@ -60,14 +72,51 @@ final class WaypointRenderer implements AutoCloseable {
         }
     }
 
+    void renderBlockMarkers(WorldRenderContext context, Collection<Waypoint> waypoints, int color,
+                            boolean beamsAlwaysThroughWalls) {
+        if (waypoints.isEmpty()) return;
+
+        prepareBuffers();
+        var matrices = context.matrixStack();
+        Vec3d cameraPos = context.camera().getPos();
+        boolean depthTestWasEnabled = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
+        try {
+            if (!beamsAlwaysThroughWalls) renderBeams(context, matrices, cameraPos, waypoints, color, BeamVisibility.NEAR);
+            RenderSystem.disableDepthTest();
+            if ((color >>> 24) != 0) renderBlockHighlights(matrices, cameraPos, waypoints, color);
+            renderBeams(context, matrices, cameraPos, waypoints, color,
+                    beamsAlwaysThroughWalls ? BeamVisibility.THROUGH_WALLS : BeamVisibility.FAR);
+        } finally {
+            if (depthTestWasEnabled) RenderSystem.enableDepthTest();
+            else RenderSystem.disableDepthTest();
+        }
+    }
+
+    private void renderBlockHighlights(MatrixStack matrices, Vec3d cameraPos, Collection<Waypoint> waypoints, int color) {
+        var vertices = consumers.getBuffer(BlockHighlight.LAYER);
+        float red = ((color >>> 16) & 0xFF) / 255.0F;
+        float green = ((color >>> 8) & 0xFF) / 255.0F;
+        float blue = (color & 0xFF) / 255.0F;
+        float alpha = (color >>> 24) / 255.0F;
+        for (Waypoint waypoint : waypoints) {
+            double x = waypoint.x() - cameraPos.x - 0.5;
+            double y = waypoint.y() - cameraPos.y;
+            double z = waypoint.z() - cameraPos.z - 0.5;
+            WorldRenderer.renderFilledBox(matrices, vertices, x, y, z, x + 1, y + 1, z + 1, red, green, blue, alpha);
+        }
+        consumers.draw();
+    }
+
     private void renderBeams(WorldRenderContext context, MatrixStack matrices, Vec3d cameraPos,
-                             List<Waypoint> waypoints, int islandColor, boolean throughWalls) {
-        VertexConsumerProvider vertices = throughWalls ? throughWallConsumers : consumers;
+                             Collection<Waypoint> waypoints, int islandColor, BeamVisibility visibility) {
+        VertexConsumerProvider vertices = visibility == BeamVisibility.NEAR ? consumers : throughWallConsumers;
         float tickDelta = context.tickCounter().getTickDelta(false);
         long worldTime = context.world().getTime();
         for (Waypoint waypoint : waypoints) {
-            double distanceSquared = cameraPos.squaredDistanceTo(waypoint.x(), waypoint.y(), waypoint.z());
-            if ((distanceSquared > THROUGH_WALL_DISTANCE_SQUARED) != throughWalls) continue;
+            if (visibility != BeamVisibility.THROUGH_WALLS) {
+                double distanceSquared = cameraPos.squaredDistanceTo(waypoint.x(), waypoint.y(), waypoint.z());
+                if ((distanceSquared > THROUGH_WALL_DISTANCE_SQUARED) != (visibility == BeamVisibility.FAR)) continue;
+            }
 
             int rgb = waypoint.beamColorOverride() == null ? islandColor : waypoint.beamColorOverride();
             matrices.push();
@@ -165,5 +214,21 @@ final class WaypointRenderer implements AutoCloseable {
                             .writeMaskState(RenderPhase.COLOR_MASK)
                             .build(false));
         }
+    }
+
+    private enum BeamVisibility {
+        NEAR, FAR, THROUGH_WALLS
+    }
+
+    private static final class BlockHighlight {
+        private static final RenderLayer LAYER = RenderLayer.of("nef_waypoint_highlight",
+                VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLE_STRIP, 1536, false, false,
+                RenderLayer.MultiPhaseParameters.builder()
+                        .program(RenderPhase.COLOR_PROGRAM)
+                        .transparency(RenderPhase.TRANSLUCENT_TRANSPARENCY)
+                        .depthTest(RenderPhase.ALWAYS_DEPTH_TEST)
+                        .cull(RenderPhase.DISABLE_CULLING)
+                        .writeMaskState(RenderPhase.COLOR_MASK)
+                        .build(false));
     }
 }

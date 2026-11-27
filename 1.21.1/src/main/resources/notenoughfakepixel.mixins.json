@@ -5,6 +5,7 @@
     "client": [
         "ChatHudMixin",
         "ClientPlayerEntityMixin",
+        "ClientPlayerInteractionManagerMixin",
         "CropOutlineMixin",
         "DrawContextMixin",
         "GenericContainerScreenMixin",

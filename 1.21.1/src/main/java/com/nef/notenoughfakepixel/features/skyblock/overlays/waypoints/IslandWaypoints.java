@@ -1,6 +1,5 @@
 package com.nef.notenoughfakepixel.features.skyblock.overlays.waypoints;
 
-import com.nef.notenoughfakepixel.config.ClientConfig;
 import com.nef.notenoughfakepixel.config.features.Waypoints;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.ConfigColor;
@@ -41,11 +40,10 @@ public abstract class IslandWaypoints implements ClientModInitializer {
     }
 
     private void render(WorldRenderContext context) {
-        if (!SkyblockData.isSkyblock() || SkyblockData.currentLocation() != island()
-                || context.matrixStack() == null || context.world() == null) return;
+        if (SkyblockData.currentLocation() != island()) return;
 
-        Waypoints settings = ClientConfig.configuration().waypoints;
-        if (!settings.generalWaypointToggle || !enabled(settings)) return;
+        Waypoints settings = WaypointRenderer.visibleSettings(context);
+        if (settings == null || !enabled(settings)) return;
 
         boolean beacons = beaconsEnabled(settings);
         renderer.render(context, waypoints(), beacons, beacons ? color.resolve(beaconColor(settings)) : 0,

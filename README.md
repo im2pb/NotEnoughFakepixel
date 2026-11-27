@@ -57,7 +57,7 @@ See the [LICENSE](LICENSE) file for details.
 
 <!-- port-progress:start -->
 
-![1.21 port progress (12.7%)](https://progress-bar.xyz/12/?scale=100&width=350&progress_color=338b33) `27/212 features`
+![1.21 port progress (14.6%)](https://progress-bar.xyz/14/?scale=100&width=350&progress_color=338b33) `31/212 features`
 
 <!-- port-progress:end -->
 
@@ -297,10 +297,10 @@ See the [LICENSE](LICENSE) file for details.
 
 | Feature | 1.8.9 | 1.21 |
 | --- | --- | --- |
-| Fairy soul waypoints | X |  |
-| Global waypoint toggle | X |  |
-| Fairy soul progress reset | X |  |
-| Jerry Island gift waypoints | X |  |
+| Fairy soul waypoints | X | X |
+| Global waypoint toggle | X | X |
+| Fairy soul progress reset | X | X |
+| Jerry Island gift waypoints | X | X |
 | St. Jerry waypoint | X | X |
 
 ### Slot Locking

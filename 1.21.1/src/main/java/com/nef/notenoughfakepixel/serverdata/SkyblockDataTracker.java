@@ -7,6 +7,7 @@ import com.nef.notenoughfakepixel.variables.Gamemode;
 import com.nef.notenoughfakepixel.variables.Slayer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.MinecraftClient;
@@ -39,6 +40,7 @@ public final class SkyblockDataTracker implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         ClientTickEvents.END_CLIENT_TICK.register(this::onClientTick);
+        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register((client, newWorld) -> updateWorld(newWorld));
         ClientReceiveMessageEvents.GAME.register(this::onGameMessage);
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> client.execute(this::resetConnection));
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(this::resetConnection));
