@@ -10,7 +10,11 @@
         "DrawContextMixin",
         "GenericContainerScreenMixin",
         "HandledScreenAccessor",
-        "ParticleManagerMixin"
+        "HandledScreenMixin",
+        "MinecraftClientMixin",
+        "ParticleManagerMixin",
+        "PlayerInventoryMixin",
+        "WorldRendererMixin"
     ],
     "injectors": {
         "defaultRequire": 1

@@ -57,7 +57,7 @@ See the [LICENSE](LICENSE) file for details.
 
 <!-- port-progress:start -->
 
-![1.21 port progress (14.6%)](https://progress-bar.xyz/14/?scale=100&width=350&progress_color=338b33) `31/212 features`
+![1.21 port progress (18.5%)](https://progress-bar.xyz/18/?scale=100&width=350&progress_color=338b33) `39/211 features`
 
 <!-- port-progress:end -->
 
@@ -157,12 +157,12 @@ See the [LICENSE](LICENSE) file for details.
 | General | Silverfish Solver | X |  |
 | General | Wither doors highlight | X |  |
 | General | Teleport maze Solver | X |  |
-| General | Terminal waypoints | X |  |
+| General | Terminal waypoints | X | X |
 | General | Custom S+ message | X |  |
 | General | Spirit bow tracer | X |  |
-| General | Dungeon Map | X |  |
-| General | Three Weirdos Solver | X |  |
-| General | Auto Ready | X |  |
+| General | Dungeon Map | X | X |
+| General | Three Weirdos Solver | X | X |
+| General | Auto Ready | - | -|
 | General | Auto close secret chests | X |  |
 | General | "Unable to locate sign" hidden | X |  |
 | General | S+ reminder | X |  |
@@ -179,10 +179,10 @@ See the [LICENSE](LICENSE) file for details.
 | General | Simple score overlay | X |  |
 | General | Paul-aware score calculation | X |  |
 | General | Item secret and Wither Essence highlights | X |  |
-| Starred mobs | Starred mob display | X |  |
+| Starred mobs | Starred mob display | X | X |
 | Starred mobs | Fel position display | X |  |
 | Starred mobs | Bat position display | X |  |
-| Starred mobs | Starred mob ESP | X |  |
+| Starred mobs | Starred mob ESP | X | X |
 | Floor 7 | Terminal solvers | X |  |
 | Floor 7 | Terminal tracker | X |  |
 | Floor 7 | Box withers | X |  |
@@ -307,11 +307,11 @@ See the [LICENSE](LICENSE) file for details.
 
 | Feature | 1.8.9 | 1.21 |
 | --- | --- | --- |
-| Slot locking & binding | X |  |
-| Bound-slot drop protection | X |  |
+| Slot locking & binding | X | X |
+| Bound-slot drop protection | X | X |
 | Slot locking storage exception | X |  |
 | Item swap drop delay | X |  |
-| Slot lock sounds | X |  |
+| Slot lock sounds | X | X |
 
 ### Overlays
 

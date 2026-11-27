@@ -41,8 +41,7 @@ public class SlotLocking {
     @Expose
     @ConfigOption(
             name = "Slot Lock Key",
-            desc = "Click this key to LOCK a slot\n" +
-                    "Hold this key and drag to BIND a slot"
+            desc = "Tap over a slot to lock or unlock it. Hold over an inventory or armor slot, move to a hotbar slot, and release to bind. Shift-click either slot to swap."
     )
     @ConfigEditorKeybind(defaultKey = GLFW.GLFW_KEY_L)
     public int slotLockKey = GLFW.GLFW_KEY_L;
@@ -95,6 +94,10 @@ public class SlotLocking {
             minStep = 1
     )
     public float slotLockSoundVol = 20;
+
+    @ConfigOption(name = "Reset Locked Slots", desc = "Clear slot locks and bindings on the current SkyBlock profile")
+    @ConfigEditorButton(buttonText = "Reset")
+    public transient Runnable resetSlotLocking = com.nef.notenoughfakepixel.features.skyblock.slotlocking.SlotLocking::confirmReset;
 
 }
 

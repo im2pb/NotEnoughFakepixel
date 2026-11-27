@@ -2,8 +2,10 @@ package com.nef.notenoughfakepixel.config.features;
 
 import com.google.gson.annotations.Expose;
 import com.nef.notenoughfakepixel.config.position.Position;
+import com.nef.notenoughfakepixel.features.skyblock.dungeons.DungeonMap;
 import io.github.notenoughupdates.moulconfig.annotations.Category;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorBoolean;
+import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorButton;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorColour;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorDropdown;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorSlider;
@@ -147,6 +149,12 @@ public class Dungeons {
         @ConfigOption(name = "Dungeons Map Rotation", desc = "Enable rotation of the dungeons map.")
         @ConfigEditorBoolean
         public boolean dungeonsRotateMap = true;
+
+        @ConfigOption(name = "Edit Position", desc = "Move the Dungeon Map on the HUD")
+        @ConfigEditorButton(buttonText = "Edit")
+        public transient Runnable editDungeonsMapPosition = () -> DungeonMap.editPosition(
+                this.dungeonsMapPos, this.dungeonsMapScale, this.dungeonsMapBorderColor,
+                position -> this.dungeonsMapPos = position);
 
         @Expose
         public Position dungeonsMapPos = new Position(10, 10, false, true);

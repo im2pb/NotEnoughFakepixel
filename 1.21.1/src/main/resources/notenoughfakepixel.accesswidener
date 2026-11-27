@@ -4,6 +4,7 @@ accessible method net/minecraft/client/gui/DrawContext setScissor (Lnet/minecraf
 accessible field net/minecraft/client/gui/DrawContext scissorStack Lnet/minecraft/client/gui/DrawContext$ScissorStack;
 accessible field net/minecraft/client/gui/DrawContext$ScissorStack stack Ljava/util/Deque;
 accessible method net/minecraft/client/gui/DrawContext drawTexturedQuad (Lnet/minecraft/util/Identifier;IIIIIFFFF)V
+accessible method net/minecraft/client/gui/DrawContext drawTexturedQuad (Lnet/minecraft/util/Identifier;IIIIIFFFFFFFF)V
 accessible field net/minecraft/client/gui/screen/ingame/HandledScreen focusedSlot Lnet/minecraft/screen/slot/Slot;
 accessible class net/minecraft/client/render/RenderLayer$MultiPhase
 accessible class net/minecraft/client/render/RenderLayer$MultiPhaseParameters

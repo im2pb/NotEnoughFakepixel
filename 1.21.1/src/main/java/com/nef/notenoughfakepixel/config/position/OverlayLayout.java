@@ -1,8 +1,25 @@
 package com.nef.notenoughfakepixel.config.position;
 
-public record OverlayLayout(int width, int height, float scale, boolean centerElement) {
-    public OverlayLayout {
-        scale = Float.isFinite(scale) ? Math.clamp(scale, 0.5F, 5.0F) : 1.0F;
+import lombok.Getter;
+import lombok.experimental.Accessors;
+
+@Getter
+@Accessors(fluent = true)
+public final class OverlayLayout {
+    private final int width;
+    private final int height;
+    private final float scale;
+    private final boolean centerElement;
+
+    public OverlayLayout(int width, int height, float scale, boolean centerElement) {
+        this(width, height, scale, centerElement, 0.5F, 5.0F);
+    }
+
+    public OverlayLayout(int width, int height, float scale, boolean centerElement, float minScale, float maxScale) {
+        this.width = width;
+        this.height = height;
+        this.scale = Float.isFinite(scale) ? Math.clamp(scale, minScale, maxScale) : 1.0F;
+        this.centerElement = centerElement;
     }
 
     public Bounds bounds(Position position, int viewportWidth, int viewportHeight) {
