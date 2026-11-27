@@ -48,6 +48,11 @@ public final class OverlayPositionEditor extends Screen {
     }
 
     @Override
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        // Leave the HUD and world visible for positioning the overlay.
+    }
+
+    @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         Bounds bounds = bounds();
         context.drawBorder(bounds.x() - 1, bounds.y() - 1, bounds.width() + 2, bounds.height() + 2, 0xFFAAAAAA);
