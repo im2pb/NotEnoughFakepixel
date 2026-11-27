@@ -3,6 +3,9 @@ package com.nef.notenoughfakepixel.serverdata;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+import com.nef.notenoughfakepixel.utils.SkyblockItemData;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.Formatting;
 
 import java.util.Comparator;
@@ -15,6 +18,8 @@ import java.util.regex.Pattern;
 
 public final class AccessoriesData {
     private static final Pattern SPACES = Pattern.compile("\\s+", Pattern.UNICODE_CHARACTER_CLASS);
+    private static final Pattern RARITY_FOOTER = Pattern.compile(
+            "\\b(COMMON|UNCOMMON|RARE|EPIC|LEGENDARY|MYTHIC|DIVINE|SPECIAL)( ACCESSORY\\b)?");
     private static final Comparator<Accessory> DISPLAY_ORDER = Comparator
             .comparing(Accessory::rarity).reversed()
             .thenComparing(Accessory::name, String.CASE_INSENSITIVE_ORDER);
@@ -110,6 +115,26 @@ public final class AccessoriesData {
                 .sorted(DISPLAY_ORDER).toList();
         long current = owned.values().stream().mapToLong(item -> item.rarity().mp).sum();
         return new Estimate(missing, current, max, recombobulated);
+    }
+
+    public static Accessory fromBag(ItemStack stack) {
+        if (SkyblockItemData.id(stack).isEmpty()) return null;
+        String name = clean(stack.getName().getString());
+        if (name.isEmpty()) return null;
+
+        var lore = stack.get(DataComponentTypes.LORE);
+        if (lore != null) {
+            for (var line : lore.lines().reversed()) {
+                String label = clean(line.getString()).toUpperCase(Locale.ROOT);
+                var footer = RARITY_FOOTER.matcher(label);
+                while (footer.find()) {
+                    if (footer.group(2) != null || (footer.start() == 0 && footer.end() == label.length())) {
+                        return new Accessory(name, Rarity.valueOf(footer.group(1)));
+                    }
+                }
+            }
+        }
+        return new Accessory(name, null);
     }
 
     public static String clean(String text) {

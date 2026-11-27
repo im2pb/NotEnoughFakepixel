@@ -2,7 +2,7 @@ package com.nef.notenoughfakepixel.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.nef.notenoughfakepixel.features.skyblock.accessories.MissingAccessories;
+import com.nef.notenoughfakepixel.features.skyblock.inventory.PagedMenuTracker;
 import com.nef.notenoughfakepixel.features.skyblock.mining.DrillFix;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -22,13 +22,13 @@ import java.util.List;
 @Mixin(ClientPlayNetworkHandler.class)
 abstract class ClientPlayNetworkHandlerMixin {
     @Inject(method = "onInventory", at = @At("RETURN"))
-    private void nef$readAccessoryBagContents(InventoryS2CPacket packet, CallbackInfo callback) {
-        MissingAccessories.INSTANCE.receiveContents(MinecraftClient.getInstance(), packet.getSyncId(), packet.getContents());
+    private void nef$readMenuContents(InventoryS2CPacket packet, CallbackInfo callback) {
+        PagedMenuTracker.contentsReceived(MinecraftClient.getInstance(), packet.getSyncId(), packet.getContents());
     }
 
     @Inject(method = "onScreenHandlerSlotUpdate", at = @At("RETURN"))
-    private void nef$readAccessoryBagSlot(ScreenHandlerSlotUpdateS2CPacket packet, CallbackInfo callback) {
-        MissingAccessories.INSTANCE.receiveSlot(MinecraftClient.getInstance(), packet.getSyncId(), packet.getSlot(), packet.getStack());
+    private void nef$readMenuSlot(ScreenHandlerSlotUpdateS2CPacket packet, CallbackInfo callback) {
+        PagedMenuTracker.slotReceived(MinecraftClient.getInstance(), packet.getSyncId(), packet.getSlot(), packet.getStack());
     }
 
     // The vanilla handlers switch to the client thread before reaching these calls.

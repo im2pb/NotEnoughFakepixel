@@ -1,18 +1,18 @@
 package com.nef.notenoughfakepixel.config.features;
 
+import com.nef.notenoughfakepixel.env.VersionChecker;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorButton;
-import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorInfoText;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigOption;
 import net.minecraft.util.Util;
 
 public final class About {
-    @ConfigOption(name = "Fabric Port", desc = "These settings are saved for the Fabric port. Gameplay features will be added separately")
-    @ConfigEditorInfoText
-    public transient String status = "";
+    @ConfigOption(name = "Fabric Version", desc = "Show the installed version and repository update information in chat")
+    @ConfigEditorButton(buttonText = "Check")
+    public transient Runnable version = VersionChecker::reportVersion;
 
     @ConfigOption(name = "Discord", desc = "Join the NotEnoughFakepixel Discord server")
     @ConfigEditorButton(buttonText = "Open")
-    public transient Runnable discord = () -> Util.getOperatingSystem().open("https://discord.gg/xjFy4GQmbp");
+    public transient Runnable discord = VersionChecker::openDiscord;
 
     @ConfigOption(name = "GitHub", desc = "View the NotEnoughFakepixel source code")
     @ConfigEditorButton(buttonText = "Open")

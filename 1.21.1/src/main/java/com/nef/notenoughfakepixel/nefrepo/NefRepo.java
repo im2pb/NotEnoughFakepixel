@@ -91,8 +91,17 @@ public final class NefRepo implements ClientModInitializer {
         if (version.isBlank() || warning == null || !warning.isJsonPrimitive() || !warning.getAsJsonPrimitive().isBoolean()) {
             throw new JsonParseException("Invalid update metadata");
         }
+        var fabric = root.get("fabric");
+        Release fabricRelease = null;
+        if (fabric != null && !fabric.isJsonNull()) {
+            if (!fabric.isJsonObject()) throw new JsonParseException("Expected a Fabric release object");
+            var entry = fabric.getAsJsonObject();
+            String fabricVersion = string(entry, "version");
+            if (fabricVersion.isBlank()) throw new JsonParseException("Missing Fabric release version");
+            fabricRelease = new Release(fabricVersion, string(entry, "update_msg"), string(entry, "update_link"));
+        }
         return new Update(version, string(root, "update_msg"), string(root, "update_link"),
-                string(root, "discord_link"), warning.getAsBoolean(), string(root, "warning_msg"));
+                string(root, "discord_link"), warning.getAsBoolean(), string(root, "warning_msg"), fabricRelease);
     }
 
     private static JsonObject object(String json) {
@@ -110,6 +119,9 @@ public final class NefRepo implements ClientModInitializer {
     }
 
     public record Update(String version, String message, String updateLink, String discordLink,
-                         boolean hasWarning, String warningMessage) {
+                         boolean hasWarning, String warningMessage, Release fabric) {
+    }
+
+    public record Release(String version, String message, String updateLink) {
     }
 }

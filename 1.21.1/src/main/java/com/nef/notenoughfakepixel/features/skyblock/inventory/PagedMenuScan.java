@@ -1,23 +1,17 @@
-package com.nef.notenoughfakepixel.features.skyblock.accessories;
+package com.nef.notenoughfakepixel.features.skyblock.inventory;
 
-import com.nef.notenoughfakepixel.serverdata.AccessoriesData;
-import com.nef.notenoughfakepixel.serverdata.AccessoriesData.Accessory;
-import com.nef.notenoughfakepixel.serverdata.AccessoriesData.Rarity;
-import com.nef.notenoughfakepixel.utils.SkyblockItemData;
-import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Formatting;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.NavigableMap;
 import java.util.TreeMap;
-import java.util.regex.Pattern;
+import java.util.function.Function;
 
-final class AccessoryBagScan {
+final class PagedMenuScan<T> {
     private static final long NAVIGATION_TIMEOUT = 5_000;
-    private static final Pattern RARITY_FOOTER = Pattern.compile(
-            "\\b(COMMON|UNCOMMON|RARE|EPIC|LEGENDARY|MYTHIC|DIVINE|SPECIAL)( ACCESSORY\\b)?");
 
     enum Direction {
         PREVIOUS(-1), NEXT(1), JUMP(0);
@@ -29,10 +23,10 @@ final class AccessoryBagScan {
         }
     }
 
-    record Page(boolean previous, boolean next, List<Accessory> accessories) {
-        static Page read(ItemStack[] stacks) {
+    record Page<T>(boolean previous, boolean next, List<T> items) {
+        static <T> Page<T> read(ItemStack[] stacks, Function<ItemStack, T> parser) {
             boolean previous = false, next = false;
-            List<Accessory> accessories = new ArrayList<>();
+            List<T> items = new ArrayList<>();
             for (ItemStack stack : stacks) {
                 if (stack.isEmpty()) continue;
                 Direction direction = navigation(stack);
@@ -42,33 +36,15 @@ final class AccessoryBagScan {
                     continue;
                 }
 
-                String name = AccessoriesData.clean(stack.getName().getString());
-                if (!name.isEmpty() && !SkyblockItemData.id(stack).isEmpty()) {
-                    accessories.add(new Accessory(name, rarity(stack)));
-                }
+                T item = parser.apply(stack);
+                if (item != null) items.add(item);
             }
-            return new Page(previous, next, List.copyOf(accessories));
-        }
-
-        private static Rarity rarity(ItemStack stack) {
-            var lore = stack.get(DataComponentTypes.LORE);
-            if (lore != null) {
-                for (var line : lore.lines().reversed()) {
-                    String label = AccessoriesData.clean(line.getString()).toUpperCase(Locale.ROOT);
-                    var footer = RARITY_FOOTER.matcher(label);
-                    while (footer.find()) {
-                        if (footer.group(2) != null || (footer.start() == 0 && footer.end() == label.length())) {
-                            return Rarity.valueOf(footer.group(1));
-                        }
-                    }
-                }
-            }
-            return null;
+            return new Page<>(previous, next, List.copyOf(items));
         }
     }
 
-    private final NavigableMap<Integer, Page> pages = new TreeMap<>();
-    private Page current;
+    private final NavigableMap<Integer, Page<T>> pages = new TreeMap<>();
+    private Page<T> current;
     private int index = -1;
     private int lastIndex = -1;
     private Direction pending;
@@ -77,7 +53,7 @@ final class AccessoryBagScan {
 
     static Direction navigation(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return null;
-        String label = AccessoriesData.clean(stack.getName().getString()).toLowerCase(Locale.ROOT);
+        String label = Formatting.strip(stack.getName().getString()).strip().toLowerCase(Locale.ROOT);
         return switch (label) {
             case "next page", "next page →", "next page »" -> Direction.NEXT;
             case "previous page", "← previous page", "« previous page" -> Direction.PREVIOUS;
@@ -105,7 +81,7 @@ final class AccessoryBagScan {
         return pending != null;
     }
 
-    void receive(Page page, boolean replacement) {
+    void receive(Page<T> page, boolean replacement) {
         if (pending != null) {
             if (!replacement && page.equals(current)) return;
             int target = index < 0 ? -1 : index + pending.step;
@@ -138,8 +114,8 @@ final class AccessoryBagScan {
         return pending == null && lastIndex >= 0 && pages.size() == lastIndex + 1;
     }
 
-    List<Accessory> accessories() {
-        return pages.values().stream().flatMap(page -> page.accessories().stream()).toList();
+    List<T> items() {
+        return pages.values().stream().flatMap(page -> page.items().stream()).toList();
     }
 
     void clear() {
