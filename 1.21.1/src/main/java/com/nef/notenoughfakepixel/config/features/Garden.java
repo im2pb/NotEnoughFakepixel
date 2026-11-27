@@ -2,9 +2,15 @@ package com.nef.notenoughfakepixel.config.features;
 
 import com.google.gson.annotations.Expose;
 import com.nef.notenoughfakepixel.config.position.Position;
+import com.nef.notenoughfakepixel.features.skyblock.garden.GardenOverlay;
 import io.github.notenoughupdates.moulconfig.annotations.*;
 
 public class Garden {
+    private static final String OLD_PEST_COLOR = "0:0:255:0:0";
+    private static final String DEFAULT_PEST_COLOR = "0:255:255:0:0";
+
+    @Expose
+    private boolean pestColorDefaultsMigrated;
 
     @Expose
     @ConfigOption(name = "Enable Garden Features", desc = "Master toggle for garden-related features")
@@ -35,11 +41,27 @@ public class Garden {
     @Category(name = "Vacuum Pests Bag", desc = "Show the pests stored in vacuum bags as a gold stack count")
     public VacuumPestsBagSettings vacuumPestsBag = new VacuumPestsBagSettings();
 
+    public boolean migratePestColorDefaults() {
+        if (pestColorDefaultsMigrated) return false;
+
+        pestColorDefaultsMigrated = true;
+        boolean oldBoxes = OLD_PEST_COLOR.equals(pestEsp.boxColor);
+        boolean oldTracers = OLD_PEST_COLOR.equals(pestEsp.tracerColor);
+        if (oldBoxes) pestEsp.boxColor = DEFAULT_PEST_COLOR;
+        if (oldTracers) pestEsp.tracerColor = DEFAULT_PEST_COLOR;
+        return oldBoxes || oldTracers;
+    }
+
     public static class PestOverlaySettings {
         @Expose
         @ConfigOption(name = "Pests Overlay", desc = "Show the active pest count")
         @ConfigEditorBoolean
         public boolean enabled = true;
+
+        @ConfigOption(name = "Position", desc = "Edit the pests overlay position")
+        @ConfigEditorButton(buttonText = "Edit")
+        public transient Runnable editPosition = () -> GardenOverlay.editPosition(
+                GardenOverlay.Panel.PESTS, this.pos, this.scale, this.backgroundColor, position -> this.pos = position);
 
         @Expose
         @ConfigOption(name = "Scale", desc = "Scale of the pests overlay text")
@@ -61,6 +83,11 @@ public class Garden {
         @ConfigEditorBoolean
         public boolean enabled = true;
 
+        @ConfigOption(name = "Position", desc = "Edit the visitors overlay position")
+        @ConfigEditorButton(buttonText = "Edit")
+        public transient Runnable editPosition = () -> GardenOverlay.editPosition(
+                GardenOverlay.Panel.VISITORS, this.pos, this.scale, this.backgroundColor, position -> this.pos = position);
+
         @Expose
         @ConfigOption(name = "Scale", desc = "Scale of the visitors overlay text")
         @ConfigEditorSlider(minValue = 0.5f, maxValue = 5.0f, minStep = 0.1f)
@@ -80,6 +107,11 @@ public class Garden {
         @ConfigOption(name = "Crop Milestone Overlay", desc = "Show the current crop milestone and progress")
         @ConfigEditorBoolean
         public boolean enabled = true;
+
+        @ConfigOption(name = "Position", desc = "Edit the crop milestone overlay position")
+        @ConfigEditorButton(buttonText = "Edit")
+        public transient Runnable editPosition = () -> GardenOverlay.editPosition(
+                GardenOverlay.Panel.CROP_MILESTONE, this.pos, this.scale, this.backgroundColor, position -> this.pos = position);
 
         @Expose
         @ConfigOption(name = "Scale", desc = "Scale of the crop milestone overlay text")
@@ -126,7 +158,7 @@ public class Garden {
         @Expose
         @ConfigOption(name = "Box Color", desc = "Color of pest boxes")
         @ConfigEditorColour
-        public String boxColor = "0:0:255:0:0";
+        public String boxColor = DEFAULT_PEST_COLOR;
 
         @Expose
         @ConfigOption(name = "Box Line Width", desc = "Width of pest boxes")
@@ -146,7 +178,7 @@ public class Garden {
         @Expose
         @ConfigOption(name = "Tracer Color", desc = "Color of pest tracers")
         @ConfigEditorColour
-        public String tracerColor = "0:0:255:0:0";
+        public String tracerColor = DEFAULT_PEST_COLOR;
 
         @Expose
         @ConfigOption(name = "Tracer Line Width", desc = "Width of pest tracers")

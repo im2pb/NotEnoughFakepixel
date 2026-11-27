@@ -1,8 +1,8 @@
 package com.nef.notenoughfakepixel.serverdata;
 
+import com.nef.notenoughfakepixel.utils.SkyblockItemData;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.component.DataComponentTypes;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
@@ -67,7 +67,7 @@ public final class SkyblockDiagnostics {
     public static Text heldItem(MinecraftClient client) {
         if (client.player == null || client.player.getMainHandStack().isEmpty()) return warning("No item in the main hand.");
 
-        String id = SkyblockDataTracker.readItemId(client.player.getMainHandStack().get(DataComponentTypes.CUSTOM_DATA));
+        String id = SkyblockItemData.id(client.player.getMainHandStack());
         return id.isEmpty() ? warning("The held item has no SkyBlock ID.") : field("Held item SkyBlock ID", id);
     }
 

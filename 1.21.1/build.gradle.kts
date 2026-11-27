@@ -43,6 +43,7 @@ val shadowLibrary by configurations.creating {
 dependencies {
     compileOnly(lombok)
     annotationProcessor(lombok)
+    compileOnly("io.github.llamalad7:mixinextras-fabric:0.4.1")
 
     minecraft("com.mojang:minecraft:$minecraftVersion")
     mappings("net.fabricmc:yarn:$yarnVersion:v2")

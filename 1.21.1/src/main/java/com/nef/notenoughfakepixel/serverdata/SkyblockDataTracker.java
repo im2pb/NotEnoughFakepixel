@@ -2,6 +2,7 @@ package com.nef.notenoughfakepixel.serverdata;
 
 import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockSidebar.SlayerPhase;
+import com.nef.notenoughfakepixel.utils.SkyblockItemData;
 import com.nef.notenoughfakepixel.variables.Gamemode;
 import com.nef.notenoughfakepixel.variables.Slayer;
 import net.fabricmc.api.ClientModInitializer;
@@ -13,7 +14,6 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.NbtComponent;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 
 import java.util.regex.Matcher;
@@ -69,7 +69,7 @@ public final class SkyblockDataTracker implements ClientModInitializer {
         }
 
         NbtComponent heldItemData = client.player.getMainHandStack().get(DataComponentTypes.CUSTOM_DATA);
-        String itemId = heldItemData == lastHeldItemData ? SkyblockData.lastHandItemId() : readItemId(heldItemData);
+        String itemId = heldItemData == lastHeldItemData ? SkyblockData.lastHandItemId() : SkyblockItemData.id(heldItemData);
         lastHeldItemData = heldItemData;
         SkyblockData.updateContext(mode, itemId);
         if (tabList != null) SkyblockData.applyTabList(tabList);
@@ -144,14 +144,6 @@ public final class SkyblockDataTracker implements ClientModInitializer {
         Matcher xpMatch = SLAYER_XP.matcher(message);
         int xpRemaining = xpMatch.find() ? SkyblockText.parseNonnegativeInt(xpMatch.group(1)) : -1;
         SkyblockData.updateSlayerProgress(level, xpRemaining);
-    }
-
-    static String readItemId(NbtComponent customData) {
-        if (customData == null) return "";
-
-        NbtCompound nbt = customData.copyNbt();
-        String id = nbt.getCompound("ExtraAttributes").getString("id");
-        return id.isEmpty() ? nbt.getString("id") : id;
     }
 
     private void startQuest() {

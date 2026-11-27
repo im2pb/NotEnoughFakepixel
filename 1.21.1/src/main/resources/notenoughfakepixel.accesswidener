@@ -14,3 +14,7 @@ accessible field net/minecraft/client/render/RenderPhase ALWAYS_DEPTH_TEST Lnet/
 accessible field net/minecraft/client/render/RenderPhase COLOR_MASK Lnet/minecraft/client/render/RenderPhase$WriteMaskState;
 accessible field net/minecraft/client/render/RenderPhase NO_TRANSPARENCY Lnet/minecraft/client/render/RenderPhase$Transparency;
 accessible field net/minecraft/client/render/RenderPhase TRANSLUCENT_TRANSPARENCY Lnet/minecraft/client/render/RenderPhase$Transparency;
+accessible class net/minecraft/client/render/RenderPhase$LineWidth
+accessible field net/minecraft/client/render/RenderPhase LINES_PROGRAM Lnet/minecraft/client/render/RenderPhase$ShaderProgram;
+accessible field net/minecraft/client/render/RenderPhase LEQUAL_DEPTH_TEST Lnet/minecraft/client/render/RenderPhase$DepthTest;
+accessible field net/minecraft/client/render/RenderPhase DISABLE_CULLING Lnet/minecraft/client/render/RenderPhase$Cull;

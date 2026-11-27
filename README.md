@@ -66,7 +66,7 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 | General | Disable block breaking particles | X |  |
 | General | Full block lever | X |  |
 | General | Block placing items | X |  |
-| General | Show unclaimed Jacob rewards | X |  |
+| General | Show unclaimed Jacob rewards | X | X |
 | General | Spider's den relic waypoints | X |  |
 | General | Etherwarp overlay | X |  |
 | General | Etherwarp sounds | X |  |
@@ -93,7 +93,7 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 | General | Visual item cooldowns | X |  |
 | General | Disable Enderman teleporting | X |  |
 | General | Full block buttons | X |  |
-| General | Highlight active wardrobe slot | X |  |
+| General | Highlight active wardrobe slot | X | X |
 | General | Smooth AOTE teleport | X |  |
 | General | Pingless cactus | X |  |
 | General | Disable rain | X |  |
@@ -125,12 +125,12 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 
 | Feature | 1.8.9 | 1.21 |
 | --- | --- | --- |
-| Pests overlay | X |  |
-| Visitors overlay | X |  |
-| Crop milestone overlay | X |  |
-| Pest plot grid | X |  |
-| Pest finder with boxes and tracers | X |  |
-| Vacuum pests bag count | X |  |
+| Pests overlay | X | X |
+| Visitors overlay | X | X |
+| Crop milestone overlay | X | X |
+| Pest plot grid | X | X |
+| Pest finder with boxes and tracers | X | X |
+| Vacuum pests bag count | X | X |
 
 ### Fishing
 
@@ -168,7 +168,7 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 | General | Mute irrelevant dungeon messages | X |  |
 | General | Dungeon salvage protection | X |  |
 | General | Correct Livid finder | X |  |
-| General | Highlight opened Croesus chests | X |  |
+| General | Highlight opened Croesus chests | X | X |
 | General | Spirit Leap announcements | X |  |
 | General | Dungeon map rotation | X |  |
 | General | S notifier | X |  |
@@ -328,7 +328,7 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 
 | Feature | 1.8.9 | 1.21 |
 | --- | --- | --- |
-| Show current pet in pet menu | X |  |
+| Show current pet in pet menu | X | X |
 | Pet tracker | X |  |
 | Pets menu shortcut | X |  |
 
@@ -346,21 +346,21 @@ Use **X** for present features. Other statuses include **Pending**, **Needs rewo
 
 | Subcategory | Feature | 1.8.9 | 1.21 |
 | --- | --- | --- | --- |
-| General | Chat and console debug logs | X |  |
+| General | Chat and console debug logs | X | X |
 | General | Force Pojav | X |  |
 | General | Copy hovered item NBT | X |  |
 | General | SkyBlock change tracing | — |  |
 | General | Sound debug logging | — |  |
 | General | Trace outside SkyBlock | — |  |
-| Loggers | Log location | X |  |
-| Loggers | Log gamemode and SkyBlock status | X |  |
-| Loggers | Log scoreboard | X |  |
+| Loggers | Log location | X | X |
+| Loggers | Log gamemode and SkyBlock status | X | X |
+| Loggers | Log scoreboard | X | X |
 | Loggers | Show held item SkyBlock ID | X |  |
 | Loggers | Log loaded SkyBlock data | X |  |
 | Loggers | Copy Fairy Souls API data | X |  |
 | Loggers | Trigger the worm spawn timer | X |  |
-| Loggers | Log tab list | — |  |
-| Loggers | Copy loaded SkyBlock data | — |  |
+| Loggers | Log tab list | X | X |
+| Loggers | Copy loaded SkyBlock data | X | X |
 | Loggers | Log client environment | — |  |
 
 

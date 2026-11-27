@@ -80,6 +80,10 @@ public final class ClientConfig implements ClientModInitializer, ClientCommandRe
         return managedConfig().getInstance();
     }
 
+    public static void saveConfiguration() {
+        managedConfig().saveToFile();
+    }
+
     private static ManagedConfig<Configuration> managedConfig() {
         if (config == null) {
             var file = FabricLoader.getInstance().getConfigDir().resolve("notenoughfakepixel.json").toFile();
@@ -91,6 +95,11 @@ public final class ClientConfig implements ClientModInitializer, ClientCommandRe
                     LOGGER.warn("Could not read {}. Using default settings.", data.getFile(), error));
             builder.setSaveFailed((data, error) ->
                     LOGGER.error("Could not save {}", data.getFile(), error));
+            builder.setAfterLoad(data -> {
+                if (data.getInstance().garden.migratePestColorDefaults() && data.getFile().isFile()) {
+                    data.saveToFile();
+                }
+            });
             MoulConfigEditors.register(builder);
             config = new ManagedConfig<>(builder);
         }
