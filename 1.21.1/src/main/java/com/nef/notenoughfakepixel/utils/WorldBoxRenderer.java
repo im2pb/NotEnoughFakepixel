@@ -1,4 +1,4 @@
-package com.nef.notenoughfakepixel.features.skyblock.dungeons;
+package com.nef.notenoughfakepixel.utils;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
@@ -15,11 +15,11 @@ import org.lwjgl.opengl.GL11;
 import java.util.Collection;
 import java.util.OptionalDouble;
 
-final class DungeonBoxes implements AutoCloseable {
+public final class WorldBoxRenderer implements AutoCloseable {
     private BufferAllocator allocator;
     private VertexConsumerProvider.Immediate consumers;
 
-    void draw(WorldRenderContext context, Collection<Marker> markers, boolean filled, boolean throughWalls) {
+    public void draw(WorldRenderContext context, Collection<Marker> markers, boolean filled, boolean throughWalls) {
         if (markers.isEmpty() || context.matrixStack() == null) return;
         if (allocator == null) {
             allocator = new BufferAllocator(4096);
@@ -71,14 +71,14 @@ final class DungeonBoxes implements AutoCloseable {
         }
     }
 
-    record Marker(Box box, int color) {
+    public record Marker(Box box, int color) {
     }
 
     private static final class Layers {
-        private static final RenderLayer FILL = create("nef_dungeon_fill", true, false);
-        private static final RenderLayer THROUGH_WALL_FILL = create("nef_dungeon_fill_through_walls", true, true);
-        private static final RenderLayer LINES = create("nef_dungeon_lines", false, false);
-        private static final RenderLayer THROUGH_WALL_LINES = create("nef_dungeon_lines_through_walls", false, true);
+        private static final RenderLayer FILL = create("nef_box_fill", true, false);
+        private static final RenderLayer THROUGH_WALL_FILL = create("nef_box_fill_through_walls", true, true);
+        private static final RenderLayer LINES = create("nef_box_lines", false, false);
+        private static final RenderLayer THROUGH_WALL_LINES = create("nef_box_lines_through_walls", false, true);
 
         private static RenderLayer create(String name, boolean filled, boolean throughWalls) {
             var phases = RenderLayer.MultiPhaseParameters.builder()

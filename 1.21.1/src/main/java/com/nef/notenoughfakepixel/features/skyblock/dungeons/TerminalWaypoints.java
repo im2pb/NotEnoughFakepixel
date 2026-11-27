@@ -3,6 +3,7 @@ package com.nef.notenoughfakepixel.features.skyblock.dungeons;
 import com.nef.notenoughfakepixel.config.ClientConfig;
 import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
+import com.nef.notenoughfakepixel.utils.WorldBoxRenderer;
 import com.nef.notenoughfakepixel.variables.DungeonFloor;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
@@ -20,8 +21,8 @@ import java.util.List;
 @RegisterEvents
 public final class TerminalWaypoints implements ClientModInitializer {
     private static final int CYAN = 0x9600BFFF;
-    private final DungeonBoxes renderer = new DungeonBoxes();
-    private List<DungeonBoxes.Marker> markers = List.of();
+    private final WorldBoxRenderer renderer = new WorldBoxRenderer();
+    private List<WorldBoxRenderer.Marker> markers = List.of();
 
     @Override
     public void onInitializeClient() {
@@ -44,7 +45,7 @@ public final class TerminalWaypoints implements ClientModInitializer {
                 positions.add(entity.getBlockPos());
             }
         }
-        markers = positions.stream().map(pos -> new DungeonBoxes.Marker(new Box(pos), CYAN)).toList();
+        markers = positions.stream().map(pos -> new WorldBoxRenderer.Marker(new Box(pos), CYAN)).toList();
     }
 
     static boolean inactiveLabel(String name) {

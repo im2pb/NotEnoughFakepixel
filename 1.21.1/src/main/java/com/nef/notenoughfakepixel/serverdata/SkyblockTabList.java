@@ -24,7 +24,8 @@ import java.util.regex.Pattern;
 
 record SkyblockTabList(
         Location location, Area area, boolean sandbox, boolean hasArea, Mayor mayor,
-        int mithril, int gemstone, HashMap<Integer, Integer> pests, List<String> visitors, List<String> milestones
+        int mithril, int gemstone, List<String> commissions, HashMap<Integer, Integer> pests,
+        List<String> visitors, List<String> milestones
 ) {
     private static final Comparator<PlayerListEntry> TAB_ORDER = Comparator
             .comparing((PlayerListEntry entry) -> entry.getGameMode() == GameMode.SPECTATOR)
@@ -45,6 +46,10 @@ record SkyblockTabList(
     }
 
     static SkyblockTabList read(MinecraftClient client, ClientPlayNetworkHandler handler) {
+        return parse(displayedRows(client, handler));
+    }
+
+    static SkyblockTabList parse(List<Text> rows) {
         String serverId = "";
         Area area = Area.NONE;
         boolean dungeon = false;
@@ -52,23 +57,27 @@ record SkyblockTabList(
         Mayor mayor = null;
         int mithril = 0;
         int gemstone = 0;
+        List<String> commissions = new ArrayList<>();
         HashMap<Integer, Integer> pests = new HashMap<>();
         List<String> visitors = new ArrayList<>();
         List<String> milestones = new ArrayList<>();
         boolean serverSection = false;
+        boolean readingCommissions = false;
         GardenSection gardenSection = GardenSection.NONE;
 
-        for (Text row : displayedRows(client, handler)) {
+        for (Text row : rows) {
             String line = SkyblockText.normalize(row.getString());
             String header = line.endsWith(":") ? line.substring(0, line.length() - 1) : line;
             switch (header) {
                 case "Server Info", "Account Info", "Player Stats" -> {
                     serverSection = header.equals("Server Info");
                     gardenSection = GardenSection.NONE;
+                    readingCommissions = false;
                     continue;
                 }
                 case "" -> {
                     if (gardenSection == GardenSection.MILESTONES) gardenSection = GardenSection.NONE;
+                    readingCommissions = false;
                     continue;
                 }
             }
@@ -80,11 +89,13 @@ record SkyblockTabList(
                 if (label.equals("Winner") || label.equals("Current Mayor")) {
                     mayor = Mayor.fromName(value);
                     gardenSection = GardenSection.NONE;
+                    readingCommissions = false;
                     continue;
                 }
                 if (label.equals("Plots")) {
                     parsePests(value, pests);
                     gardenSection = GardenSection.NONE;
+                    readingCommissions = false;
                     continue;
                 }
                 if (serverSection) {
@@ -102,18 +113,28 @@ record SkyblockTabList(
                     }
                     if (serverField) {
                         gardenSection = GardenSection.NONE;
+                        readingCommissions = false;
                         continue;
                     }
                 }
             }
 
-            if (line.startsWith("Next Visitor")) {
+            if (serverSection && header.equals("Commissions")) {
+                readingCommissions = true;
+                gardenSection = GardenSection.NONE;
+            } else if (line.startsWith("Next Visitor")) {
+                readingCommissions = false;
                 gardenSection = GardenSection.NONE;
             } else if (line.startsWith("Visitors")) {
+                readingCommissions = false;
                 gardenSection = GardenSection.VISITORS;
             } else if (line.startsWith("Crop Milestone")) {
+                readingCommissions = false;
                 gardenSection = GardenSection.MILESTONES;
                 milestones.add(legacyFormat(row));
+            } else if (readingCommissions) {
+                if (legacyFormat(row).contains("\u00a79\u00a7l")) readingCommissions = false;
+                else commissions.add(line);
             } else if (gardenSection == GardenSection.VISITORS) {
                 visitors.add(legacyFormat(row));
             } else if (gardenSection == GardenSection.MILESTONES) {
@@ -122,7 +143,8 @@ record SkyblockTabList(
         }
         Location location = dungeon ? Location.DUNGEON : Location.fromServerId(serverId);
         boolean sandbox = serverId.toLowerCase(Locale.ROOT).contains("_sandbox");
-        return new SkyblockTabList(location, area, sandbox, hasArea, mayor, mithril, gemstone, pests, visitors, milestones);
+        return new SkyblockTabList(location, area, sandbox, hasArea, mayor, mithril, gemstone,
+                List.copyOf(commissions), pests, visitors, milestones);
     }
 
     boolean indicatesSkyblock() {

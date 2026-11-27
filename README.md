@@ -57,7 +57,7 @@ See the [LICENSE](LICENSE) file for details.
 
 <!-- port-progress:start -->
 
-![1.21 port progress (18.5%)](https://progress-bar.xyz/18/?scale=100&width=350&progress_color=338b33) `39/211 features`
+![1.21 port progress (21.8%)](https://progress-bar.xyz/21/?scale=100&width=350&progress_color=338b33) `46/211 features`
 
 <!-- port-progress:end -->
 
@@ -201,15 +201,15 @@ See the [LICENSE](LICENSE) file for details.
 
 | Subcategory | Feature | 1.8.9 | 1.21 |
 | --- | --- | --- | --- |
-| General | Drill Animation Reset FIX | X |  |
+| General | Drill Animation Reset FIX | X | X |
 | General | Mining Ability ready notifier | X |  |
 | General | Dwarven waypoints | X | X |
-| Mining Overlay | Drill Fuel Overlay | X |  |
-| Mining Overlay | Mining Ability cooldown Overlay | X |  |
-| Mining Overlay | Commissions Overlay | X |  |
-| Mining Overlay | Mithril Powder Overlay | X |  |
-| Mining Overlay | Puzzler NPC Solver | X |  |
-| Mining Overlay | Gemstone Powder Overlay | X |  |
+| Mining Overlay | Drill Fuel Overlay | X | X |
+| Mining Overlay | Mining Ability cooldown Overlay | X | X |
+| Mining Overlay | Commissions Overlay | X | X |
+| Mining Overlay | Mithril Powder Overlay | X | X |
+| Mining Overlay | Puzzler NPC Solver | X | X |
+| Mining Overlay | Gemstone Powder Overlay | X | X |
 | Crystal Hollows | Crystal Hollows Map | X |  |
 | Crystal Hollows | Crystal Hollows Waypoints | X |  |
 | Crystal Hollows | FullBlock glass panes | X |  |

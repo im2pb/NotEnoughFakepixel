@@ -2,6 +2,7 @@ package com.nef.notenoughfakepixel.features.skyblock.dungeons;
 
 import com.nef.notenoughfakepixel.config.ClientConfig;
 import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.utils.WorldBoxRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -38,7 +39,7 @@ public final class ThreeWeirdos implements ClientModInitializer {
     private static final List<Direction> ADJACENT = List.of(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
     private static final int CHEST_Y = 69;
 
-    private final DungeonBoxes renderer = new DungeonBoxes();
+    private final WorldBoxRenderer renderer = new WorldBoxRenderer();
     private String answer;
     private BlockPos chest;
 
@@ -145,7 +146,7 @@ public final class ThreeWeirdos implements ClientModInitializer {
     private void render(WorldRenderContext context) {
         if (chest == null || !enabled()) return;
         Box box = new Box(chest).expand(0.05, 0.002, 0.05);
-        renderer.draw(context, List.of(new DungeonBoxes.Marker(box, 0x8000FF00)), true, false);
+        renderer.draw(context, List.of(new WorldBoxRenderer.Marker(box, 0x8000FF00)), true, false);
     }
 
     private static boolean enabled() {

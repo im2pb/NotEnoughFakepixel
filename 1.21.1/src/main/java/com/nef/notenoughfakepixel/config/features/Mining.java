@@ -15,7 +15,7 @@ public class Mining {
     public boolean miningAbilityNotifier = true;
 
     @Expose
-    @ConfigOption(name = "Fix Drill Animation Reset", desc = "Fix drill animation resetting on fuel update")
+    @ConfigOption(name = "Fix Drill Animation Reset", desc = "Apply drill fuel updates after you release the attack key")
     @ConfigEditorBoolean
     public boolean miningDrillFix = true;
 

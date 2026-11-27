@@ -4,6 +4,7 @@ import com.nef.notenoughfakepixel.config.ClientConfig;
 import com.nef.notenoughfakepixel.config.features.Dungeons;
 import com.nef.notenoughfakepixel.env.registers.RegisterInstance;
 import com.nef.notenoughfakepixel.utils.ConfigColor;
+import com.nef.notenoughfakepixel.utils.WorldBoxRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -34,7 +35,7 @@ public final class StarredMobDisplay implements ClientModInitializer {
     @RegisterInstance
     private static final StarredMobDisplay INSTANCE = new StarredMobDisplay();
 
-    private final DungeonBoxes renderer = new DungeonBoxes();
+    private final WorldBoxRenderer renderer = new WorldBoxRenderer();
     private final ConfigColor normal = new ConfigColor();
     private final ConfigColor stormy = new ConfigColor();
     private final ConfigColor withermancer = new ConfigColor();
@@ -128,12 +129,12 @@ public final class StarredMobDisplay implements ClientModInitializer {
         if (settings.dungeonsStarredMobs != BOX) return;
 
         float delta = context.tickCounter().getTickDelta(false);
-        var markers = new ArrayList<DungeonBoxes.Marker>(labels.size());
+        var markers = new ArrayList<WorldBoxRenderer.Marker>(labels.size());
         for (var label : labels) {
             if (!label.stand().isAlive() || !starredName(label(label.stand()))) continue;
             int color = color(label.kind(), settings);
             if ((color >>> 24) != 0) {
-                markers.add(new DungeonBoxes.Marker(label.kind().boxAt(label.stand().getLerpedPos(delta)), color));
+                markers.add(new WorldBoxRenderer.Marker(label.kind().boxAt(label.stand().getLerpedPos(delta)), color));
             }
         }
         renderer.draw(context, markers, false, settings.dungeonsStarredMobsEsp);

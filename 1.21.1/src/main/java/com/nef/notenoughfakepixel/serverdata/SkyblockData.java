@@ -48,6 +48,7 @@ public final class SkyblockData {
     // Mining
     @Getter private static int mithrilPowder;
     @Getter private static int gemstonePowder;
+    @Getter private static List<String> commissions = List.of();
     @Getter private static int heat;
 
     // Dungeons
@@ -166,6 +167,7 @@ public final class SkyblockData {
         if (tabList.mayor() != null) currentMayor = tabList.mayor();
         mithrilPowder = tabList.mithril();
         gemstonePowder = tabList.gemstone();
+        commissions = tabList.commissions();
 
         if (currentLocation == Location.GARDEN) {
             activePests = tabList.pests();
@@ -186,6 +188,7 @@ public final class SkyblockData {
         sandbox = false;
         mithrilPowder = 0;
         gemstonePowder = 0;
+        commissions = List.of();
         clearGardenData();
     }
 
