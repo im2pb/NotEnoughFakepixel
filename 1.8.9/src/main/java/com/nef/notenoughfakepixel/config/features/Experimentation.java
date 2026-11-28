@@ -40,7 +40,7 @@ public class Experimentation {
     @Expose
     @ConfigOption(
             name = "Ultrasequencer Upcoming",
-            desc = "Set the colour of the glass pane shown behind the element in the ultrasequencer which is coming after \"next\""
+            desc = "Highlight color for the Ultrasequencer slot after the next guess."
     )
     @ConfigEditorDropdown(
             values = {
@@ -53,7 +53,7 @@ public class Experimentation {
     @Expose
     @ConfigOption(
             name = "Superpairs Matched",
-            desc = "Set the colour of the glass pane shown behind successfully matched pairs"
+            desc = "Highlight color for confirmed matches."
     )
     @ConfigEditorDropdown(
             values = {
@@ -66,7 +66,7 @@ public class Experimentation {
     @Expose
     @ConfigOption(
             name = "Superpairs Possible",
-            desc = "Set the colour of the glass pane shown behind pairs which can be matched, but have not yet"
+            desc = "Highlight color for cards that could match."
     )
     @ConfigEditorDropdown(
             values = {
@@ -79,7 +79,7 @@ public class Experimentation {
     @Expose
     @ConfigOption(
             name = "Superpairs Unmatched",
-            desc = "Set the colour of the glass pane shown behind pairs which have been previously uncovered"
+            desc = "Highlight color for remembered cards with no known partner."
     )
     @ConfigEditorDropdown(
             values = {
@@ -92,7 +92,7 @@ public class Experimentation {
     @Expose
     @ConfigOption(
             name = "Superpairs Powerups",
-            desc = "Set the colour of the glass pane shown behind powerups"
+            desc = "Highlight color for revealed powerups."
     )
     @ConfigEditorDropdown(
             values = {

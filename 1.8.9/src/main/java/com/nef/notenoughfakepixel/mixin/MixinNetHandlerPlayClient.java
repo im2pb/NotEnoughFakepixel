@@ -1,12 +1,15 @@
 package com.nef.notenoughfakepixel.mixin;
 
 import com.nef.notenoughfakepixel.events.ParticlePacketEvent;
+import com.nef.notenoughfakepixel.features.skyblock.enchanting.EnchantingSolvers;
 import com.nef.notenoughfakepixel.features.skyblock.qol.EnderNodesHighlighter;
 import com.nef.notenoughfakepixel.features.skyblock.qol.SmoothAote;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.play.server.S2APacketParticles;
+import net.minecraft.network.play.server.S2FPacketSetSlot;
+import net.minecraft.network.play.server.S30PacketWindowItems;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraftforge.common.MinecraftForge;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,6 +23,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinNetHandlerPlayClient {
 
     @Shadow private Minecraft gameController;
+
+    @Inject(method = "handleWindowItems", at = @At("RETURN"))
+    private void nef$observeExperimentContents(S30PacketWindowItems packet, CallbackInfo ci) {
+        EnchantingSolvers.contentsReceived(packet.func_148911_c(), packet.getItemStacks());
+    }
+
+    @Inject(method = "handleSetSlot", at = @At("RETURN"))
+    private void nef$observeExperimentSlot(S2FPacketSetSlot packet, CallbackInfo ci) {
+        EnchantingSolvers.slotReceived(packet.func_149175_c(), packet.func_149173_d(), packet.func_149174_e());
+    }
 
     @Inject(
             method = "handleParticles(Lnet/minecraft/network/play/server/S2APacketParticles;)V",

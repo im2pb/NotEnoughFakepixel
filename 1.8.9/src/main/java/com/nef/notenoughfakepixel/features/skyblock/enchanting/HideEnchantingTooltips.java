@@ -2,40 +2,36 @@ package com.nef.notenoughfakepixel.features.skyblock.enchanting;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
 import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
-import net.minecraft.block.Block;
+import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.ContainerChest;
-import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.Slot;
+import net.minecraft.item.Item;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 @RegisterEvents
 public class HideEnchantingTooltips {
-
     @SubscribeEvent(priority = EventPriority.LOW)
     public void onTooltipLow(ItemTooltipEvent event) {
-        if (!Config.feature.experimentation.experimentationHideTooltips) return;
-        if (event.toolTip == null) return;
+        if (!Config.feature.experimentation.experimentationSolvers
+                || !Config.feature.experimentation.experimentationHideTooltips
+                || !SkyblockData.getCurrentGamemode().isSkyblock() || event.toolTip == null
+                || !(Minecraft.getMinecraft().currentScreen instanceof GuiChest)) return;
 
-        Minecraft mc = Minecraft.getMinecraft();
-        EntityPlayerSP player = mc.thePlayer;
+        GuiChest screen = (GuiChest) Minecraft.getMinecraft().currentScreen;
+        ContainerChest chest = (ContainerChest) screen.inventorySlots;
+        Slot slot = screen.getSlotUnderMouse();
+        if (slot == null || slot.inventory != chest.getLowerChestInventory() || slot.getStack() != event.itemStack) return;
 
-        if (mc.currentScreen instanceof GuiChest) {
-            ContainerChest chest = (ContainerChest) player.openContainer;
-            IInventory inv = chest.getLowerChestInventory();
-            String chestName = inv.getDisplayName().getUnformattedText();
-
-            if ((chestName.startsWith("Chronomatron (") ||
-                    chestName.startsWith("Ultrasequencer (")) &&
-                    event.itemStack.getItem() != Items.clock &&
-                    Block.getBlockFromItem(event.itemStack.getItem()) != Blocks.bookshelf) {
-                event.toolTip.clear();
-            }
-        }
+        String title = slot.inventory.getDisplayName().getUnformattedText();
+        boolean active = (title.startsWith("Chronomatron (") && Config.feature.experimentation.experimentationChronomatronSolver)
+                || (title.startsWith("Ultrasequencer (") && Config.feature.experimentation.experimentationUltraSequencerSolver);
+        Item item = event.itemStack.getItem();
+        if (active && item != Items.clock && item != Item.getItemFromBlock(Blocks.bookshelf)) event.toolTip.clear();
     }
 }

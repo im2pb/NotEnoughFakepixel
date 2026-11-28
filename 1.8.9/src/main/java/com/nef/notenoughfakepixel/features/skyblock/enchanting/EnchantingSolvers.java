@@ -2,484 +2,405 @@ package com.nef.notenoughfakepixel.features.skyblock.enchanting;
 
 import com.nef.notenoughfakepixel.config.gui.Config;
 import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
-import com.nef.notenoughfakepixel.events.SlotClickEvent;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
-import com.nef.notenoughfakepixel.utils.RenderUtils;
-import com.nef.notenoughfakepixel.utils.TablistParser;
-import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.inventory.GuiChest;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
-import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
+import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.client.event.GuiOpenEvent;
-import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.lwjgl.opengl.GL11;
 
-import java.awt.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @RegisterEvents
 public class EnchantingSolvers {
+    private static ContainerChest chest;
+    private static Solver solver;
+    private static ItemStack[] serverSlots;
+    private static final List<Integer> colors = new ArrayList<>();
+    private static Set<Integer> highlightedColors = new HashSet<>();
+    private static final List<Integer> numberedSlots = new ArrayList<>();
+    private static final BitSet coveredNumbers = new BitSet();
+    private static final Map<Integer, ItemStack> cards = new HashMap<>();
+    private static final Map<Integer, BitSet> rejectedPartners = new HashMap<>();
+    private static final BitSet cardSlots = new BitSet();
+    private static final BitSet visibleCards = new BitSet();
+    private static final BitSet matchedCards = new BitSet();
+    private static final List<Integer> openCards = new ArrayList<>();
+    private static int next;
+    private static int highestNumber;
+    private static int expectedNumbers;
+    private static int instantReveal = -1;
+    private static boolean guessing;
+    private static boolean complete;
+    private static boolean ambiguous;
+    private static boolean colorReady;
+    private static boolean colorLit;
+    private static boolean finished;
+    private static boolean instantFind;
 
-    public static SolverTypes currentSolverType = SolverTypes.NONE;
-    static List<UltrasequencerSlot> ultrasequencerSlots = new ArrayList<>();
-    static List<Integer> chronomatronOrder = new ArrayList<Integer>();
-    private boolean resolved = false;
-    static boolean resolving = false;
-    private final Color green = new Color(0, 255, 0);
-    private boolean chronomatronRemembering = false;
-    private boolean chronomatronNoteActive = false;
-    private Set<Integer> chronomatronActiveSlots = new HashSet<>();
-    private int chronomatronStableFrames = 0;
-    private boolean ultrasequencerRemembering = false;
-    private Map<Integer, Integer> ultrasequencerCandidate = new HashMap<>();
-    private int ultrasequencerCandidateStableFrames = 0;
-
-    static class UltrasequencerSlot {
-        public Slot slot;
-        public int quantity;
-
-        public UltrasequencerSlot(Slot slot, int quantity) {
-            this.slot = slot;
-            this.quantity = quantity;
-        }
-    }
-
-    public enum SolverTypes {
-        NONE,
-        CHRONOMATRON,
-        ULTRASEQUENCER,
-        SUPERPAIRS
-    }
-
-    @SubscribeEvent()
+    @SubscribeEvent
     public void onGuiOpen(GuiOpenEvent event) {
-        if (event.gui == null) return;
-        if (!(event.gui instanceof GuiChest)) return;
-
-        String chestName = TablistParser.currentOpenChestName;
-        if (chestName == null || chestName.isEmpty()) return;
-
-        if (chestName.startsWith("Chronomatron")) {
-            currentSolverType = SolverTypes.CHRONOMATRON;
-        } else if (chestName.startsWith("Ultrasequencer")) {
-            currentSolverType = SolverTypes.ULTRASEQUENCER;
-        } else if (chestName.startsWith("Superpairs")) {
-            if (!chestName.contains("Stakes")) currentSolverType = SolverTypes.SUPERPAIRS;
-        } else if (chestName.startsWith("Experiment Over")) {
-            currentSolverType = SolverTypes.NONE;
-        } else {
-            currentSolverType = SolverTypes.NONE;
-        }
-        resolving = false;
-        chronomatronOrder.clear();
-        ultrasequencerSlots.clear();
-        chronomatronRemembering = false;
-        chronomatronNoteActive = false;
-        chronomatronActiveSlots.clear();
-        chronomatronStableFrames = 0;
-        ultrasequencerRemembering = false;
-        ultrasequencerCandidate.clear();
-        ultrasequencerCandidateStableFrames = 0;
-        resolved = false;
+        clear();
     }
 
-    @SubscribeEvent
-    public void onGuiDrawn(GuiScreenEvent.BackgroundDrawnEvent event) {
-        if (Config.feature.experimentation.experimentationUltraSequencerSolver && currentSolverType == SolverTypes.ULTRASEQUENCER) {
+    private static void clear() {
+        chest = null;
+        solver = null;
+        serverSlots = null;
+        resetPattern();
+        highlightedColors.clear();
+        expectedNumbers = 0;
+        cards.clear();
+        rejectedPartners.clear();
+        cardSlots.clear();
+        matchedCards.clear();
+        visibleCards.clear();
+        openCards.clear();
+        instantReveal = -1;
+        guessing = finished = instantFind = false;
+    }
 
-            if (!(event.gui instanceof GuiChest)) return;
-            GuiChest chest = (GuiChest) event.gui;
-            Container container = chest.inventorySlots;
+    public static void contentsReceived(int windowId, ItemStack[] contents) {
+        if (!accepts(windowId) || contents.length < serverSlots.length) return;
+        for (int slot = 0; slot < serverSlots.length; slot++) serverSlots[slot] = copy(contents[slot]);
+        observeBoard();
+    }
 
-            if (!(container instanceof ContainerChest)) return;
-            String title = ((ContainerChest) container).getLowerChestInventory().getDisplayName().getUnformattedText();
-            if (!title.startsWith("Ultrasequencer (")) return;
-            ContainerChest containerChest = (ContainerChest) container;
-            IInventory lower = ((ContainerChest) container).getLowerChestInventory();
-            ItemStack timerStack = lower.getStackInSlot(lower.getSizeInventory() - 5);
-            if (timerStack == null) return;
-            boolean isClock = timerStack.getItem() == Items.clock;
+    public static void slotReceived(int windowId, int slot, ItemStack stack) {
+        if (slot < 0 || !accepts(windowId) || slot >= serverSlots.length) return;
+        serverSlots[slot] = copy(stack);
+        observeBoard();
+    }
 
-            if (!isClock) {
-                if (!ultrasequencerRemembering) {
-                    ultrasequencerSlots.clear();
-                    ultrasequencerCandidate.clear();
-                    ultrasequencerCandidateStableFrames = 0;
-                    ultrasequencerRemembering = true;
+    private static boolean accepts(int windowId) {
+        if (windowId <= 0 || !Config.feature.experimentation.experimentationSolvers
+                || !SkyblockData.getCurrentGamemode().isSkyblock()
+                || !(Minecraft.getMinecraft().currentScreen instanceof GuiChest)) return false;
+        ContainerChest current = (ContainerChest) ((GuiChest) Minecraft.getMinecraft().currentScreen).inventorySlots;
+        IInventory inventory = current.getLowerChestInventory();
+        int size = inventory.getSizeInventory();
+        if (current.windowId != windowId || size < 27) return false;
+
+        if (current != chest) {
+            clear();
+            chest = current;
+            String title = inventory.getDisplayName().getUnformattedText();
+            if (title.startsWith("Chronomatron (")) solver = Solver.CHRONOMATRON;
+            else if (title.startsWith("Ultrasequencer (")) solver = Solver.ULTRASEQUENCER;
+            else if (title.startsWith("Superpairs (")) solver = Solver.SUPERPAIRS;
+            if (solver != null) serverSlots = new ItemStack[size];
+        }
+        return solver != null;
+    }
+
+    // Capture the server's board independently of local cursor and slot predictions.
+    private static void observeBoard() {
+        int size = serverSlots.length;
+        if (solver == Solver.SUPERPAIRS) {
+            if (Config.feature.experimentation.experimentationSuperpairsSolver) observeCards();
+            return;
+        }
+
+        boolean clock = is(serverSlots[size - 5], Items.clock);
+        Set<Integer> previousColors = highlightedColors;
+        if (solver == Solver.CHRONOMATRON) {
+            highlightedColors = new HashSet<>();
+            for (int i = 0; i < size; i++) {
+                ItemStack stack = serverSlots[i];
+                if (is(stack, Item.getItemFromBlock(Blocks.stained_hardened_clay))) {
+                    highlightedColors.add(stack.getItemDamage());
                 }
+            }
+        }
+        if (!clock && guessing) {
+            expectedNumbers = complete ? numberedSlots.size() + 1 : 0;
+            resetPattern();
+            previousColors = new HashSet<>();
+        }
+        if (!clock || !guessing) {
+            if (solver == Solver.CHRONOMATRON) {
+                Set<Integer> pulses = new HashSet<>(highlightedColors);
+                pulses.removeAll(previousColors);
+                if (pulses.size() > 1) ambiguous = true;
+                if (pulses.size() == 1) colors.add(pulses.iterator().next());
+            } else {
+                rememberNumbers();
+            }
+        }
+        if (clock && !guessing) {
+            ItemStack round = serverSlots[4];
+            complete = solver == Solver.CHRONOMATRON
+                    ? !ambiguous && round != null && colors.size() == round.stackSize
+                    : !numberedSlots.isEmpty() && numberedSlots.size() == (expectedNumbers > 0 ? expectedNumbers : highestNumber);
+            if (complete && solver == Solver.CHRONOMATRON) colorReady = !highlightedColors.contains(colors.get(0));
+        }
+        guessing = clock;
+        if (!guessing || !complete) return;
 
-                Map<Integer, Integer> observedRound = new HashMap<>();
-                for (int slotIndex = 0; slotIndex < lower.getSizeInventory(); slotIndex++) {
-                    ItemStack item = lower.getStackInSlot(slotIndex);
-                    if (item != null && item.getItem() == Items.dye) {
-                        observedRound.put(slotIndex, item.stackSize);
-                    }
+        if (solver == Solver.CHRONOMATRON && next < colors.size()) {
+            boolean lit = highlightedColors.contains(colors.get(next));
+            if (!colorReady) colorReady = !lit;
+            else if (lit) colorLit = true;
+            else if (colorLit) {
+                next++;
+                colorLit = false;
+                colorReady = next < colors.size() && !highlightedColors.contains(colors.get(next));
+            }
+        } else if (solver == Solver.ULTRASEQUENCER) {
+            for (int numberedSlot : numberedSlots) {
+                if (!is(serverSlots[numberedSlot], Items.dye)) coveredNumbers.set(numberedSlot);
+            }
+            while (next < numberedSlots.size()) {
+                int numberedSlot = numberedSlots.get(next);
+                if (!coveredNumbers.get(numberedSlot) || !is(serverSlots[numberedSlot], Items.dye)) break;
+                next++;
+            }
+        }
+    }
+
+    private static void resetPattern() {
+        colors.clear();
+        numberedSlots.clear();
+        coveredNumbers.clear();
+        next = highestNumber = 0;
+        complete = ambiguous = colorReady = colorLit = false;
+    }
+
+    private static void rememberNumbers() {
+        Map<Integer, Integer> byNumber = new HashMap<>();
+        int count = 0;
+        for (int slot = 0; slot < serverSlots.length; slot++) {
+            ItemStack stack = serverSlots[slot];
+            if (!is(stack, Items.dye)) continue;
+            count++;
+            highestNumber = Math.max(highestNumber, stack.stackSize);
+            byNumber.put(stack.stackSize, slot);
+        }
+        highestNumber = Math.max(highestNumber, count);
+        if (count == 0 || byNumber.size() != count || count < numberedSlots.size()
+                || (expectedNumbers > 0 && count != expectedNumbers)) return;
+        for (int i = 1; i <= count; i++) {
+            if (!byNumber.containsKey(i)) return;
+        }
+        numberedSlots.clear();
+        for (int i = 1; i <= count; i++) numberedSlots.add(byNumber.get(i));
+    }
+
+    static boolean blocksClick(Slot slot) {
+        if (!guessing || !complete || !active(slot.inventory)) return false;
+
+        ItemStack stack = slot.getStack();
+        if (solver == Solver.CHRONOMATRON && Config.feature.experimentation.experimentationChronomatronSolver
+                && nextColorKnown() && is(stack, Item.getItemFromBlock(Blocks.stained_glass))
+                && stack.getItemDamage() != colors.get(next)) {
+            return true;
+        }
+        return solver == Solver.ULTRASEQUENCER && Config.feature.experimentation.experimentationUltraSequencerSolver
+                && next < numberedSlots.size() && coveredNumbers.get(numberedSlots.get(next))
+                && is(stack, Item.getItemFromBlock(Blocks.stained_glass_pane))
+                && slot.slotNumber != numberedSlots.get(next)
+                && slot.slotNumber >= 9 && slot.slotNumber < slot.inventory.getSizeInventory() - 9;
+    }
+
+    public static void drawSlotHint(Slot slot) {
+        if (!active(slot.inventory)) return;
+        int color = 0;
+        int number = -1;
+        ItemStack stack = slot.getStack();
+        if (solver == Solver.SUPERPAIRS && Config.feature.experimentation.experimentationSuperpairsSolver && !finished) {
+            ItemStack reward = cards.get(slot.getSlotIndex());
+            if (reward != null) {
+                int dye = 0;
+                if (powerup(reward)) dye = Config.feature.experimentation.supPower;
+                else if (matchedCards.get(slot.getSlotIndex())) dye = Config.feature.experimentation.supMatched;
+                else if (hasPartner(slot.getSlotIndex(), reward)) dye = Config.feature.experimentation.supPossible;
+                else if (cover(stack)) dye = Config.feature.experimentation.supUnmatched;
+                color = dyeColor(dye);
+            }
+        } else if (guessing && complete && solver == Solver.CHRONOMATRON
+                && Config.feature.experimentation.experimentationChronomatronSolver && nextColorKnown()
+                && is(stack, Item.getItemFromBlock(Blocks.stained_glass)) && stack.getItemDamage() == colors.get(next)) {
+            color = 0xFF46FF69;
+        } else if (guessing && complete && solver == Solver.ULTRASEQUENCER
+                && Config.feature.experimentation.experimentationUltraSequencerSolver && !is(stack, Items.dye)) {
+            int order = numberedSlots.indexOf(slot.slotNumber);
+            if (order >= next && coveredNumbers.get(slot.slotNumber)) {
+                number = order + 1;
+                if (order == next) color = 0xFF46FF69;
+                else if (order == next + 1) color = dyeColor(Config.feature.experimentation.seqUpcoming);
+            }
+        }
+        if (color == 0 && number < 0) return;
+
+        int x = slot.xDisplayPosition;
+        int y = slot.yDisplayPosition;
+        boolean depth = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
+        GlStateManager.disableDepth();
+        if (color != 0) {
+            Gui.drawRect(x, y, x + 16, y + 16, 0x40000000 | (color & 0xFFFFFF));
+            Gui.drawRect(x, y, x + 16, y + 1, color);
+            Gui.drawRect(x, y + 15, x + 16, y + 16, color);
+            Gui.drawRect(x, y + 1, x + 1, y + 15, color);
+            Gui.drawRect(x + 15, y + 1, x + 16, y + 15, color);
+        }
+        if (number > 0) {
+            FontRenderer font = Minecraft.getMinecraft().fontRendererObj;
+            String label = Integer.toString(number);
+            Gui.drawRect(x + 2, y + 3, x + 14, y + 13, 0xC0000000);
+            font.drawStringWithShadow(label, x + 8 - font.getStringWidth(label) / 2.0F, y + 4, 0xFFFFFF);
+        }
+        if (depth) GlStateManager.enableDepth();
+    }
+
+    private static boolean nextColorKnown() {
+        return next < colors.size() && colorReady && !colorLit;
+    }
+
+    private static int dyeColor(int id) {
+        return id > 0 && id <= 16 ? 0xFF000000 | EnumDyeColor.byMetadata(id - 1).getMapColor().colorValue : 0;
+    }
+
+    public static ItemStack displayStack(Slot slot, ItemStack stack) {
+        if (solver != Solver.SUPERPAIRS || finished || !active(slot.inventory)
+                || !Config.feature.experimentation.experimentationSuperpairsSolver || !cover(stack)) return stack;
+        return cards.getOrDefault(slot.getSlotIndex(), stack);
+    }
+
+    private static void observeCards() {
+        if (finished) return;
+
+        if (openCards.stream().anyMatch(slot -> cover(serverSlots[slot]))) {
+            if (openCards.size() == 2) {
+                int a = openCards.get(0);
+                int b = openCards.get(1);
+                if (sameReward(cards.get(a), cards.get(b))) {
+                    rejectedPartners.computeIfAbsent(a, ignored -> new BitSet()).set(b);
+                    rejectedPartners.computeIfAbsent(b, ignored -> new BitSet()).set(a);
                 }
+            }
+            openCards.clear();
+        }
+        for (int slot = 0; slot < serverSlots.length; slot++) {
+            ItemStack stack = serverSlots[slot];
+            if (cover(stack)) {
+                cardSlots.set(slot);
+                visibleCards.clear(slot);
+            } else if (stack != null && cardSlots.get(slot)) {
+                if (loreContains(stack, "Click any to proceed!")) {
+                    finished = true;
+                    return;
+                }
+                if (visibleCards.get(slot)) continue;
 
-                if (!observedRound.equals(ultrasequencerCandidate)) {
-                    ultrasequencerCandidate = observedRound;
-                    ultrasequencerCandidateStableFrames = 1;
-                    ultrasequencerSlots.clear();
+                if (openCards.size() == 2) {
+                    confirmPair(openCards.get(0), openCards.get(1));
+                    openCards.clear();
+                }
+                ItemStack copy = stack.copy();
+                cards.put(slot, copy);
+                visibleCards.set(slot);
+                if (powerup(copy)) {
+                    if (loreContains(copy, "Powerup for next click!")) instantFind = true;
+                } else if (instantFind && instantReveal < 0) {
+                    instantReveal = slot;
                 } else {
-                    ultrasequencerCandidateStableFrames++;
-                }
-
-                if (!observedRound.isEmpty() && ultrasequencerCandidateStableFrames >= 2) {
-                    ultrasequencerSlots.clear();
-                    for (Map.Entry<Integer, Integer> entry : observedRound.entrySet()) {
-                        ultrasequencerSlots.add(new UltrasequencerSlot(
-                                containerChest.inventorySlots.get(entry.getKey()), entry.getValue()));
+                    if (instantFind) {
+                        instantFind = false;
+                        int earlier = instantReveal;
+                        instantReveal = -1;
+                        if (confirmPair(earlier, slot)) continue;
+                        if (!openCards.isEmpty() && confirmPair(openCards.get(0), earlier)) openCards.clear();
                     }
+                    openCards.add(slot);
                 }
-                resolving = false;
-            } else {
-                ultrasequencerRemembering = false;
-                resolving = true;
-                int nextQuantity = getNextUltrasequencerQuantity(containerChest);
-                for (UltrasequencerSlot slot : ultrasequencerSlots) {
-                    ItemStack itemInSlot = containerChest.inventorySlots.get(slot.slot.slotNumber).getStack();
-                    if (itemInSlot == null || itemInSlot.getItem() == Items.dye) continue;
-                    int color = slot.quantity == nextQuantity
-                            ? 0xFF00FF00
-                            : 0xFFFF0000;
-                    RenderUtils.drawOnSlot(containerChest.inventorySlots.size(), slot.slot.xDisplayPosition, slot.slot.yDisplayPosition, color, slot.quantity);
-                }
-            }
-        } else if (Config.feature.experimentation.experimentationChronomatronSolver && currentSolverType == SolverTypes.CHRONOMATRON) {
-            if (!(event.gui instanceof GuiChest)) return;
-            GuiChest chest = (GuiChest) event.gui;
-            Container container = chest.inventorySlots;
-
-            if (!(container instanceof ContainerChest)) return;
-            String title = ((ContainerChest) container).getLowerChestInventory().getDisplayName().getUnformattedText();
-            if (!title.startsWith("Chronomatron (")) return;
-            ContainerChest containerChest = (ContainerChest) container;
-            IInventory lower = ((ContainerChest) container).getLowerChestInventory();
-            ItemStack timerStack = lower.getStackInSlot(lower.getSizeInventory() - 5);
-            if (timerStack == null) return;
-            boolean isClock = timerStack.getItem() == Items.clock;
-
-            if (!isClock) {
-                if (!chronomatronRemembering) {
-                    chronomatronOrder.clear();
-                    chronomatronRemembering = true;
-                    chronomatronNoteActive = false;
-                    chronomatronActiveSlots.clear();
-                    chronomatronStableFrames = 0;
-                    resolved = false;
-                }
-                resolving = false;
-
-                ItemStack itemInSlot = containerChest.inventorySlots.get(4).getStack();
-                if (itemInSlot == null) return;
-                int round = itemInSlot.stackSize;
-                if (chronomatronOrder.size() >= round) return;
-
-                Set<Integer> activeSlots = new HashSet<>();
-                for (int index = 0; index < lower.getSizeInventory(); index++) {
-                    ItemStack item = lower.getStackInSlot(index);
-                    if (item != null && Block.getBlockFromItem(item.getItem()) == Blocks.stained_hardened_clay) {
-                        activeSlots.add(index);
-                    }
-                }
-
-                if (activeSlots.isEmpty()) {
-                    chronomatronNoteActive = false;
-                    chronomatronActiveSlots.clear();
-                    chronomatronStableFrames = 0;
-                    return;
-                }
-
-                if (!activeSlots.equals(chronomatronActiveSlots)) {
-                    chronomatronActiveSlots = activeSlots;
-                    chronomatronStableFrames = 1;
-                    return;
-                }
-                chronomatronStableFrames++;
-                if (chronomatronNoteActive || chronomatronStableFrames < 2) return;
-
-                int representative = findChronomatronRepresentative(activeSlots, title, lower.getSizeInventory());
-                if (representative >= 0) {
-                    chronomatronOrder.add(representative);
-                    chronomatronNoteActive = true;
-                }
-
-            } else {
-                chronomatronRemembering = false;
-                chronomatronNoteActive = false;
-                chronomatronActiveSlots.clear();
-                chronomatronStableFrames = 0;
-                resolving = true;
-                if (!chronomatronOrder.isEmpty()) {
-                    int resultIndex = chronomatronOrder.get(0);
-                    ItemStack resultStack = containerChest.inventorySlots.get(resultIndex).getStack();
-                    if (resultStack == null) return;
-                    Item resultItem = resultStack.getItem();
-                    if (Block.getBlockFromItem(resultItem) == Blocks.stained_glass) {
-                        if (resolved) {
-                            chronomatronOrder.remove(0);
-                            resolved = false;
-                            return;
-                        }
-                        Slot slot1 = containerChest.inventorySlots.get(resultIndex);
-                        Slot slot2 = containerChest.inventorySlots.get(resultIndex + 9);
-                        RenderUtils.drawOnSlot(containerChest.inventorySlots.size(), slot1.xDisplayPosition, slot1.yDisplayPosition, green.getRGB());
-                        RenderUtils.drawOnSlot(containerChest.inventorySlots.size(), slot2.xDisplayPosition, slot2.yDisplayPosition, green.getRGB());
-                        if (!TablistParser.currentOpenChestName.contains("Transcendent") && !TablistParser.currentOpenChestName.contains("Metaphysical")) {
-                            Slot slot3 = containerChest.inventorySlots.get(resultIndex + 18);
-                            RenderUtils.drawOnSlot(containerChest.inventorySlots.size(), slot3.xDisplayPosition, slot3.yDisplayPosition, green.getRGB());
-                        }
-                    } else if (Block.getBlockFromItem(resultItem) == Blocks.stained_hardened_clay && !resolved) {
-                        resolved = true;
-                    }
-
-                }
-            }
-        } else if (currentSolverType == SolverTypes.NONE) {
-            if (chronomatronOrder.isEmpty() && ultrasequencerSlots.isEmpty()) return;
-
-            ultrasequencerSlots = new ArrayList<>();
-            chronomatronOrder = new ArrayList<>();
-
-            successfulMatches.clear();
-            powerupMatches.clear();
-            possibleMatches.clear();
-            lastSlotClicked = -1;
-
-            resolved = false;
-            resolving = false;
-            chronomatronRemembering = false;
-            chronomatronNoteActive = false;
-            chronomatronActiveSlots.clear();
-            chronomatronStableFrames = 0;
-            ultrasequencerRemembering = false;
-        }
-    }
-
-    private static int findChronomatronRepresentative(Set<Integer> activeSlots, String title, int inventorySize) {
-        for (int index = 9; index <= 18; index++) {
-            if (activeSlots.contains(index)) return index;
-        }
-        if (title.contains("Transcendent") || title.contains("Metaphysical")) {
-            for (int index = 28; index <= 37; index++) {
-                if (activeSlots.contains(index)) return index;
-            }
-        }
-        for (int index = 0; index < inventorySize; index++) {
-            if (activeSlots.contains(index)) return index;
-        }
-        return -1;
-    }
-
-    static int getNextUltrasequencerQuantity(ContainerChest containerChest) {
-        int nextQuantity = Integer.MAX_VALUE;
-        for (UltrasequencerSlot slot : ultrasequencerSlots) {
-            ItemStack itemInSlot = containerChest.inventorySlots.get(slot.slot.slotNumber).getStack();
-            if (itemInSlot == null || itemInSlot.getItem() == Items.dye) continue;
-            nextQuantity = Math.min(nextQuantity, slot.quantity);
-        }
-        return nextQuantity == Integer.MAX_VALUE ? -1 : nextQuantity;
-    }
-
-    @SubscribeEvent
-    public void onTick(TickEvent.ClientTickEvent event) {
-        if (!(Minecraft.getMinecraft().currentScreen instanceof GuiChest)) {
-            currentSolverType = SolverTypes.NONE;
-        }
-
-        if (event.phase != TickEvent.Phase.END) {
-            return;
-        }
-
-        processInventoryContents(true);
-    }
-
-    @SubscribeEvent
-    public void onStackClick(SlotClickEvent event) {
-        if (!Config.feature.experimentation.experimentationSolvers) return;
-
-        if (currentSolverType == SolverTypes.SUPERPAIRS) {
-            lastSlotClicked = event.slotId;
-        }
-    }
-
-    public static void processInventoryContents(boolean fromTick) {
-        if (!Config.feature.experimentation.experimentationSolvers) {
-            return;
-        }
-
-        if (!SkyblockData.getCurrentGamemode().isSkyblock()) {
-            return;
-        }
-
-        if (Minecraft.getMinecraft().currentScreen instanceof GuiChest) {
-            GuiChest chest = (GuiChest) Minecraft.getMinecraft().currentScreen;
-            ContainerChest container = (ContainerChest) chest.inventorySlots;
-            IInventory lower = container.getLowerChestInventory();
-
-            if (currentSolverType == SolverTypes.SUPERPAIRS) {
-                successfulMatches.clear();
-                possibleMatches.clear();
-                powerupMatches.clear();
-                out:
-                for (int index = 0; index < lower.getSizeInventory(); index++) {
-                    ItemStack stack = lower.getStackInSlot(index);
-                    if (stack == null) continue;
-                    if (stack.getItem() != Item.getItemFromBlock(Blocks.stained_glass) &&
-                            stack.getItem() != Item.getItemFromBlock(Blocks.stained_glass_pane)) {
-                        superpairStacks.put(index, stack);
-
-                        NBTTagCompound tag = stack.getTagCompound();
-                        if (tag != null) {
-                            NBTTagCompound display = tag.getCompoundTag("display");
-                            if (display.hasKey("Lore", 9)) {
-                                NBTTagList list = display.getTagList("Lore", 8);
-                                for (int i = 0; i < list.tagCount(); i++) {
-                                    if (list.getStringTagAt(i).toLowerCase(Locale.ROOT).contains("powerup")) {
-                                        powerupMatches.add(index);
-                                        continue out;
-                                    }
-                                }
-                            }
-                        }
-
-                        int numMatches = 0;
-                        for (int index2 = 0; index2 < lower.getSizeInventory(); index2++) {
-                            ItemStack stack2 = lower.getStackInSlot(index2);
-                            if (stack2 != null && stack2.getDisplayName().equals(stack.getDisplayName()) &&
-                                    stack.getItem() == stack2.getItem() && stack.getItemDamage() == stack2.getItemDamage()) {
-                                numMatches++;
-                            }
-                        }
-                        boolean oddMatches = (numMatches % 2) == 1;
-
-                        if ((!oddMatches || index != lastSlotClicked) && !successfulMatches.contains(index)) {
-                            for (int index2 = 0; index2 < lower.getSizeInventory(); index2++) {
-                                if (index == index2) continue;
-                                if (oddMatches && index2 == lastSlotClicked) continue;
-
-                                ItemStack stack2 = lower.getStackInSlot(index2);
-                                if (stack2 != null && stack2.getDisplayName().equals(stack.getDisplayName()) &&
-                                        stack.getItem() == stack2.getItem() && stack.getItemDamage() == stack2.getItemDamage()) {
-                                    successfulMatches.add(index);
-                                    successfulMatches.add(index2);
-                                }
-                            }
-                        }
-                    } else {
-                        if (superpairStacks.containsKey(index) && superpairStacks.get(index) != null &&
-                                !possibleMatches.contains(index)) {
-                            ItemStack stack1 = superpairStacks.get(index);
-                            for (int index2 = 0; index2 < lower.getSizeInventory(); index2++) {
-                                if (index == index2) continue;
-
-                                if (superpairStacks.containsKey(index2) && superpairStacks.get(index2) != null) {
-                                    ItemStack stack2 = superpairStacks.get(index2);
-                                    if (stack1.getDisplayName().equals(stack2.getDisplayName()) &&
-                                            stack1.getItem() == stack2.getItem() && stack1.getItemDamage() == stack2.getItemDamage()) {
-                                        possibleMatches.add(index);
-                                        possibleMatches.add(index2);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            } else {
-                superpairStacks.clear();
-                successfulMatches.clear();
-                powerupMatches.clear();
-                lastSlotClicked = -1;
             }
         }
     }
 
-    private static final Map<Integer, ItemStack> superpairStacks = new HashMap<>();
-    private static final HashSet<Integer> successfulMatches = new HashSet<>();
-    private static final HashSet<Integer> possibleMatches = new HashSet<>();
-    private static final HashSet<Integer> powerupMatches = new HashSet<>();
-    private static int lastSlotClicked = -1;
-
-    public static ItemStack overrideStack(IInventory inventory, int slotIndex, ItemStack stack) {
-        if (!Config.feature.experimentation.experimentationSuperpairsSolver) {
-            return null;
-        }
-
-        if (!SkyblockData.getCurrentGamemode().isSkyblock()) return null;
-
-        if (stack != null && stack.getDisplayName() != null) {
-            if (Minecraft.getMinecraft().currentScreen instanceof GuiChest) {
-                GuiChest chest = (GuiChest) Minecraft.getMinecraft().currentScreen;
-                ContainerChest container = (ContainerChest) chest.inventorySlots;
-                IInventory lower = container.getLowerChestInventory();
-
-                if (lower != inventory) {
-                    return null;
-                }
-
-                String displayName = stack.getDisplayName();
-                if (currentSolverType == SolverTypes.SUPERPAIRS) {
-                    if (stack.getItem() == Item.getItemFromBlock(Blocks.stained_glass) && superpairStacks.containsKey(slotIndex)) {
-                        ItemStack stack2 = superpairStacks.get(slotIndex);
-                        stack2.setStackDisplayName(displayName);
-                        return stack2;
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
-    public static boolean onStackRender(ItemStack stack, IInventory inventory, int slotIndex, int x, int y) {
-        if (!Config.feature.experimentation.experimentationSolvers) return false;
-        if (!SkyblockData.getCurrentGamemode().isSkyblock()) return false;
-
-        if (stack != null && stack.getDisplayName() != null) {
-            if (Minecraft.getMinecraft().currentScreen instanceof GuiChest) {
-                GuiChest chest = (GuiChest) Minecraft.getMinecraft().currentScreen;
-                ContainerChest container = (ContainerChest) chest.inventorySlots;
-                IInventory lower = container.getLowerChestInventory();
-
-                if (lower != inventory) {
-                    return false;
-                }
-
-                if (currentSolverType == SolverTypes.SUPERPAIRS) {
-                    int meta = 0;
-                    if (stack.getItem() == Item.getItemFromBlock(Blocks.stained_glass) &&
-                            superpairStacks.containsKey(slotIndex)) {
-                        if (possibleMatches.contains(slotIndex)) {
-                            meta = Config.feature.experimentation.supPossible;
-                        } else {
-                            meta = Config.feature.experimentation.supUnmatched;
-                        }
-                    } else {
-                        if (powerupMatches.contains(slotIndex)) {
-                            meta = Config.feature.experimentation.supPower;
-                        } else if (successfulMatches.contains(slotIndex)) {
-                            meta = Config.feature.experimentation.supMatched;
-                        }
-                    }
-                    if (meta > 0) {
-                        RenderUtils.drawItemStack(new ItemStack(Item.getItemFromBlock(Blocks.stained_glass_pane), 1, meta - 1), x, y);
-                    }
-                }
+    private static boolean hasPartner(int slot, ItemStack reward) {
+        for (Map.Entry<Integer, ItemStack> entry : cards.entrySet()) {
+            if (entry.getKey() != slot && !matchedCards.get(entry.getKey())
+                    && !rejected(slot, entry.getKey()) && sameReward(reward, entry.getValue())) {
+                return true;
             }
         }
         return false;
     }
 
+    private static boolean confirmPair(int a, int b) {
+        if (!visibleCards.get(a) || !visibleCards.get(b) || rejected(a, b)
+                || !sameReward(cards.get(a), cards.get(b))) return false;
+        matchedCards.set(a);
+        matchedCards.set(b);
+        return true;
+    }
 
+    private static boolean rejected(int a, int b) {
+        BitSet partners = rejectedPartners.get(a);
+        return partners != null && partners.get(b);
+    }
+
+    private static boolean sameReward(ItemStack a, ItemStack b) {
+        return a != null && b != null && !powerup(a) && !powerup(b) && a.getItem() == b.getItem()
+                && a.getItemDamage() == b.getItemDamage() && a.stackSize == b.stackSize
+                && a.getDisplayName().equals(b.getDisplayName()) && lore(a).equals(lore(b));
+    }
+
+    private static boolean active(IInventory inventory) {
+        return solver != null && chest != null && inventory == chest.getLowerChestInventory()
+                && Minecraft.getMinecraft().currentScreen instanceof GuiChest
+                && ((GuiChest) Minecraft.getMinecraft().currentScreen).inventorySlots == chest
+                && Config.feature.experimentation.experimentationSolvers && SkyblockData.getCurrentGamemode().isSkyblock();
+    }
+
+    private static boolean cover(ItemStack stack) {
+        if (!is(stack, Item.getItemFromBlock(Blocks.stained_glass)) || stack.getItemDamage() != 8) return false;
+        String name = EnumChatFormatting.getTextWithoutFormattingCodes(stack.getDisplayName()).trim();
+        return name.isEmpty() || name.equals("?");
+    }
+
+    private static boolean powerup(ItemStack stack) {
+        return loreContains(stack, "Instant Powerup!") || loreContains(stack, "Powerup for next click!");
+    }
+
+    private static boolean loreContains(ItemStack stack, String text) {
+        NBTTagList lore = lore(stack);
+        for (int index = 0; index < lore.tagCount(); index++) {
+            if (text.equalsIgnoreCase(EnumChatFormatting.getTextWithoutFormattingCodes(lore.getStringTagAt(index)).trim())) return true;
+        }
+        return false;
+    }
+
+    private static NBTTagList lore(ItemStack stack) {
+        return stack.hasTagCompound() ? stack.getTagCompound().getCompoundTag("display").getTagList("Lore", 8) : new NBTTagList();
+    }
+
+    private static boolean is(ItemStack stack, Item item) {
+        return stack != null && stack.getItem() == item;
+    }
+
+    private static ItemStack copy(ItemStack stack) {
+        return stack == null ? null : stack.copy();
+    }
+
+    private enum Solver { CHRONOMATRON, ULTRASEQUENCER, SUPERPAIRS }
 }

@@ -22,6 +22,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -41,56 +42,23 @@ public class MixinGuiContainer extends GuiScreen {
     @Inject(method = "drawSlot", at = @At("RETURN"))
     public void drawSlotRet(Slot slotIn, CallbackInfo ci) {
         SlotLocking.getInstance().drawSlot(slotIn);
+        EnchantingSolvers.drawSlotHint(slotIn);
     }
 
     @Redirect(method = "drawSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/inventory/Slot;getStack()Lnet/minecraft/item/ItemStack;"))
     public ItemStack drawSlot_getStack(Slot slot) {
-
-        ItemStack stack = slot.getStack();
-
-        if (stack != null) {
-            ItemStack newStack = EnchantingSolvers.overrideStack(slot.inventory, slot.getSlotIndex(), stack);
-            if (newStack != null) {
-                stack = newStack;
-            }
-        }
-        return stack;
+        return EnchantingSolvers.displayStack(slot, slot.getStack());
     }
 
-    @Inject(method = "drawSlot", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "drawSlot", at = @At("HEAD"))
     public void drawSlot(Slot slot, CallbackInfo ci) {
-        if (slot == null) return;
-        ItemStack stack = slot.getStack();
-
-        if (stack != null) {
-            if (EnchantingSolvers.onStackRender(
-                    stack,
-                    slot.inventory,
-                    slot.getSlotIndex(),
-                    slot.xDisplayPosition,
-                    slot.yDisplayPosition
-            )) {
-                ci.cancel();
-                return;
-            }
-        }
-
         RenderHelper.enableGUIStandardItemLighting();
     }
 
-    @Redirect(method = "drawScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/inventory/Slot;getStack()Lnet/minecraft/item/ItemStack;"))
-    public ItemStack drawScreen_getStack(Slot slot) {
-        if (theSlot != null && theSlot == slot && theSlot.getStack() != null) {
-            ItemStack newStack = EnchantingSolvers.overrideStack(
-                    theSlot.inventory,
-                    theSlot.getSlotIndex(),
-                    theSlot.getStack()
-            );
-            if (newStack != null) {
-                return newStack;
-            }
-        }
-        return slot.getStack();
+    @ModifyArg(method = "drawScreen", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/gui/inventory/GuiContainer;renderToolTip(Lnet/minecraft/item/ItemStack;II)V"), index = 0)
+    private ItemStack nef$showRememberedSuperpairsTooltip(ItemStack stack) {
+        return EnchantingSolvers.displayStack(theSlot, stack);
     }
 
     @Shadow
