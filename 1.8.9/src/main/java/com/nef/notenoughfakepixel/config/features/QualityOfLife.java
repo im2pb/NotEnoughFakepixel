@@ -501,7 +501,7 @@ public class QualityOfLife {
     public static class PlayerSizeSettings {
 
             @Expose
-            @ConfigOption(name = "Skytils's smolpeople", desc = "Enable smolpeople")
+            @ConfigOption(name = "Small People", desc = "Render players with a smaller model.")
             @ConfigEditorBoolean
             public boolean smolPeople = false;
     }
