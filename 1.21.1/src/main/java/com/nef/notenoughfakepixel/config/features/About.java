@@ -1,14 +1,15 @@
 package com.nef.notenoughfakepixel.config.features;
 
+import com.nef.notenoughfakepixel.config.gui.annotations.ConfigTitleDisplay;
 import com.nef.notenoughfakepixel.env.VersionChecker;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorButton;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigOption;
 import net.minecraft.util.Util;
 
 public final class About {
-    @ConfigOption(name = "Fabric Version", desc = "Show the installed version and repository update information in chat")
-    @ConfigEditorButton(buttonText = "Check")
-    public transient Runnable version = VersionChecker::reportVersion;
+    @ConfigOption(name = "Current Version", desc = "The installed NotEnoughFakepixel version")
+    @ConfigTitleDisplay(color = 0x87FF54)
+    public transient Void currentVersion;
 
     @ConfigOption(name = "Discord", desc = "Join the NotEnoughFakepixel Discord server")
     @ConfigEditorButton(buttonText = "Open")

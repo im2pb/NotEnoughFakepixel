@@ -1,6 +1,7 @@
 package com.nef.notenoughfakepixel.config.features;
 
 import com.google.gson.annotations.Expose;
+import com.nef.notenoughfakepixel.env.VersionChecker;
 import com.nef.notenoughfakepixel.features.debug.DebugModule;
 import io.github.notenoughupdates.moulconfig.annotations.Category;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorBoolean;
@@ -85,5 +86,9 @@ public class Debug {
         @ConfigOption(name = "Log Client Environment", desc = "Show the connection type, Java version, operating system, and Pojav status")
         @ConfigEditorButton(buttonText = "Log")
         public transient Runnable logClientEnvironment = DebugModule::logClientEnvironment;
+
+        @ConfigOption(name = "Fabric Version", desc = "Show the installed version and repository update information in chat")
+        @ConfigEditorButton(buttonText = "Check")
+        public transient Runnable version = VersionChecker::reportVersion;
     }
 }

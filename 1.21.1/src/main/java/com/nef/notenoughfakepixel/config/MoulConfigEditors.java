@@ -1,6 +1,8 @@
 package com.nef.notenoughfakepixel.config;
 
 import com.nef.notenoughfakepixel.Configuration;
+import com.nef.notenoughfakepixel.config.gui.annotations.ConfigTitleDisplay;
+import com.nef.notenoughfakepixel.config.gui.editors.GuiOptionEditorTitleDisplay;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorDropdown;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorInfoText;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorKeybind;
@@ -37,6 +39,7 @@ final class MoulConfigEditors {
 
     static void register(ManagedConfigBuilder<Configuration> builder) {
         // The 1.21 Modern release provides components but does not register these editors.
+        builder.customProcessor(ConfigTitleDisplay.class, GuiOptionEditorTitleDisplay::new);
         builder.customProcessor(ConfigEditorInfoText.class, (option, info) -> new GuiOptionEditor(option) {});
         builder.customProcessor(ConfigEditorSlider.class, MoulConfigEditors::slider);
         builder.customProcessor(ConfigEditorDropdown.class, MoulConfigEditors::dropdown);
