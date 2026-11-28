@@ -57,7 +57,7 @@ See the [LICENSE](LICENSE) file for details.
 
 <!-- port-progress:start -->
 
-![1.21 port progress (46.0%)](https://progress-bar.xyz/46/?scale=100&width=350&progress_color=338b33) `99/215 features`
+![1.21 port progress (52.3%)](https://progress-bar.xyz/52/?scale=100&width=350&progress_color=338b33) `112/214 features`
 
 <!-- port-progress:end -->
 
@@ -248,10 +248,10 @@ See the [LICENSE](LICENSE) file for details.
 | Feature | 1.8.9 | 1.21 |
 | --- | --- | --- |
 | Bosses notifier | X |  |
-| Ashfang helper & overlay | X |  |
+| Ashfang helper & overlay | X | X |
 | Crimson Isle Waypoints | X | X |
-| Ashfang and Gravity Orb waypoints | X |  |
-| Ashfang minion hitboxes | X |  |
+| Ashfang and Gravity Orb waypoints | X | X |
+| Ashfang minion hitboxes | X | X |
 | Ashfang chat and sound filters | X |  |
 | Ashfang hit sound | X |  |
 
@@ -277,19 +277,18 @@ See the [LICENSE](LICENSE) file for details.
 
 | Feature | 1.8.9 | 1.21 |
 | --- | --- | --- |
-| Voidgloom Seraph beacon waypoint BETA | X |  |
-| Miniboss spawn alert | X |  |
-| Slayer health display | X |  |
-| Slayer boss time | X |  |
-| Blaze pillar title | X |  |
-| Blaze attunements | X |  |
+| Voidgloom Seraph beacon waypoint | X | X |
+| Miniboss spawn alert | X | X |
+| Slayer health display | X | X |
+| Slayer boss time | X | X |
+| Blaze pillar title | X | X |
+| Blaze attunements | X | X |
 | Faster Maddox calling | X |  |
 | Slayer progress overlay | X |  |
-| Slayer miniboss hitboxes | X |  |
-| Slayer boss hitboxes and outlines | X |  |
-| Voidgloom beacon tracer | X |  |
-| Voidgloom beacon notifier | X |  |
-| Hellion Shield chat filter | X |  |
+| Slayer miniboss hitboxes | X | X |
+| Slayer boss hitboxes and outlines | X | X |
+| Voidgloom beacon tracer | X | X |
+| Voidgloom beacon notifier | X | X |
 
 ### Waypoints
 

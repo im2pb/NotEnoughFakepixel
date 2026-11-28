@@ -1,11 +1,10 @@
 package com.nef.notenoughfakepixel.features.skyblock.overlays.waypoints;
 
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
 import com.nef.notenoughfakepixel.env.registers.RegisterInstance;
 import com.nef.notenoughfakepixel.features.skyblock.overlays.waypoints.IslandWaypoints.Waypoint;
 import com.nef.notenoughfakepixel.serverdata.SkyblockData;
 import com.nef.notenoughfakepixel.utils.ConfigColor;
+import com.nef.notenoughfakepixel.utils.SkullTextures;
 import com.nef.notenoughfakepixel.variables.Location;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
@@ -26,8 +25,6 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -152,23 +149,7 @@ public final class GiftWaypoints implements ClientModInitializer {
     }
 
     private static boolean isGiftTexture(String encoded) {
-        if (encoded.length() > 8192) return false;
-        try {
-            String json = new String(Base64.getDecoder().decode(encoded), StandardCharsets.UTF_8);
-            var root = JsonParser.parseString(json);
-            if (!root.isJsonObject()) return false;
-            var textures = root.getAsJsonObject().get("textures");
-            if (textures == null || !textures.isJsonObject()) return false;
-            var skin = textures.getAsJsonObject().get("SKIN");
-            if (skin == null || !skin.isJsonObject()) return false;
-            var url = skin.getAsJsonObject().get("url");
-            if (url == null || !url.isJsonPrimitive() || !url.getAsJsonPrimitive().isString()) return false;
-
-            String address = url.getAsString();
-            return address.equals("https://" + GIFT_TEXTURE) || address.equals("http://" + GIFT_TEXTURE);
-        } catch (IllegalArgumentException | JsonParseException ignored) {
-            return false;
-        }
+        return SkullTextures.matches(SkullTextures.skinUrl(encoded), GIFT_TEXTURE);
     }
 
     private record GiftInteraction(BlockPos position, long time) {

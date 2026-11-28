@@ -118,7 +118,7 @@ public record SkyblockSidebar(String title, List<String> lines) {
             if (line.startsWith("Voidgloom Seraph")) return Slayer.VOIDGLOOM;
             if (line.startsWith("Inferno Demonlord")) return Slayer.INFERNO;
             if (line.startsWith("Sven Packmaster")) return Slayer.SVEN;
-            if (line.startsWith("Revenant Horror")) return Slayer.REVENANT;
+            if (line.startsWith("Revenant Horror") || line.startsWith("Atoned Horror")) return Slayer.REVENANT;
             if (line.startsWith("Tarantula Broodfather")) return Slayer.TARANTULA;
         }
         return Slayer.NONE;

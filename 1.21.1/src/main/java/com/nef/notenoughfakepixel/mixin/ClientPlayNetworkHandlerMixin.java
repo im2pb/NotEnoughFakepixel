@@ -2,10 +2,13 @@ package com.nef.notenoughfakepixel.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.nef.notenoughfakepixel.features.skyblock.crimson.AshfangHelper;
 import com.nef.notenoughfakepixel.features.skyblock.enchanting.ExperimentationSolver;
 import com.nef.notenoughfakepixel.features.skyblock.fishing.FishingAlert;
 import com.nef.notenoughfakepixel.features.skyblock.inventory.PagedMenuTracker;
 import com.nef.notenoughfakepixel.features.skyblock.mining.DrillFix;
+import com.nef.notenoughfakepixel.features.skyblock.slayers.SlayerAlerts;
+import com.nef.notenoughfakepixel.features.skyblock.slayers.VoidgloomBeacons;
 import com.nef.notenoughfakepixel.features.skyblock.qol.CombatVisuals;
 import com.nef.notenoughfakepixel.features.skyblock.qol.TeleportCamera;
 import net.minecraft.client.MinecraftClient;
@@ -15,7 +18,10 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.s2c.play.InventoryS2CPacket;
+import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
+import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.ParticleS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
 import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
@@ -29,6 +35,28 @@ import java.util.List;
 
 @Mixin(ClientPlayNetworkHandler.class)
 abstract class ClientPlayNetworkHandlerMixin {
+    @Inject(method = "onPlaySound", at = @At(value = "INVOKE", shift = At.Shift.AFTER,
+            target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/packet/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V"),
+            cancellable = true)
+    private void nef$muteAshfangSound(PlaySoundS2CPacket packet, CallbackInfo callback) {
+        if (AshfangHelper.muteSound(MinecraftClient.getInstance(), packet)) callback.cancel();
+    }
+
+    @Inject(method = "onPlaySound", at = @At("RETURN"))
+    private void nef$observeSlayerSound(PlaySoundS2CPacket packet, CallbackInfo callback) {
+        SlayerAlerts.INSTANCE.observeSound(MinecraftClient.getInstance(), packet);
+    }
+
+    @Inject(method = "onBlockUpdate", at = @At("RETURN"))
+    private void nef$observeSlayerBeacon(BlockUpdateS2CPacket packet, CallbackInfo callback) {
+        VoidgloomBeacons.INSTANCE.observeBlock(MinecraftClient.getInstance(), packet.getPos(), packet.getState());
+    }
+
+    @Inject(method = "onChunkDeltaUpdate", at = @At("RETURN"))
+    private void nef$observeSlayerBeacons(ChunkDeltaUpdateS2CPacket packet, CallbackInfo callback) {
+        VoidgloomBeacons.INSTANCE.observeChunkDelta(MinecraftClient.getInstance(), packet);
+    }
+
     @WrapOperation(method = "onPlayerPositionLook", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/entity/player/PlayerEntity;setPosition(DDD)V"))
     private void nef$animateAspectTeleport(PlayerEntity player, double x, double y, double z, Operation<Void> original) {

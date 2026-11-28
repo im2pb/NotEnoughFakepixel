@@ -2,6 +2,7 @@ package com.nef.notenoughfakepixel.config.features;
 
 import com.google.gson.annotations.Expose;
 import com.nef.notenoughfakepixel.config.position.Position;
+import com.nef.notenoughfakepixel.features.skyblock.slayers.SlayerHealthDisplay;
 import io.github.notenoughupdates.moulconfig.annotations.*;
 
 public class Slayer {
@@ -66,7 +67,7 @@ public class Slayer {
     public static class MinibossSettings {
 
             @Expose
-            @ConfigOption(name = "Slayer Minibosses Display", desc = "Draw a box around slayer minibosses")
+            @ConfigOption(name = "Slayer Minibosses Display", desc = "Highlight slayer minibosses with a colored glow")
             @ConfigEditorBoolean
             public boolean slayerMinibosses = true;
 
@@ -89,14 +90,9 @@ public class Slayer {
     public static class BossSettings {
 
             @Expose
-            @ConfigOption(name = "Slayer Bosses Display", desc = "Draw a box around slayer bosses")
+            @ConfigOption(name = "Slayer Bosses Display", desc = "Highlight slayer bosses with a colored glow")
             @ConfigEditorBoolean
             public boolean slayerBosses = true;
-
-            @Expose
-            @ConfigOption(name = "Slayer Bosses Outline", desc = "Draw an outline around slayer bosses")
-            @ConfigEditorBoolean
-            public boolean slayerBossesOutline = false;
 
             @Expose
             @ConfigOption(name = "Slayer Boss Health Display", desc = "Displays the slayer health on screen")
@@ -115,6 +111,11 @@ public class Slayer {
 
             @Expose
             public Position slayerBossHPPos = new Position(10, 10, false, true);
+
+            @ConfigOption(name = "Edit Boss Health Position", desc = "Move the slayer boss health display")
+            @ConfigEditorButton(buttonText = "Edit")
+            public transient Runnable editBossHealthPosition = () ->
+                    SlayerHealthDisplay.editPosition(slayerBossHPPos, position -> slayerBossHPPos = position);
     }
 
     public static class BeaconSettings {
@@ -161,12 +162,12 @@ public class Slayer {
     public static class BlazeAttunementSettings {
 
             @Expose
-            @ConfigOption(name = "Show Outline", desc = "Draw a coloured outline around attunement minions")
+            @ConfigOption(name = "Show Outline", desc = "Highlight the Inferno Demonlord and its demons in their current attunement colors")
             @ConfigEditorBoolean
             public boolean slayerBlazeAttunementOutline = true;
 
             @Expose
-            @ConfigOption(name = "Show Full Attunement", desc = "Fill the attunement minion model with its attunement colour")
+            @ConfigOption(name = "Show Full Attunement", desc = "Tint the boss and demon models with their current attunement colors")
             @ConfigEditorBoolean
             public boolean slayerBlazeAttunementFill = false;
     }

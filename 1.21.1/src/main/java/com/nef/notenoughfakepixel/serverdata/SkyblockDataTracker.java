@@ -1,6 +1,7 @@
 package com.nef.notenoughfakepixel.serverdata;
 
 import com.nef.notenoughfakepixel.env.registers.RegisterEvents;
+import com.nef.notenoughfakepixel.features.skyblock.slayers.SlayerAlerts;
 import com.nef.notenoughfakepixel.serverdata.SkyblockSidebar.SlayerPhase;
 import com.nef.notenoughfakepixel.utils.SkyblockItemData;
 import com.nef.notenoughfakepixel.variables.Gamemode;
@@ -158,6 +159,7 @@ public final class SkyblockDataTracker implements ClientModInitializer {
         if (success) {
             double seconds = bossStartedAt == null ? 0 : (System.nanoTime() - bossStartedAt) / 1_000_000_000.0;
             SkyblockData.recordSlayerCompletion(seconds);
+            if (bossStartedAt != null) SlayerAlerts.completed(seconds);
         }
         bossStartedAt = null;
         questResolved = true;

@@ -2,6 +2,7 @@ package com.nef.notenoughfakepixel.config.features;
 
 import com.google.gson.annotations.Expose;
 import com.nef.notenoughfakepixel.config.position.Position;
+import com.nef.notenoughfakepixel.features.skyblock.crimson.AshfangOverlay;
 import io.github.notenoughupdates.moulconfig.annotations.*;
 
 public class Crimson {
@@ -27,7 +28,7 @@ public class Crimson {
             public boolean crimsonMageOutlawNotifier = true;
 
             @Expose
-            @ConfigOption(name = "Ashfang Notifier", desc = "Notify when Ashfang boss spawns")
+            @ConfigOption(name = "Ashfang Notifier", desc = "Show estimated respawn reminders and a title when Ashfang returns")
             @ConfigEditorBoolean
             public boolean crimsonAshfangNotifier = true;
 
@@ -50,7 +51,7 @@ public class Crimson {
             public String crimsonAshfangWaypointColor = "0:100:255:0:255";
 
             @Expose
-            @ConfigOption(name = "Ashfang Hitboxes", desc = "Show hitboxes for Ashfang minions")
+            @ConfigOption(name = "Ashfang Minion Glow", desc = "Highlight Ashfang minions and Blazing Souls with colored glow")
             @ConfigEditorBoolean
             public boolean crimsonAshfangHitboxes = true;
 
@@ -86,6 +87,11 @@ public class Crimson {
 
             @Expose
             public Position ashfangOverlayPos = new Position(10, 10, false, true);
+
+            @ConfigOption(name = "Edit Ashfang Overlay Position", desc = "Move the Ashfang health and soul overlay")
+            @ConfigEditorButton(buttonText = "Edit")
+            public transient Runnable editAshOverlayPosition = () ->
+                    AshfangOverlay.editPosition(ashfangOverlayPos, position -> ashfangOverlayPos = position);
     }
 
 }

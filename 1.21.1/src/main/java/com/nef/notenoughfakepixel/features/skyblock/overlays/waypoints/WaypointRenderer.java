@@ -27,7 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.SequencedMap;
 
-final class WaypointRenderer implements AutoCloseable {
+public final class WaypointRenderer implements AutoCloseable {
     private static final double THROUGH_WALL_DISTANCE_SQUARED = 10 * 10;
     private static final double LABEL_RENDER_DISTANCE = 12;
     private static final int BEAM_HEIGHT = 300;
@@ -48,7 +48,12 @@ final class WaypointRenderer implements AutoCloseable {
 
     void render(WorldRenderContext context, List<Waypoint> waypoints, boolean beacons, int islandColor,
                 double labelHeight, boolean showDistance) {
-        if (waypoints.isEmpty()) return;
+        render(context, waypoints, beacons, islandColor, labelHeight, showDistance, false);
+    }
+
+    public void render(WorldRenderContext context, List<Waypoint> waypoints, boolean beacons, int islandColor,
+                       double labelHeight, boolean showDistance, boolean beamsAlwaysThroughWalls) {
+        if (waypoints.isEmpty() || context.matrixStack() == null) return;
 
         prepareBuffers();
         Camera camera = context.camera();
@@ -56,11 +61,12 @@ final class WaypointRenderer implements AutoCloseable {
         Vec3d cameraPos = camera.getPos();
         boolean depthTestWasEnabled = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
         try {
-            if (beacons) renderBeams(context, matrices, cameraPos, waypoints, islandColor, BeamVisibility.NEAR);
+            if (beacons && !beamsAlwaysThroughWalls) renderBeams(context, matrices, cameraPos, waypoints, islandColor, BeamVisibility.NEAR);
 
             // Vanilla's see-through layers expect depth testing to be off before they draw.
             RenderSystem.disableDepthTest();
-            if (beacons) renderBeams(context, matrices, cameraPos, waypoints, islandColor, BeamVisibility.FAR);
+            if (beacons) renderBeams(context, matrices, cameraPos, waypoints, islandColor,
+                    beamsAlwaysThroughWalls ? BeamVisibility.THROUGH_WALLS : BeamVisibility.FAR);
 
             TextRenderer font = MinecraftClient.getInstance().textRenderer;
             // See-through layers sort quads by distance. Flush shadows before submitting the lettering.
