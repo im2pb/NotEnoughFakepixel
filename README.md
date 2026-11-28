@@ -57,7 +57,7 @@ See the [LICENSE](LICENSE) file for details.
 
 <!-- port-progress:start -->
 
-![1.21 port progress (57.0%)](https://progress-bar.xyz/57/?scale=100&width=350&progress_color=338b33) `122/214 features`
+![1.21 port progress (57.5%)](https://progress-bar.xyz/57/?scale=100&width=350&progress_color=338b33) `123/214 features`
 
 <!-- port-progress:end -->
 
@@ -78,8 +78,8 @@ See the [LICENSE](LICENSE) file for details.
 | General | Hide player armor | X | X |
 | General | Hide dead mobs | X |  |
 | General | Hide falling blocks | X | X |
-| General | Item animations | X |  |
-| General | Smol people | X |  |
+| General | Item animations | X | X |
+| General | Small People | X |  |
 | General | Reforge helper | X |  |
 | General | Disable Hyperion Explosions | X | X |
 | General | Disable Thunderlord enchantment bolts | X | X |

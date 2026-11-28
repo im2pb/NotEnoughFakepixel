@@ -437,7 +437,7 @@ public class QualityOfLife {
             public float customSpeed = 0f;
 
             @Expose
-            @ConfigOption(name = "Item Animation Ignore Haste", desc = "Makes the chosen speed override haste modifiers")
+            @ConfigOption(name = "Item Animation Ignore Haste", desc = "Use the normal swing duration as the base even with Haste or Mining Fatigue")
             @ConfigEditorBoolean
             public boolean ignoreHaste = true;
 
@@ -445,6 +445,16 @@ public class QualityOfLife {
             @ConfigOption(name = "Item Animation Drinking Fix", desc = "With Item Animation Toggle enabled, choose vanilla drinking, bobbing only, or drinking with your item position offsets")
             @ConfigEditorDropdown(values = {"No fix", "Rotationless", "Fixed"})
             public int drinkingSelector = 2;
+
+            @ConfigOption(name = "Reset Item Animation", desc = "Restore the default held item position, rotation, scale, and swing settings")
+            @ConfigEditorButton(buttonText = "Reset")
+            public transient Runnable resetItemValues = () -> {
+                    customX = customY = customZ = 0.0F;
+                    customYaw = customPitch = customRoll = 0.0F;
+                    customSize = customSpeed = 0.0F;
+                    doesScaleSwing = true;
+                    ignoreHaste = true;
+            };
 
     }
 
@@ -469,7 +479,7 @@ public class QualityOfLife {
     public static class PlayerSizeSettings {
 
             @Expose
-            @ConfigOption(name = "Skytils's smolpeople", desc = "Enable smolpeople")
+            @ConfigOption(name = "Small People", desc = "Render players with a smaller model")
             @ConfigEditorBoolean
             public boolean smolPeople = false;
     }

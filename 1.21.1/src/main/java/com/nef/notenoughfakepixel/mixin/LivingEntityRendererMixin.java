@@ -1,6 +1,8 @@
 package com.nef.notenoughfakepixel.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.nef.notenoughfakepixel.config.ClientConfig;
@@ -24,6 +26,14 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 @Mixin(LivingEntityRenderer.class)
 abstract class LivingEntityRendererMixin {
+    @WrapOperation(
+            method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isBaby()Z"))
+    private boolean nef$useSmallPlayerModel(LivingEntity entity, Operation<Boolean> original) {
+        return original.call(entity) || (entity instanceof PlayerEntity
+                && ClientConfig.configuration().qol.playerSizeSettings.smolPeople);
+    }
+
     @ModifyArg(
             method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/model/EntityModel;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;III)V"),
