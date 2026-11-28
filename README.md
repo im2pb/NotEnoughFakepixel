@@ -57,7 +57,7 @@ See the [LICENSE](LICENSE) file for details.
 
 <!-- port-progress:start -->
 
-![1.21 port progress (31.0%)](https://progress-bar.xyz/31/?scale=100&width=350&progress_color=338b33) `67/216 features`
+![1.21 port progress (33.8%)](https://progress-bar.xyz/33/?scale=100&width=350&progress_color=338b33) `73/216 features`
 
 <!-- port-progress:end -->
 
@@ -112,12 +112,12 @@ See the [LICENSE](LICENSE) file for details.
 | General | Stacking enchantment counters | X |  |
 | General | Dark Auction timer | X | X |
 | General | Dark Auction reminder | X |  |
-| Chat | Disable Friend > joined messages | X |  |
-| Chat | Disable Info & Watchdog messages | X |  |
-| Chat | Disable selling ranks messages | X |  |
-| Chat | Disable zombie rare drop messages | X |  |
-| Chat | Disable server announcements | X |  |
-| Chat | Disable game invite spam | X |  |
+| Chat | Disable Friend > joined messages | X | X |
+| Chat | Disable Info & Watchdog messages | X | X |
+| Chat | Disable selling ranks messages | X | X |
+| Chat | Disable zombie rare drop messages | X | X |
+| Chat | Disable server announcements | X | X |
+| Chat | Disable game invite spam | X | X |
 
 ### Farming
 
