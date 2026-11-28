@@ -5,8 +5,12 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.nef.notenoughfakepixel.features.skyblock.fishing.FishingAlert;
 import com.nef.notenoughfakepixel.features.skyblock.inventory.PagedMenuTracker;
 import com.nef.notenoughfakepixel.features.skyblock.mining.DrillFix;
+import com.nef.notenoughfakepixel.features.skyblock.qol.CombatVisuals;
+import com.nef.notenoughfakepixel.features.skyblock.qol.TeleportCamera;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.s2c.play.InventoryS2CPacket;
@@ -14,6 +18,7 @@ import net.minecraft.network.packet.s2c.play.ParticleS2CPacket;
 import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
+import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -23,9 +28,38 @@ import java.util.List;
 
 @Mixin(ClientPlayNetworkHandler.class)
 abstract class ClientPlayNetworkHandlerMixin {
+    @WrapOperation(method = "onPlayerPositionLook", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/entity/player/PlayerEntity;setPosition(DDD)V"))
+    private void nef$animateAspectTeleport(PlayerEntity player, double x, double y, double z, Operation<Void> original) {
+        var before = player.getPos();
+        original.call(player, x, y, z);
+        TeleportCamera.INSTANCE.positionChanged(player, before);
+    }
+
+    @Inject(method = "onParticle", at = @At(value = "INVOKE", shift = At.Shift.AFTER,
+            target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/packet/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V"),
+            cancellable = true)
+    private void nef$skipImplosionParticles(ParticleS2CPacket packet, CallbackInfo callback) {
+        if (CombatVisuals.hideExplosionParticle(packet)) callback.cancel();
+    }
+
     @Inject(method = "onParticle", at = @At("RETURN"))
     private void nef$observeFishingParticle(ParticleS2CPacket packet, CallbackInfo callback) {
         FishingAlert.INSTANCE.observeParticle(MinecraftClient.getInstance(), packet);
+    }
+
+    @WrapOperation(method = "onEntityPosition", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/entity/Entity;updateTrackedPositionAndAngles(DDDFFI)V"))
+    private void nef$snapEndermanTeleport(Entity entity, double x, double y, double z, float yaw, float pitch,
+                                         int interpolationSteps, Operation<Void> original) {
+        if (CombatVisuals.hideEndermanTeleport(entity) && MathHelper.squaredMagnitude(
+                x - entity.getLerpTargetX(), y - entity.getLerpTargetY(), z - entity.getLerpTargetZ()) >= 4) {
+            // Keep the server destination and skip rendering the trip between the two positions.
+            original.call(entity, x, y, z, yaw, pitch, 0);
+            entity.refreshPositionAndAngles(x, y, z, yaw, pitch);
+        } else {
+            original.call(entity, x, y, z, yaw, pitch, interpolationSteps);
+        }
     }
 
     @Inject(method = "onInventory", at = @At("RETURN"))

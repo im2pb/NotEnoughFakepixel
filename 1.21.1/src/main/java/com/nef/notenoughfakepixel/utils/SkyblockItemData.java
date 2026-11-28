@@ -13,6 +13,10 @@ public final class SkyblockItemData {
         return id(stack.get(DataComponentTypes.CUSTOM_DATA));
     }
 
+    public static boolean isAspect(String id) {
+        return "ASPECT_OF_THE_END".equals(id) || "ASPECT_OF_THE_VOID".equals(id);
+    }
+
     public static String id(NbtComponent customData) {
         if (customData == null) return "";
 

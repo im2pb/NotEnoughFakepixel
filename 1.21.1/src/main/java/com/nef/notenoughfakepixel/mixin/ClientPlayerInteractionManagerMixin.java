@@ -4,8 +4,11 @@ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.nef.notenoughfakepixel.features.skyblock.inventory.PagedMenuTracker;
 import com.nef.notenoughfakepixel.features.skyblock.overlays.waypoints.GiftWaypoints;
+import com.nef.notenoughfakepixel.features.skyblock.qol.CombatVisuals;
+import com.nef.notenoughfakepixel.features.skyblock.qol.TeleportCamera;
 import com.nef.notenoughfakepixel.features.skyblock.slotlocking.SlotLocking;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -13,6 +16,7 @@ import net.minecraft.recipe.RecipeEntry;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -58,5 +62,18 @@ abstract class ClientPlayerInteractionManagerMixin {
     @Inject(method = "attackEntity", at = @At("HEAD"))
     private void nef$recordGiftAttack(PlayerEntity player, Entity entity, CallbackInfo callback) {
         GiftWaypoints.recordInteraction(entity);
+    }
+
+    @Inject(method = "interactItem", at = @At("HEAD"))
+    private void nef$recordItemUse(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> callback) {
+        CombatVisuals.recordItemUse(player, hand);
+        TeleportCamera.INSTANCE.recordUse(player, hand);
+    }
+
+    @Inject(method = "interactBlock", at = @At("HEAD"))
+    private void nef$recordBlockUse(ClientPlayerEntity player, Hand hand, BlockHitResult hit,
+                                   CallbackInfoReturnable<ActionResult> callback) {
+        CombatVisuals.recordItemUse(player, hand);
+        TeleportCamera.INSTANCE.recordUse(player, hand);
     }
 }

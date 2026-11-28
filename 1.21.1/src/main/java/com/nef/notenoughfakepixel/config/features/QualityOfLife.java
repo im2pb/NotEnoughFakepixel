@@ -1,6 +1,7 @@
 package com.nef.notenoughfakepixel.config.features;
 
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.nef.notenoughfakepixel.config.position.Position;
 import com.nef.notenoughfakepixel.features.skyblock.qol.DarkAhTimer;
 import io.github.notenoughupdates.moulconfig.annotations.*;
@@ -39,7 +40,7 @@ public class QualityOfLife {
     public boolean qolVisualCooldowns = true;
 
     @Expose
-    @ConfigOption(name = "Disable Enderman Teleport", desc = "Disable enderman teleportation")
+    @ConfigOption(name = "Disable Enderman Teleport", desc = "Skip the teleport trail and snap Endermen to their destination in SkyBlock")
     @ConfigEditorBoolean
     public boolean qolDisableEnderManTeleport = true;
 
@@ -124,7 +125,7 @@ public class QualityOfLife {
     public boolean qolReforgeHelper = true;
 
     @Expose
-    @ConfigOption(name = "Enable Smooth AOTE", desc = "Enables smooth AOTE teleport animation")
+    @ConfigOption(name = "Enable Smooth AOTE", desc = "Smooth first-person camera movement when teleporting with AOTE or AOTV")
     @ConfigEditorBoolean
     public boolean enableSmoothAote = false;
 
@@ -183,12 +184,12 @@ public class QualityOfLife {
     public static class VisualTweaks {
 
             @Expose
-            @ConfigOption(name = "Fullbright", desc = "Enable fullbright")
+            @ConfigOption(name = "Fullbright", desc = "Render the world at full brightness without changing gamma")
             @ConfigEditorBoolean
             public boolean qolFullbright = true;
 
             @Expose
-            @ConfigOption(name = "Disable Rain", desc = "Disables rain rendering")
+            @ConfigOption(name = "Disable Rain", desc = "Hide rain and snow and mute rain splash sounds")
             @ConfigEditorBoolean
             public boolean qolDisableRain = true;
 
@@ -213,9 +214,15 @@ public class QualityOfLife {
             public boolean qolHideFallingBlocks = false;
 
             @Expose
-            @ConfigOption(name = "Hide Player Armor", desc = "Hide player armor")
+            @ConfigOption(name = "Hide Player Armor", desc = "Hide rendered player armor, headgear, and elytra in SkyBlock")
             @ConfigEditorBoolean
             public boolean qolHidePlayerArmor = false;
+
+            @Expose
+            @SerializedName(value = "qolHideSwordOffhandShield", alternate = "qolHideAspectOffhandShield")
+            @ConfigOption(name = "Hide Sword Offhand Shield", desc = "Hide the offhand shield while holding any sword or an Aspect of the Void in SkyBlock")
+            @ConfigEditorBoolean
+            public boolean qolHideSwordOffhandShield = true;
 
             @Expose
             @ConfigOption(name = "Hide Players near NPCS", desc = "Hide players near NPCS")
@@ -226,17 +233,17 @@ public class QualityOfLife {
     public static class EtherwarpSettings {
 
             @Expose
-            @ConfigOption(name = "Etherwarp Zoom", desc = "Zooms in when using etherwarp")
+            @ConfigOption(name = "Etherwarp Zoom", desc = "Zoom toward the aimed-at block with an Etherwarp Conduit or a sneaking Etherwarp-upgraded AOTE or AOTV")
             @ConfigEditorBoolean
             public boolean qolEtherwarpZoom = true;
 
             @Expose
-            @ConfigOption(name = "Etherwarp Overlay", desc = "Show etherwarp overlay")
+            @ConfigOption(name = "Etherwarp Overlay", desc = "Highlight the block you are aiming at with Etherwarp")
             @ConfigEditorBoolean
             public boolean qolEtherwarpOverlay = true;
 
             @Expose
-            @ConfigOption(name = "Etherwarp Text Helper", desc = "Shows text helper when etherwarping")
+            @ConfigOption(name = "Etherwarp Text Helper", desc = "Show why Etherwarp cannot land at the crosshair target")
             @ConfigEditorBoolean
             public boolean qolEtherwarpText = true;
 
@@ -248,7 +255,7 @@ public class QualityOfLife {
             @Expose
             @ConfigOption(name = "Etherwarp Overlay Failed Color", desc = "Color of the failed etherwarp overlay")
             @ConfigEditorColour
-            public String qolEtherwarpFailedOverlayColor = "0:100:0:255:0";
+            public String qolEtherwarpFailedOverlayColor = "0:100:255:0:0";
 
             @Expose
             @ConfigOption(name = "Etherwarp Sound", desc = "Sound played on etherwarp")
@@ -362,12 +369,12 @@ public class QualityOfLife {
             public boolean qolDisableAoteSounds = false;
 
             @Expose
-            @ConfigOption(name = "Disable Hyperion Explosion", desc = "Disable Hyperion explosion effects")
+            @ConfigOption(name = "Disable Hyperion Explosion", desc = "Hide nearby explosion particles when you use Implosion or Wither Impact")
             @ConfigEditorBoolean
             public boolean qolDisableHyperionExplosions = true;
 
             @Expose
-            @ConfigOption(name = "Disable Thunderlord Bolt", desc = "Disable Thunderlord bolt effects")
+            @ConfigOption(name = "Disable Thunderlord Bolt", desc = "Hide lightning bolts and flashes in SkyBlock outside thunderstorms")
             @ConfigEditorBoolean
             public boolean qolDisableThunderlordBolt = true;
 

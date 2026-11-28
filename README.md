@@ -57,7 +57,7 @@ See the [LICENSE](LICENSE) file for details.
 
 <!-- port-progress:start -->
 
-![1.21 port progress (33.8%)](https://progress-bar.xyz/33/?scale=100&width=350&progress_color=338b33) `73/216 features`
+![1.21 port progress (38.9%)](https://progress-bar.xyz/38/?scale=100&width=350&progress_color=338b33) `84/216 features`
 
 <!-- port-progress:end -->
 
@@ -75,17 +75,17 @@ See the [LICENSE](LICENSE) file for details.
 | General | Etherwarp overlay | X |  |
 | General | Etherwarp sounds | X |  |
 | General | Hide flaming fists | X |  |
-| General | Hide player armor | X |  |
+| General | Hide player armor | X | X |
 | General | Hide dead mobs | X |  |
-| General | Hide falling blocks | X |  |
+| General | Hide falling blocks | X | X |
 | General | Item animations | X |  |
 | General | Smol people | X |  |
 | General | Reforge helper | X |  |
-| General | Disable Hyperion Explosions | X |  |
-| General | Disable Thunderlord enchantment bolts | X |  |
-| General | No Hurt camera animation | X |  |
+| General | Disable Hyperion Explosions | X | X |
+| General | Disable Thunderlord enchantment bolts | X | X |
+| General | No Hurt camera animation | X | X |
 | General | Golden enchants | X |  |
-| General | Fullbright | X |  |
+| General | Fullbright | X | X |
 | General | Disable Potion Effects in inventory | X |  |
 | General | Middle click on Menus | X |  |
 | General | Disable sounds from Jerry-chine gun and AOTE | X |  |
@@ -95,15 +95,15 @@ See the [LICENSE](LICENSE) file for details.
 | General | Hide players close to NPCs | X |  |
 | General | Show Ender Nodes | X |  |
 | General | Visual item cooldowns | X |  |
-| General | Disable Enderman teleporting | X |  |
+| General | Disable Enderman teleporting | X | X |
 | General | Full block buttons | X |  |
 | General | Highlight active wardrobe slot | X | X |
-| General | Smooth AOTE teleport | X |  |
+| General | Smooth AOTE teleport | X | X |
 | General | Pingless cactus | X |  |
-| General | Disable rain | X |  |
+| General | Disable rain | X | X |
 | General | Item rarity backgrounds | X |  |
-| General | Etherwarp zoom | X |  |
-| General | Etherwarp text helper | X |  |
+| General | Etherwarp zoom | X | X |
+| General | Etherwarp text helper | X | X |
 | General | Wardrobe slot shortcuts | X |  |
 | General | Island, Hub, and Dungeon Hub warp shortcuts | X |  |
 | General | Drinking animation fixes | X |  |
@@ -348,7 +348,7 @@ See the [LICENSE](LICENSE) file for details.
 
 | Feature  | 1.21 |
 | --- | --- |
-| Hide Shield |  |
+| Hide Shield Off-hand | X |
 
 
 ### Debug
