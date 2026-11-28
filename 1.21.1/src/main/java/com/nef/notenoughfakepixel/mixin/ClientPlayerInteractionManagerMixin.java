@@ -2,6 +2,7 @@ package com.nef.notenoughfakepixel.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.nef.notenoughfakepixel.features.skyblock.enchanting.ExperimentationSolver;
 import com.nef.notenoughfakepixel.features.skyblock.inventory.PagedMenuTracker;
 import com.nef.notenoughfakepixel.features.skyblock.overlays.waypoints.GiftWaypoints;
 import com.nef.notenoughfakepixel.features.skyblock.qol.CombatVisuals;
@@ -29,10 +30,13 @@ abstract class ClientPlayerInteractionManagerMixin {
     @WrapMethod(method = "clickSlot")
     private void nef$protectLockedSlots(int syncId, int slotId, int button, SlotActionType action,
                                          PlayerEntity player, Operation<Void> original) {
+        var client = MinecraftClient.getInstance();
+        if (ExperimentationSolver.INSTANCE.blocksClick(client, syncId, slotId, action)) return;
+
         var click = SlotLocking.INSTANCE.checkClick(syncId, slotId, button, action, player);
         if (click != null) {
             original.call(syncId, click.slotId(), click.button(), click.action(), player);
-            PagedMenuTracker.slotClicked(MinecraftClient.getInstance(), syncId, click.slotId());
+            PagedMenuTracker.slotClicked(client, syncId, click.slotId());
         }
     }
 

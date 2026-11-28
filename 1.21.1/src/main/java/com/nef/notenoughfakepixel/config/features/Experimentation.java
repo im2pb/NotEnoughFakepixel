@@ -13,17 +13,17 @@ public class Experimentation {
     public boolean experimentationSolvers = true;
 
     @Expose
-    @ConfigOption(name = "Chronomatron Solver", desc = "Enable Chronomatron solver")
+    @ConfigOption(name = "Chronomatron Solver", desc = "Highlight the next color in Chronomatron, including Metaphysical.")
     @ConfigEditorBoolean
     public boolean experimentationChronomatronSolver = true;
 
     @Expose
-    @ConfigOption(name = "Ultrasequencer Solver", desc = "Enable Ultrasequencer solver")
+    @ConfigOption(name = "Ultrasequencer Solver", desc = "Show the hidden stack counts in their original slots.")
     @ConfigEditorBoolean
     public boolean experimentationUltraSequencerSolver = true;
 
     @Expose
-    @ConfigOption(name = "Superpairs Solver", desc = "Enable Superpairs solver")
+    @ConfigOption(name = "Superpairs Solver", desc = "Remember revealed cards and highlight possible pairs, matches and powerups.")
     @ConfigEditorBoolean
     public boolean experimentationSuperpairsSolver = true;
 
@@ -40,7 +40,7 @@ public class Experimentation {
     @Expose
     @ConfigOption(
             name = "Ultrasequencer Upcoming",
-            desc = "Set the colour of the glass pane shown behind the element in the ultrasequencer which is coming after \"next\""
+            desc = "Set the border color for the Ultrasequencer slot after the next guess."
     )
     @ConfigEditorDropdown(
             values = {
@@ -53,7 +53,7 @@ public class Experimentation {
     @Expose
     @ConfigOption(
             name = "Superpairs Matched",
-            desc = "Set the colour of the glass pane shown behind successfully matched pairs"
+            desc = "Highlight color for confirmed matches."
     )
     @ConfigEditorDropdown(
             values = {
@@ -66,7 +66,7 @@ public class Experimentation {
     @Expose
     @ConfigOption(
             name = "Superpairs Possible",
-            desc = "Set the colour of the glass pane shown behind pairs which can be matched, but have not yet"
+            desc = "Highlight color for cards that could match."
     )
     @ConfigEditorDropdown(
             values = {
@@ -79,7 +79,7 @@ public class Experimentation {
     @Expose
     @ConfigOption(
             name = "Superpairs Unmatched",
-            desc = "Set the colour of the glass pane shown behind pairs which have been previously uncovered"
+            desc = "Highlight color for remembered cards with no known partner."
     )
     @ConfigEditorDropdown(
             values = {
@@ -92,7 +92,7 @@ public class Experimentation {
     @Expose
     @ConfigOption(
             name = "Superpairs Powerups",
-            desc = "Set the colour of the glass pane shown behind powerups"
+            desc = "Highlight color for revealed powerups."
     )
     @ConfigEditorDropdown(
             values = {

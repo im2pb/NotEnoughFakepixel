@@ -57,7 +57,7 @@ See the [LICENSE](LICENSE) file for details.
 
 <!-- port-progress:start -->
 
-![1.21 port progress (43.7%)](https://progress-bar.xyz/43/?scale=100&width=350&progress_color=338b33) `94/215 features`
+![1.21 port progress (46.0%)](https://progress-bar.xyz/46/?scale=100&width=350&progress_color=338b33) `99/215 features`
 
 <!-- port-progress:end -->
 
@@ -228,11 +228,11 @@ See the [LICENSE](LICENSE) file for details.
 
 | Feature | 1.8.9 | 1.21 |
 | --- | --- | --- |
-| Chronomatron solver | X |  |
-| Ultrasequencer solver | X |  |
-| Prevent missclicks | X |  |
-| Superpairs solver | X |  |
-| Hide Experimentation tooltips | X |  |
+| Chronomatron solver | X | X |
+| Ultrasequencer solver | X | X |
+| Prevent missclicks | X | X |
+| Superpairs solver | X | X |
+| Hide Experimentation tooltips | X | X |
 
 ### Chocolate Factory
 

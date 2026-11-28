@@ -2,6 +2,7 @@ package com.nef.notenoughfakepixel.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.nef.notenoughfakepixel.features.skyblock.enchanting.ExperimentationSolver;
 import com.nef.notenoughfakepixel.features.skyblock.fishing.FishingAlert;
 import com.nef.notenoughfakepixel.features.skyblock.inventory.PagedMenuTracker;
 import com.nef.notenoughfakepixel.features.skyblock.mining.DrillFix;
@@ -64,12 +65,16 @@ abstract class ClientPlayNetworkHandlerMixin {
 
     @Inject(method = "onInventory", at = @At("RETURN"))
     private void nef$readMenuContents(InventoryS2CPacket packet, CallbackInfo callback) {
-        PagedMenuTracker.contentsReceived(MinecraftClient.getInstance(), packet.getSyncId(), packet.getContents());
+        var client = MinecraftClient.getInstance();
+        PagedMenuTracker.contentsReceived(client, packet.getSyncId(), packet.getContents());
+        ExperimentationSolver.INSTANCE.contentsReceived(client, packet.getSyncId(), packet.getContents());
     }
 
     @Inject(method = "onScreenHandlerSlotUpdate", at = @At("RETURN"))
     private void nef$readMenuSlot(ScreenHandlerSlotUpdateS2CPacket packet, CallbackInfo callback) {
-        PagedMenuTracker.slotReceived(MinecraftClient.getInstance(), packet.getSyncId(), packet.getSlot(), packet.getStack());
+        var client = MinecraftClient.getInstance();
+        PagedMenuTracker.slotReceived(client, packet.getSyncId(), packet.getSlot(), packet.getStack());
+        ExperimentationSolver.INSTANCE.slotReceived(client, packet.getSyncId(), packet.getSlot(), packet.getStack());
     }
 
     // The vanilla handlers switch to the client thread before reaching these calls.
