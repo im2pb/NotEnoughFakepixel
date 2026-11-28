@@ -19,7 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-record SkyblockSidebar(String title, List<String> lines) {
+public record SkyblockSidebar(String title, List<String> lines) {
     static final SkyblockSidebar EMPTY = new SkyblockSidebar("", List.of());
 
     private static final Comparator<ScoreboardEntry> SCORE_ORDER = Comparator
@@ -61,6 +61,11 @@ record SkyblockSidebar(String title, List<String> lines) {
                 .sorted(SCORE_ORDER)
                 .limit(15)
                 .map(entry -> Team.decorateName(scoreboard.getScoreHolderTeam(entry.owner()), entry.name()));
+    }
+
+    public static Stream<Text> displayedLines(MinecraftClient client) {
+        var objective = displayedObjective(client);
+        return objective == null ? Stream.empty() : displayedLines(objective);
     }
 
     Gamemode gamemode() {

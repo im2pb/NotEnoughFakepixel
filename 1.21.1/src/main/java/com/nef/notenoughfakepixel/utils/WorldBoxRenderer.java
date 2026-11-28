@@ -10,9 +10,11 @@ import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.util.BufferAllocator;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3d;
 import org.lwjgl.opengl.GL11;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.OptionalDouble;
 
 public final class WorldBoxRenderer implements AutoCloseable {
@@ -21,10 +23,7 @@ public final class WorldBoxRenderer implements AutoCloseable {
 
     public void draw(WorldRenderContext context, Collection<Marker> markers, boolean filled, boolean throughWalls) {
         if (markers.isEmpty() || context.matrixStack() == null) return;
-        if (allocator == null) {
-            allocator = new BufferAllocator(4096);
-            consumers = VertexConsumerProvider.immediate(allocator);
-        }
+        prepareBuffer();
 
         RenderLayer layer = filled
                 ? (throughWalls ? Layers.THROUGH_WALL_FILL : Layers.FILL)
@@ -55,6 +54,41 @@ public final class WorldBoxRenderer implements AutoCloseable {
         } finally {
             if (depthWasEnabled) RenderSystem.enableDepthTest();
             else RenderSystem.disableDepthTest();
+        }
+    }
+
+    public void drawPath(WorldRenderContext context, List<Vec3d> path, int color, boolean throughWalls) {
+        if (path.size() < 2 || context.matrixStack() == null) return;
+        prepareBuffer();
+
+        var matrix = context.matrixStack().peek();
+        var camera = context.camera().getPos();
+        boolean depthWasEnabled = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
+        try {
+            if (throughWalls) RenderSystem.disableDepthTest();
+            else RenderSystem.enableDepthTest();
+
+            var vertices = consumers.getBuffer(throughWalls ? Layers.THROUGH_WALL_LINES : Layers.LINES);
+            for (int i = 1; i < path.size(); i++) {
+                Vec3d from = path.get(i - 1).subtract(camera);
+                Vec3d to = path.get(i).subtract(camera);
+                Vec3d direction = to.subtract(from).normalize();
+                vertices.vertex(matrix, (float) from.x, (float) from.y, (float) from.z).color(color)
+                        .normal(matrix, (float) direction.x, (float) direction.y, (float) direction.z);
+                vertices.vertex(matrix, (float) to.x, (float) to.y, (float) to.z).color(color)
+                        .normal(matrix, (float) direction.x, (float) direction.y, (float) direction.z);
+            }
+            consumers.draw();
+        } finally {
+            if (depthWasEnabled) RenderSystem.enableDepthTest();
+            else RenderSystem.disableDepthTest();
+        }
+    }
+
+    private void prepareBuffer() {
+        if (allocator == null) {
+            allocator = new BufferAllocator(4096);
+            consumers = VertexConsumerProvider.immediate(allocator);
         }
     }
 

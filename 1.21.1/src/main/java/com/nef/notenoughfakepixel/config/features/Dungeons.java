@@ -74,7 +74,7 @@ public class Dungeons {
         public boolean dungeonsIsPaul = false;
 
         @Expose
-        @ConfigOption(name = "Auto Close Chests", desc = "Automatically close chests in dungeons")
+        @ConfigOption(name = "Auto Close Chests", desc = "Automatically close Secret Chest menus in dungeons")
         @ConfigEditorBoolean
         public boolean dungeonsAutoCloseChests = true;
 
@@ -124,7 +124,7 @@ public class Dungeons {
         public boolean dungeonsSpiritBow = true;
 
         @Expose
-        @ConfigOption(name = "Announce Blood Room Done", desc = "Announce when blood room is done spawning.")
+        @ConfigOption(name = "Blood Ready Title", desc = "Show a title and play a sound when the Watcher finishes spawning mobs")
         @ConfigEditorBoolean
         public boolean dungeonsBloodReady = true;
     }

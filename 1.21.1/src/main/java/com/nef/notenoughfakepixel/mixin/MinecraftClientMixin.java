@@ -3,8 +3,10 @@ package com.nef.notenoughfakepixel.mixin;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.nef.notenoughfakepixel.features.skyblock.dungeons.SpiritLeapScreen;
 import com.nef.notenoughfakepixel.features.skyblock.slotlocking.SlotLocking;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.network.packet.Packet;
@@ -12,9 +14,15 @@ import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Mixin(MinecraftClient.class)
 abstract class MinecraftClientMixin {
+    @ModifyVariable(method = "setScreen", at = @At("HEAD"), argsOnly = true)
+    private Screen nef$replaceSpiritLeapScreen(Screen screen) {
+        return SpiritLeapScreen.replace((MinecraftClient) (Object) this, screen);
+    }
+
     @WrapOperation(method = "handleInputEvents", at = @At(value = "FIELD",
             target = "Lnet/minecraft/entity/player/PlayerInventory;selectedSlot:I", opcode = Opcodes.PUTFIELD))
     private void nef$trackHotbarKey(PlayerInventory inventory, int next, Operation<Void> original) {

@@ -57,7 +57,7 @@ See the [LICENSE](LICENSE) file for details.
 
 <!-- port-progress:start -->
 
-![1.21 port progress (38.9%)](https://progress-bar.xyz/38/?scale=100&width=350&progress_color=338b33) `84/216 features`
+![1.21 port progress (41.4%)](https://progress-bar.xyz/41/?scale=100&width=350&progress_color=338b33) `89/215 features`
 
 <!-- port-progress:end -->
 
@@ -150,11 +150,11 @@ See the [LICENSE](LICENSE) file for details.
 
 | Subcategory | Feature | 1.8.9 | 1.21 |
 | --- | --- | --- | --- |
-| General | Custom Leap GUI | X |  |
+| General | Custom Leap GUI | X | X |
 | General | Custom Terminal GUI | X |  |
-| General | Blood ready title | X |  |
-| General | Boulder Solver | X |  |
-| General | Silverfish Solver | X |  |
+| General | Blood ready title | X | X |
+| General | Boulder Solver | X | X |
+| General | Silverfish Solver | X | X |
 | General | Wither doors highlight | X |  |
 | General | Teleport maze Solver | X |  |
 | General | Terminal waypoints | X | X |
@@ -162,7 +162,7 @@ See the [LICENSE](LICENSE) file for details.
 | General | Spirit bow tracer | X |  |
 | General | Dungeon Map | X | X |
 | General | Three Weirdos Solver | X | X |
-| General | Auto close secret chests | X |  |
+| General | Auto close secret chests | X | X |
 | General | "Unable to locate sign" hidden | X | X |
 | General | S+ reminder | X |  |
 | General | Score overlay | X |  |
@@ -173,7 +173,6 @@ See the [LICENSE](LICENSE) file for details.
 | General | Correct Livid finder | X |  |
 | General | Highlight opened Croesus chests | X | X |
 | General | Spirit Leap announcements | X |  |
-| General | Dungeon map rotation | X |  |
 | General | S notifier | X |  |
 | General | Simple score overlay | X |  |
 | General | Paul-aware score calculation | X |  |
@@ -193,8 +192,8 @@ See the [LICENSE](LICENSE) file for details.
 | Master Mode 7 | M7 dragon highlight | X |  |
 | Master Mode 7 | M7 relic waypoints | X |  |
 | Master Mode 7 | Dragon statue distance boxes | X |  |
-| Puzzle Solvers | Creeper Solver | X |  |
-| Puzzle Solvers | Water Solver | X |  |
+| Puzzle Solvers | Creeper Solver | X | X |
+| Puzzle Solvers | Water Solver | X | X |
 
 ### Mining
 
