@@ -3,6 +3,7 @@ package com.nef.notenoughfakepixel.config.features;
 import com.google.gson.annotations.Expose;
 import com.nef.notenoughfakepixel.config.position.Position;
 import com.nef.notenoughfakepixel.features.skyblock.dungeons.DungeonMap;
+import com.nef.notenoughfakepixel.features.skyblock.dungeons.ScoreOverlay;
 import io.github.notenoughupdates.moulconfig.annotations.Category;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorBoolean;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorButton;
@@ -58,18 +59,18 @@ public class Dungeons {
     public String dungeonsWitherDoorsInactive = "0:255:255:0:0";
 
     @Expose
-    @ConfigOption(name = "Floor 7 Withers box", desc = "Box withers in f7")
+    @ConfigOption(name = "Floor 7 Withers Glow", desc = "Illuminate Maxor, Storm, Goldor, and Necron with a glowing outline")
     @ConfigEditorBoolean
     public boolean dungeonsWithersBox = true;
 
     @Expose
-    @ConfigOption(name = "Floor 7 Withers box color", desc = "Floor 7 Withers box color")
+    @ConfigOption(name = "Floor 7 Withers Color", desc = "Color of the Floor 7 Wither outlines")
     @ConfigEditorColour
     public String dungeonsWithersBoxColor = "0:255:0:255:0";
 
     public static class General {
         @Expose
-        @ConfigOption(name = "Is Paul Active", desc = "Check if Paul is active as mayor with EZPZ perk")
+        @ConfigOption(name = "Is Paul Active", desc = "Include Paul's EZPZ bonus in the score estimate")
         @ConfigEditorBoolean
         public boolean dungeonsIsPaul = false;
 
@@ -195,7 +196,7 @@ public class Dungeons {
 
     public static class Mobs {
         @Expose
-        @ConfigOption(name = "Fel Mobs Display", desc = "Display Fel mobs.")
+        @ConfigOption(name = "Fel Mobs Glow", desc = "Highlight Fels with a glowing outline")
         @ConfigEditorBoolean
         public boolean dungeonsFelMob = true;
 
@@ -205,7 +206,7 @@ public class Dungeons {
         public String dungeonsFelColor = "0:92:154:255:255";
 
         @Expose
-        @ConfigOption(name = "Bat Mobs Display", desc = "Display Bat mobs.")
+        @ConfigOption(name = "Bat Mobs Glow", desc = "Highlight dungeon bats with a glowing outline")
         @ConfigEditorBoolean
         public boolean dungeonsBatMobs = true;
 
@@ -214,10 +215,13 @@ public class Dungeons {
         @ConfigEditorColour
         public String dungeonsBatColor = "0:92:0:255:0";
 
+        @Expose(serialize = false)
+        private Integer dungeonsStarredMobs;
+
         @Expose
-        @ConfigOption(name = "Starred Mobs Display", desc = "Display style for starred mobs.")
-        @ConfigEditorDropdown(values = {"Box", "Outline", "Disabled"})
-        public int dungeonsStarredMobs = 0;
+        @ConfigOption(name = "Starred Mobs Glow", desc = "Highlight starred dungeon mobs with a glowing outline")
+        @ConfigEditorBoolean
+        public boolean dungeonsStarredMobGlow = true;
 
         @Expose
         @ConfigOption(name = "Starred Mobs Color", desc = "Color of starred mobs.")
@@ -225,7 +229,7 @@ public class Dungeons {
         public String dungeonsStarredBoxColor = "0:92:154:255:255";
 
         @Expose
-        @ConfigOption(name = "Starred Mobs ESP", desc = "Render starred mobs hitboxes through walls.")
+        @ConfigOption(name = "Starred Mobs ESP", desc = "Show starred mob outlines through walls")
         @ConfigEditorBoolean
         public boolean dungeonsStarredMobsEsp = true;
 
@@ -248,6 +252,14 @@ public class Dungeons {
         @ConfigOption(name = "Stormy Color", desc = "Color of Stormy.")
         @ConfigEditorColour
         public String dungeonsStormyColor = "0:173:216:230:255";
+
+        public boolean migrateStarredMobDisplay() {
+            if (dungeonsStarredMobs == null) return false;
+
+            dungeonsStarredMobGlow = dungeonsStarredMobs == 0 || dungeonsStarredMobs == 1;
+            dungeonsStarredMobs = null;
+            return true;
+        }
     }
 
     public static class Terminals {
@@ -391,8 +403,28 @@ public class Dungeons {
         @ConfigEditorColour
         public String scoreOverlayBackgroundColor = "0:150:0:0:0";
 
+        @ConfigOption(name = "Edit Position", desc = "Move the Dungeon Score Overlay on the HUD")
+        @ConfigEditorButton(buttonText = "Edit")
+        public transient Runnable editScoreOverlayPosition = () -> ScoreOverlay.editPosition(
+                this.scoreOverlayPosition, this.scoreOverlayScale, this.scoreOverlayBackgroundColor,
+                this.dungeonsScoreSimple, position -> this.scoreOverlayPosition = position);
+
+        @Expose(serialize = false)
+        private Position scoreOverlayPos;
+
         @Expose
-        public Position scoreOverlayPos = new Position(10, 10, false, true);
+        public Position scoreOverlayPosition = new Position(10, 10);
+
+        public boolean migrateScorePosition(Position mapPosition) {
+            if (scoreOverlayPos == null) return false;
+
+            var oldDefault = new Position(10, 10, false, true);
+            if (!oldDefault.equals(scoreOverlayPos) || !oldDefault.equals(mapPosition)) {
+                scoreOverlayPosition = scoreOverlayPos;
+            }
+            scoreOverlayPos = null;
+            return true;
+        }
 
         @Expose
         @ConfigOption(name = "S Notifier", desc = "Notify when S is reached (actually reached not virtual).")

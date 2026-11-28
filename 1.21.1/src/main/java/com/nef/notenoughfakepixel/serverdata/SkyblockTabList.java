@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 record SkyblockTabList(
         Location location, Area area, boolean sandbox, boolean hasArea, Mayor mayor,
         int mithril, int gemstone, List<String> commissions, HashMap<Integer, Integer> pests,
-        List<String> visitors, List<String> milestones
+        List<String> visitors, List<String> milestones, DungeonRunStats dungeonStats
 ) {
     private static final Comparator<PlayerListEntry> TAB_ORDER = Comparator
             .comparing((PlayerListEntry entry) -> entry.getGameMode() == GameMode.SPECTATOR)
@@ -57,6 +57,10 @@ record SkyblockTabList(
         Mayor mayor = null;
         int mithril = 0;
         int gemstone = 0;
+        double secretPercent = -1;
+        int deaths = -1;
+        int elapsed = -1;
+        int crypts = -1;
         List<String> commissions = new ArrayList<>();
         HashMap<Integer, Integer> pests = new HashMap<>();
         List<String> visitors = new ArrayList<>();
@@ -86,6 +90,24 @@ record SkyblockTabList(
             if (colon >= 0) {
                 String label = line.substring(0, colon);
                 String value = line.substring(colon + 1).strip();
+                switch (label) {
+                    case "Secrets Found" -> {
+                        double parsed = DungeonRunStats.parseSecrets(value);
+                        if (parsed >= 0) secretPercent = parsed;
+                    }
+                    case "Deaths" -> {
+                        int parsed = DungeonRunStats.parseDeaths(value);
+                        if (parsed >= 0) deaths = parsed;
+                    }
+                    case "Time", "Time Elapsed" -> {
+                        int parsed = DungeonRunStats.parseElapsed(value);
+                        if (parsed >= 0) elapsed = parsed;
+                    }
+                    case "Crypts" -> {
+                        int parsed = DungeonRunStats.parseCrypts(value);
+                        if (parsed >= 0) crypts = parsed;
+                    }
+                }
                 if (label.equals("Winner") || label.equals("Current Mayor")) {
                     mayor = Mayor.fromName(value);
                     gardenSection = GardenSection.NONE;
@@ -144,7 +166,8 @@ record SkyblockTabList(
         Location location = dungeon ? Location.DUNGEON : Location.fromServerId(serverId);
         boolean sandbox = serverId.toLowerCase(Locale.ROOT).contains("_sandbox");
         return new SkyblockTabList(location, area, sandbox, hasArea, mayor, mithril, gemstone,
-                List.copyOf(commissions), pests, visitors, milestones);
+                List.copyOf(commissions), pests, visitors, milestones,
+                location.isDungeon() ? new DungeonRunStats(secretPercent, deaths, elapsed, crypts) : DungeonRunStats.EMPTY);
     }
 
     boolean indicatesSkyblock() {

@@ -57,7 +57,7 @@ See the [LICENSE](LICENSE) file for details.
 
 <!-- port-progress:start -->
 
-![1.21 port progress (41.4%)](https://progress-bar.xyz/41/?scale=100&width=350&progress_color=338b33) `89/215 features`
+![1.21 port progress (43.7%)](https://progress-bar.xyz/43/?scale=100&width=350&progress_color=338b33) `94/215 features`
 
 <!-- port-progress:end -->
 
@@ -165,7 +165,7 @@ See the [LICENSE](LICENSE) file for details.
 | General | Auto close secret chests | X | X |
 | General | "Unable to locate sign" hidden | X | X |
 | General | S+ reminder | X |  |
-| General | Score overlay | X |  |
+| General | Score overlay | X | X |
 | General | Secret overlay | X |  |
 | General | Wither and Blood key tracers | X |  |
 | General | Mute irrelevant dungeon messages | X |  |
@@ -178,8 +178,8 @@ See the [LICENSE](LICENSE) file for details.
 | General | Paul-aware score calculation | X |  |
 | General | Item secret and Wither Essence highlights | X |  |
 | Starred mobs | Starred mob display | X | X |
-| Starred mobs | Fel position display | X |  |
-| Starred mobs | Bat position display | X |  |
+| Starred mobs | Fel position display | X | X |
+| Starred mobs | Bat position display | X | X |
 | Starred mobs | Starred mob ESP | X | X |
 | Floor 7 | Terminal solvers | X |  |
 | Floor 7 | Terminal tracker | X |  |

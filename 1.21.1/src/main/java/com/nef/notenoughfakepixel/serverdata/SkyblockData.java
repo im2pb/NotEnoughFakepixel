@@ -54,6 +54,7 @@ public final class SkyblockData {
     // Dungeons
     @Getter private static DungeonFloor currentFloor = DungeonFloor.NONE;
     @Getter private static int clearedPercentage = -1;
+    @Getter private static DungeonRunStats dungeonRunStats = DungeonRunStats.EMPTY;
 
     // Garden
     @Getter private static HashMap<Integer, Integer> activePests = new HashMap<>();
@@ -165,6 +166,7 @@ public final class SkyblockData {
         currentArea = tabList.area();
         sandbox = tabList.sandbox();
         if (tabList.mayor() != null) currentMayor = tabList.mayor();
+        dungeonRunStats = tabList.dungeonStats();
         mithrilPowder = tabList.mithril();
         gemstonePowder = tabList.gemstone();
         commissions = tabList.commissions();
@@ -185,6 +187,7 @@ public final class SkyblockData {
         currentLocation = Location.NONE;
         currentArea = Area.NONE;
         currentMayor = Mayor.NONE;
+        dungeonRunStats = DungeonRunStats.EMPTY;
         sandbox = false;
         mithrilPowder = 0;
         gemstonePowder = 0;

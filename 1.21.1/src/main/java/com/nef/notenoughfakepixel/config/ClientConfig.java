@@ -96,7 +96,12 @@ public final class ClientConfig implements ClientModInitializer, ClientCommandRe
             builder.setSaveFailed((data, error) ->
                     LOGGER.error("Could not save {}", data.getFile(), error));
             builder.setAfterLoad(data -> {
-                if (data.getInstance().garden.migratePestColorDefaults() && data.getFile().isFile()) {
+                var configuration = data.getInstance();
+                boolean pestColorsMigrated = configuration.garden.migratePestColorDefaults();
+                boolean mobDisplayMigrated = configuration.dungeons.mobs.migrateStarredMobDisplay();
+                boolean scorePositionMigrated = configuration.dungeons.scoreSecrets.migrateScorePosition(
+                        configuration.dungeons.map.dungeonsMapPos);
+                if ((pestColorsMigrated || mobDisplayMigrated || scorePositionMigrated) && data.getFile().isFile()) {
                     data.saveToFile();
                 }
             });

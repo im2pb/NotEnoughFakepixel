@@ -72,6 +72,7 @@ public final class SkyblockDiagnostics {
     }
 
     public static Text snapshot() {
+        var dungeon = SkyblockData.dungeonRunStats();
         return lines(
                 heading("Loaded SkyBlock data", Formatting.AQUA),
                 gamemode(),
@@ -101,6 +102,10 @@ public final class SkyblockDiagnostics {
                 field("Floor", SkyblockData.currentFloor())
                         .append(" | ").append(field("Cleared", SkyblockData.clearedPercentage() < 0
                                 ? "(unknown)" : SkyblockData.clearedPercentage() + "%")),
+                field("Secrets found", dungeon.secretsPercent() < 0 ? "(unknown)" : dungeon.secretsPercent() + "%")
+                        .append(" | ").append(field("Deaths", dungeon.deaths() < 0 ? "(unknown)" : dungeon.deaths()))
+                        .append(" | ").append(field("Time (seconds)", dungeon.elapsedSeconds() < 0 ? "(unknown)" : dungeon.elapsedSeconds()))
+                        .append(" | ").append(field("Crypts", dungeon.crypts() < 0 ? "(unknown)" : dungeon.crypts())),
                 heading("Garden", Formatting.DARK_GREEN),
                 field("Pests", new TreeMap<>(SkyblockData.activePests())),
                 field("Visitors", unformatted(SkyblockData.activeVisitors())),

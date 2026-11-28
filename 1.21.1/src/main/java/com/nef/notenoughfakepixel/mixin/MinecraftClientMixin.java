@@ -1,13 +1,16 @@
 package com.nef.notenoughfakepixel.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.nef.notenoughfakepixel.features.skyblock.dungeons.SpiritLeapScreen;
 import com.nef.notenoughfakepixel.features.skyblock.slotlocking.SlotLocking;
+import com.nef.notenoughfakepixel.utils.EntityGlow;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
@@ -18,6 +21,11 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Mixin(MinecraftClient.class)
 abstract class MinecraftClientMixin {
+    @ModifyReturnValue(method = "hasOutline", at = @At("RETURN"))
+    private boolean nef$hasEntityGlow(boolean vanilla, Entity entity) {
+        return vanilla || EntityGlow.color(entity) != null;
+    }
+
     @ModifyVariable(method = "setScreen", at = @At("HEAD"), argsOnly = true)
     private Screen nef$replaceSpiritLeapScreen(Screen screen) {
         return SpiritLeapScreen.replace((MinecraftClient) (Object) this, screen);

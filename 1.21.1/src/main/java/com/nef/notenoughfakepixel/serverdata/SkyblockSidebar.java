@@ -26,6 +26,7 @@ public record SkyblockSidebar(String title, List<String> lines) {
             .comparingInt(ScoreboardEntry::value).reversed()
             .thenComparing(ScoreboardEntry::owner, String.CASE_INSENSITIVE_ORDER);
     private static final Pattern FLOOR = Pattern.compile("The Catacombs\\s*\\(([EFM][0-9])\\)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern CLEARED = Pattern.compile("(?:Dungeon )?Cleared:\\s*(\\d{1,3})\\s*%?(?:\\s*\\([^)]*\\))?");
     private static final Pattern SEASON = Pattern.compile("\\b(Spring|Summer|Autumn|Winter)\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern TIME = Pattern.compile("\\b(1[0-2]|0?[1-9]):([0-5][0-9])\\s*(am|pm)\\b", Pattern.CASE_INSENSITIVE);
 
@@ -89,12 +90,15 @@ public record SkyblockSidebar(String title, List<String> lines) {
             Matcher floorMatch = FLOOR.matcher(line);
             if (floorMatch.find()) {
                 floor = DungeonFloor.fromCode(floorMatch.group(1).toUpperCase(Locale.ROOT));
-            } else if (line.startsWith("Dungeon Cleared:")) {
-                int percent = SkyblockText.parseNonnegativeInt(line.substring("Dungeon Cleared:".length()).replace("%", ""));
-                if (percent >= 0 && percent <= 100) cleared = percent;
             } else if (line.startsWith("Heat:")) {
                 int value = SkyblockText.parseNonnegativeInt(line.substring("Heat:".length()).replace("♨", "").replace("%", ""));
                 if (value >= 0) heat = value;
+            }
+
+            Matcher clearedMatch = CLEARED.matcher(line);
+            if (clearedMatch.matches()) {
+                int percent = Integer.parseInt(clearedMatch.group(1));
+                if (percent <= 100) cleared = percent;
             }
 
             Matcher seasonMatch = SEASON.matcher(line);
