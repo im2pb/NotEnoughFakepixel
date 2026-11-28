@@ -2,6 +2,7 @@ package com.nef.notenoughfakepixel.mixin;
 
 import com.nef.notenoughfakepixel.config.ClientConfig;
 import com.nef.notenoughfakepixel.features.skyblock.qol.CombatVisuals;
+import com.nef.notenoughfakepixel.features.skyblock.qol.HidePlayersNearNpcs;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
@@ -19,7 +20,8 @@ abstract class EntityRenderDispatcherMixin {
     private void nef$skipHiddenEntity(Entity entity, double x, double y, double z, float yaw, float tickDelta,
                                       MatrixStack matrices, VertexConsumerProvider vertices, int light, CallbackInfo callback) {
         if ((entity instanceof FallingBlockEntity && ClientConfig.configuration().qol.visualTweaks.qolHideFallingBlocks)
-                || (entity instanceof LightningEntity && CombatVisuals.hideLightning(entity.getWorld()))) {
+                || (entity instanceof LightningEntity && CombatVisuals.hideLightning(entity.getWorld()))
+                || HidePlayersNearNpcs.INSTANCE.hidden(entity)) {
             callback.cancel();
         }
     }

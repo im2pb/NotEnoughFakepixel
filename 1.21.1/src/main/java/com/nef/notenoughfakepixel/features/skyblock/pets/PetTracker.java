@@ -10,7 +10,6 @@ import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -52,13 +51,8 @@ public final class PetTracker implements ClientModInitializer {
         });
     }
 
-    static boolean isPetsTitle(String title) {
+    public static boolean isPetsTitle(String title) {
         return TITLE.matcher(title).matches();
-    }
-
-    static boolean isPetsMenu(Screen screen) {
-        return screen instanceof GenericContainerScreen
-                && isPetsTitle(Formatting.strip(screen.getTitle().getString()).strip());
     }
 
     private void render(MinecraftClient client, GenericContainerScreen menu, DrawContext context, int mouseX, int mouseY) {

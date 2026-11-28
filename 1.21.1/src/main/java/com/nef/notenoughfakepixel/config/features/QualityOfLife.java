@@ -45,12 +45,12 @@ public class QualityOfLife {
     public boolean qolDisableEnderManTeleport = true;
 
     @Expose
-    @ConfigOption(name = "Full Block Lever", desc = "Make levers full blocks")
+    @ConfigOption(name = "Full Block Lever", desc = "Extend the lever hitbox across its mounting face")
     @ConfigEditorBoolean
     public boolean qolFullBlockLever = true;
 
     @Expose
-    @ConfigOption(name = "Full Block Button", desc = "Make Buttons full blocks")
+    @ConfigOption(name = "Full Block Button", desc = "Extend the button hitbox across its mounting face")
     @ConfigEditorBoolean
     public boolean qolFullBlockButton = true;
 
@@ -225,7 +225,7 @@ public class QualityOfLife {
             public boolean qolHideSwordOffhandShield = true;
 
             @Expose
-            @ConfigOption(name = "Hide Players near NPCS", desc = "Hide players near NPCS")
+            @ConfigOption(name = "Hide Players Near NPCs", desc = "Hide other players around NPCs so you can see and click the NPC")
             @ConfigEditorBoolean
             public boolean qolHidePlayerNearNpcs = false;
     }
@@ -266,12 +266,12 @@ public class QualityOfLife {
     public static class Shortcuts {
 
             @Expose
-            @ConfigOption(name = "Wardrobe Shortcut", desc = "Enable wardrobe shortcut")
+            @ConfigOption(name = "Wardrobe Shortcut", desc = "Open or close the Wardrobe with a keybind")
             @ConfigEditorBoolean
             public boolean qolShortcutWardrobe = false;
 
             @Expose
-            @ConfigOption(name = "Wardrobe Slots Shortcut", desc = "Enable wardrobe slots {1 - 9} shortcuts")
+            @ConfigOption(name = "Wardrobe Slots Shortcut", desc = "Use keybinds to equip or unequip sets on the current Wardrobe page")
             @ConfigEditorBoolean
             public boolean qolShortcutSlotsWardrobe = false;
 
@@ -326,13 +326,13 @@ public class QualityOfLife {
             public int qolWardrobeKey9 = GLFW.GLFW_KEY_9;
 
             @Expose
-            @ConfigOption(name = "Equipment Shortcut", desc = "Enable Equipment shortcut")
+            @ConfigOption(name = "Equipment Shortcut", desc = "Open or close the Equipment menu with a keybind")
             @ConfigEditorBoolean
             public boolean qolShortcutEq = false;
 
             @Expose
             @ConfigOption(name = "Equipment Shortcut Key", desc = "Keybind for Equipment shortcut")
-            @ConfigEditorKeybind(defaultKey = GLFW.GLFW_KEY_P)
+            @ConfigEditorKeybind(defaultKey = GLFW.GLFW_KEY_U)
             public int qolEqKey = GLFW.GLFW_KEY_U;
 
             @Expose
@@ -442,7 +442,7 @@ public class QualityOfLife {
             public boolean ignoreHaste = true;
 
             @Expose
-            @ConfigOption(name = "Item Animation Drinking Fix", desc = "Pick how to handle drinking animations")
+            @ConfigOption(name = "Item Animation Drinking Fix", desc = "With Item Animation Toggle enabled, choose vanilla drinking, bobbing only, or drinking with your item position offsets")
             @ConfigEditorDropdown(values = {"No fix", "Rotationless", "Fixed"})
             public int drinkingSelector = 2;
 
@@ -508,7 +508,7 @@ public class QualityOfLife {
             public boolean qolDAtimer = true;
 
             @Expose
-            @ConfigOption(name = "Dark Auction Reminder", desc = "Notifies you when there is 1 minute left for Dark Auction")
+            @ConfigOption(name = "Dark Auction Reminder", desc = "Show a title one minute before the Dark Auction, even with the timer hidden")
             @ConfigEditorBoolean
             public boolean qolDarkAhNotifier = false;
 

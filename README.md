@@ -57,7 +57,7 @@ See the [LICENSE](LICENSE) file for details.
 
 <!-- port-progress:start -->
 
-![1.21 port progress (52.3%)](https://progress-bar.xyz/52/?scale=100&width=350&progress_color=338b33) `112/214 features`
+![1.21 port progress (57.0%)](https://progress-bar.xyz/57/?scale=100&width=350&progress_color=338b33) `122/214 features`
 
 <!-- port-progress:end -->
 
@@ -68,7 +68,7 @@ See the [LICENSE](LICENSE) file for details.
 | General | Alerts | X |  |
 | General | Aliases | X |  |
 | General | Disable block breaking particles | X | X |
-| General | Full block lever | X |  |
+| General | Full block lever | X | X |
 | General | Block placing items | X |  |
 | General | Show unclaimed Jacob rewards | X | X |
 | General | Spider's den relic waypoints | X |  |
@@ -90,13 +90,13 @@ See the [LICENSE](LICENSE) file for details.
 | General | Middle click on Menus | X |  |
 | General | Disable sounds from Jerry-chine gun and AOTE | X |  |
 | General | Midas Staff minimal animation and sounds | X |  |
-| General | Wardrobe key shortcut | X |  |
-| General | Equipment key shortcut | X |  |
-| General | Hide players close to NPCs | X |  |
+| General | Wardrobe key shortcut | X | X |
+| General | Equipment key shortcut | X | X |
+| General | Hide players close to NPCs | X | X |
 | General | Show Ender Nodes | X |  |
 | General | Visual item cooldowns | X |  |
 | General | Disable Enderman teleporting | X | X |
-| General | Full block buttons | X |  |
+| General | Full block buttons | X | X |
 | General | Highlight active wardrobe slot | X | X |
 | General | Smooth AOTE teleport | X | X |
 | General | Pingless cactus | X |  |
@@ -104,14 +104,14 @@ See the [LICENSE](LICENSE) file for details.
 | General | Item rarity backgrounds | X |  |
 | General | Etherwarp zoom | X | X |
 | General | Etherwarp text helper | X | X |
-| General | Wardrobe slot shortcuts | X |  |
-| General | Island, Hub, and Dungeon Hub warp shortcuts | X |  |
-| General | Drinking animation fixes | X |  |
+| General | Wardrobe slot shortcuts | X | X |
+| General | Island, Hub, and Dungeon Hub warp shortcuts | X | X |
+| General | Drinking animation fixes | X | X |
 | General | Salvage protection by item rarity | X |  |
 | General | Admin item tooltip tags | X |  |
 | General | Stacking enchantment counters | X |  |
 | General | Dark Auction timer | X | X |
-| General | Dark Auction reminder | X |  |
+| General | Dark Auction reminder | X | X |
 | Chat | Disable Friend > joined messages | X | X |
 | Chat | Disable Info & Watchdog messages | X | X |
 | Chat | Disable selling ranks messages | X | X |
@@ -330,7 +330,7 @@ See the [LICENSE](LICENSE) file for details.
 | --- | --- | --- |
 | Show current pet in pet menu | X | X |
 | Pet tracker | X | X |
-| Pets menu shortcut | X |  |
+| Pets menu shortcut | X | X |
 
 ### Misc
 

@@ -15,7 +15,7 @@ public class Pets {
     public boolean petTracker = true;
 
     @Expose
-    @ConfigOption(name = "Pets Shortcut", desc = "Enable a keybind that runs /pets")
+    @ConfigOption(name = "Pets Shortcut", desc = "Open or close the Pets menu with a keybind")
     @ConfigEditorBoolean
     public boolean qolShortcutPets = false;
 

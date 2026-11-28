@@ -17,6 +17,7 @@ public final class DarkAhTimer extends Timer {
     private static final Identifier ICON = Identifier.of("notenoughfakepixel", "skyblock/dark_ah.png");
     private static final long HOUR_MILLIS = 3_600_000;
     private static final long AUCTION_MINUTE_MILLIS = 55 * 60_000;
+    private static final long REMINDER_WINDOW_MILLIS = 60_000;
     private long remindedGoal;
 
     public DarkAhTimer() {
@@ -26,16 +27,20 @@ public final class DarkAhTimer extends Timer {
     @Override
     protected void registerEvents() {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (client.player == null || !SkyblockData.isSkyblock()
+            if (client.player == null || client.world == null || !SkyblockData.isSkyblock()
                     || !ClientConfig.configuration().qol.darkAuctionSettings.qolDarkAhNotifier) return;
 
-            long now = System.currentTimeMillis();
-            long goal = goalEpochMillis(now);
-            if (goal - now <= 60_000 && goal != remindedGoal) {
-                remindedGoal = goal;
+            if (consumeReminder(System.currentTimeMillis())) {
                 notifyPlayer(client, "Dark Auction is about to start!", Formatting.GOLD, false);
             }
         });
+    }
+
+    private boolean consumeReminder(long now) {
+        long goal = goalEpochMillis(now);
+        if (goal <= remindedGoal || goal - now > REMINDER_WINDOW_MILLIS) return false;
+        remindedGoal = goal;
+        return true;
     }
 
     @Override

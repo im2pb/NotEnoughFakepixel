@@ -12,12 +12,14 @@
         "DrawContextMixin",
         "EntityRenderDispatcherMixin",
         "FishingBobberAccessor",
+        "FullBlockOutlineMixin",
         "GameRendererMixin",
         "GenericContainerScreenMixin",
         "HandledScreenAccessor",
         "HandledScreenMixin",
         "HeldItemRendererMixin",
         "InGameHudMixin",
+        "KeyboardMixin",
         "LightningEntityMixin",
         "LightmapTextureManagerMixin",
         "LivingEntityMixin",
@@ -27,7 +29,6 @@
         "ParticleManagerMixin",
         "PlayerEntityRendererMixin",
         "PlayerInventoryMixin",
-        "StainedGlassPaneOutlineMixin",
         "WorldRendererMixin"
     ],
     "injectors": {
